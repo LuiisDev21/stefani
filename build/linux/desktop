@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Name=STEFANI
+Comment=Reproductor musical y entorno de aprendizaje de ingles
+# The Exec line includes %u to pass the URL to the application
+Exec=/usr/local/bin/stefani.exe %u
+Terminal=false
+Type=Application
+Icon=stefani.exe
+Categories=Utility;
+StartupWMClass=stefani.exe
+
+ 

@@ -1,0 +1,45 @@
+.task
+.wails
+bin/
+build/bin/
+build/windows/nsis/
+*.exe
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Go
+vendor/
+coverage.out
+coverage.html
+
+frontend/dist
+frontend/node_modules
+frontend/.vite/
+frontend/playwright-report/
+frontend/test-results/
+frontend/blob-report/
+frontend/playwright/.cache/
+
+# Editors / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+
+# Local runtime data, databases and secrets
+data/
+*.db
+*.db-wal
+*.db-shm
+.env
+.env.*
+*.local
+*.log
+
+# Test artefacts
+e2e-artifacts/
