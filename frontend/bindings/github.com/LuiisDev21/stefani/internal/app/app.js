@@ -13,6 +13,10 @@ import { Call as $Call, CancellablePromise as $CancellablePromise, Create as $Cr
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore: Unused imports
+import * as media$0 from "../media/models.js";
+
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore: Unused imports
 import * as $models from "./models.js";
 
 /**
@@ -305,12 +309,15 @@ export function ResetAnnotations(trackID) {
 }
 
 /**
- * ResolveAudioPath maps a media URL id to a file, for the streaming handler.
+ * ResolveAudioSource maps a media URL id to bytes: a local file for demo and
+ * local tracks, or a proxied online stream when the feature is enabled.
  * @param {string} trackID
- * @returns {$CancellablePromise<string>}
+ * @returns {$CancellablePromise<media$0.Source>}
  */
-export function ResolveAudioPath(trackID) {
-    return $Call.ByID(372468127, trackID);
+export function ResolveAudioSource(trackID) {
+    return $Call.ByID(3020879485, trackID).then(/** @type {($result: any) => any} */(($result) => {
+        return $$createType17($result);
+    }));
 }
 
 /**
@@ -352,7 +359,7 @@ export function SaveWord($in) {
  */
 export function Search(query, limit) {
     return $Call.ByID(2296388846, query, limit).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType17($result);
+        return $$createType18($result);
     }));
 }
 
@@ -406,7 +413,7 @@ export function Settings() {
  */
 export function TestLLM() {
     return $Call.ByID(2950311297).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType18($result);
+        return $$createType19($result);
     }));
 }
 
@@ -438,7 +445,7 @@ export function UpdatePlaylist(id, name, description) {
  */
 export function Vocabulary() {
     return $Call.ByID(814024750).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType19($result);
+        return $$createType20($result);
     }));
 }
 
@@ -448,7 +455,7 @@ export function Vocabulary() {
  */
 export function WindowState() {
     return $Call.ByID(1162240999).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType20($result);
+        return $$createType21($result);
     }));
 }
 
@@ -470,7 +477,8 @@ const $$createType13 = $models.WordDTO.createFrom;
 const $$createType14 = $Create.Array($$createType5);
 const $$createType15 = $models.ProgressDTO.createFrom;
 const $$createType16 = $Create.Array($$createType15);
-const $$createType17 = $models.SearchDTO.createFrom;
-const $$createType18 = $models.TestOutcome.createFrom;
-const $$createType19 = $Create.Array($$createType13);
-const $$createType20 = $models.WindowStateInput.createFrom;
+const $$createType17 = media$0.Source.createFrom;
+const $$createType18 = $models.SearchDTO.createFrom;
+const $$createType19 = $models.TestOutcome.createFrom;
+const $$createType20 = $Create.Array($$createType13);
+const $$createType21 = $models.WindowStateInput.createFrom;

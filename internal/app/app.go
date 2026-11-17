@@ -53,6 +53,7 @@ type Deps struct {
 	Lyrics    *lyrics.Service
 	Phonetics *phonetics.Service
 	AI        *ai.Client
+	Streamer  *music.YtDlp
 	Log       *slog.Logger
 	Picker    FilePicker
 	Emitter   Emitter
@@ -64,17 +65,18 @@ type Deps struct {
 
 // App is the bound service.
 type App struct {
-	db      *storage.DB
-	configs *config.Store
-	secrets secret.Store
-	music   *music.Service
-	lyrics  *lyrics.Service
-	phon    *phonetics.Service
-	ai      *ai.Client
-	log     *slog.Logger
-	picker  FilePicker
-	emitter Emitter
-	opener  Opener
+	db       *storage.DB
+	configs  *config.Store
+	secrets  secret.Store
+	music    *music.Service
+	lyrics   *lyrics.Service
+	phon     *phonetics.Service
+	ai       *ai.Client
+	streamer *music.YtDlp
+	log      *slog.Logger
+	picker   FilePicker
+	emitter  Emitter
+	opener   Opener
 
 	onConfigChange func(config.Config)
 
@@ -89,18 +91,19 @@ func New(d Deps) *App {
 		log = slog.Default()
 	}
 	return &App{
-		db:      d.DB,
-		configs: d.Configs,
-		secrets: d.Secrets,
-		music:   d.Music,
-		lyrics:  d.Lyrics,
-		phon:    d.Phonetics,
-		ai:      d.AI,
-		log:     log,
-		picker:  d.Picker,
-		emitter: d.Emitter,
-		opener:  d.Opener,
-		cfg:     d.Config,
+		db:       d.DB,
+		configs:  d.Configs,
+		secrets:  d.Secrets,
+		music:    d.Music,
+		lyrics:   d.Lyrics,
+		phon:     d.Phonetics,
+		ai:       d.AI,
+		streamer: d.Streamer,
+		log:      log,
+		picker:   d.Picker,
+		emitter:  d.Emitter,
+		opener:   d.Opener,
+		cfg:      d.Config,
 
 		onConfigChange: d.OnConfigChange,
 	}
@@ -134,6 +137,12 @@ func (a *App) Info() InfoDTO {
 		Identifier: brand.Identifier,
 		DBPath:     a.db.Path(),
 		Schema:     schema,
+		Online: OnlineDTO{
+			Enabled:   a.currentConfig().Features.YouTubeMusic,
+			Available: a.streamer.Available(),
+			Version:   a.streamer.Version(),
+			Detail:    a.streamer.Detail(),
+		},
 	}
 }
 
@@ -275,9 +284,30 @@ func (a *App) toTrackList(ctx context.Context, tracks []domain.Track) []TrackDTO
 	out := make([]TrackDTO, 0, len(tracks))
 	for _, t := range tracks {
 		fav, inLibrary := a.db.IsFavorite(ctx, t.ID)
-		out = append(out, toTrackDTO(t, inLibrary, fav))
+		out = append(out, a.trackDTO(t, inLibrary, fav))
 	}
 	return out
+}
+
+// trackDTO is the only converter the service uses: it knows whether the track
+// can actually stream on this machine (local file, or online with yt-dlp).
+func (a *App) trackDTO(t domain.Track, inLibrary, favorite bool) TrackDTO {
+	return toTrackDTO(t, inLibrary, favorite, a.streamable(t))
+}
+
+// streamable answers "can this track play right now?". Online tracks need the
+// feature enabled and a working yt-dlp; there is no optimistic true.
+func (a *App) streamable(t domain.Track) bool {
+	if t.Playable() {
+		return true
+	}
+	if t.Provider != domain.ProviderYTMusic {
+		return false
+	}
+	if !a.currentConfig().Features.YouTubeMusic {
+		return false
+	}
+	return a.streamer.Available()
 }
 
 // Track returns one track by id.
@@ -289,7 +319,7 @@ func (a *App) Track(id string) (TrackDTO, error) {
 		return TrackDTO{}, fmt.Errorf("no encontre esa cancion")
 	}
 	fav, inLibrary := a.db.IsFavorite(ctx, id)
-	return toTrackDTO(track, inLibrary, fav), nil
+	return a.trackDTO(track, inLibrary, fav), nil
 }
 
 // Search queries the configured providers.
@@ -310,10 +340,23 @@ func (a *App) Search(query string, limit int) (SearchDTO, error) {
 		if existing, err := a.db.TrackByProviderID(ctx, r.Track.Provider, r.Track.ProviderID); err == nil {
 			fav, inLibrary = a.db.IsFavorite(ctx, existing.ID)
 			r.Track = existing
+		} else if r.Track.Provider != domain.ProviderDemo {
+			// Remote results need a local row: that is what gives the player a
+			// stable id, the library state and a media URL.
+			id, err := a.db.SaveTrack(ctx, r.Track)
+			if err != nil {
+				a.log.Warn("could not persist catalogue track", "provider", r.Track.Provider, "error", err)
+			} else {
+				r.Track.ID = id
+			}
 		}
-		dto := toTrackDTO(r.Track, inLibrary, fav)
-		dto.Playable = r.Playable
-		dto.Note = r.Note
+		dto := a.trackDTO(r.Track, inLibrary, fav)
+		dto.Playable = r.Playable || dto.Playable
+		if dto.Playable {
+			dto.Note = ""
+		} else {
+			dto.Note = r.Note
+		}
 		items = append(items, dto)
 	}
 	cfg := a.currentConfig()
@@ -421,7 +464,7 @@ func (a *App) SetInLibrary(trackID string, save bool) (TrackDTO, error) {
 		return TrackDTO{}, fmt.Errorf("no encontre esa cancion")
 	}
 	fav, inLibrary := a.db.IsFavorite(ctx, trackID)
-	return toTrackDTO(track, inLibrary, fav), nil
+	return a.trackDTO(track, inLibrary, fav), nil
 }
 
 // SetFavorite flags or unflags a track.
@@ -436,7 +479,7 @@ func (a *App) SetFavorite(trackID string, favorite bool) (TrackDTO, error) {
 		return TrackDTO{}, fmt.Errorf("no encontre esa cancion")
 	}
 	fav, inLibrary := a.db.IsFavorite(ctx, trackID)
-	return toTrackDTO(track, inLibrary, fav), nil
+	return a.trackDTO(track, inLibrary, fav), nil
 }
 
 // ---- playlists ----
@@ -644,16 +687,25 @@ func (a *App) OpenExternal(rawURL string) error {
 	return a.opener.OpenURL(parsed.String())
 }
 
-// ResolveAudioPath maps a media URL id to a file, for the streaming handler.
-func (a *App) ResolveAudioPath(trackID string) (string, error) {
+// ResolveAudioSource maps a media URL id to bytes: a local file for demo and
+// local tracks, or a proxied online stream when the feature is enabled.
+func (a *App) ResolveAudioSource(trackID string) (media.Source, error) {
 	ctx, cancel := a.opCtx()
 	defer cancel()
 	track, err := a.db.Track(ctx, trackID)
 	if err != nil {
-		return "", media.ErrNoAudio
+		return media.Source{}, media.ErrNoAudio
 	}
-	if track.AudioPath == "" {
-		return "", media.ErrNoAudio
+	if track.AudioPath != "" {
+		return media.Source{Path: track.AudioPath}, nil
 	}
-	return track.AudioPath, nil
+	if !a.streamable(track) {
+		return media.Source{}, media.ErrNoAudio
+	}
+	stream, err := a.streamer.Resolve(ctx, track.ProviderID)
+	if err != nil {
+		a.log.Warn("online stream could not be resolved", "track", track.ID, "error", err)
+		return media.Source{}, media.ErrNoAudio
+	}
+	return media.Source{URL: stream.URL}, nil
 }

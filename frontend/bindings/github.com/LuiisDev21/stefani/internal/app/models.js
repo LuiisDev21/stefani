@@ -503,6 +503,13 @@ export class InfoDTO {
              */
             this["schema"] = 0;
         }
+        if (!("online" in $$source)) {
+            /**
+             * @member
+             * @type {OnlineDTO}
+             */
+            this["online"] = (new OnlineDTO());
+        }
 
         Object.assign(this, $$source);
     }
@@ -513,7 +520,11 @@ export class InfoDTO {
      * @returns {InfoDTO}
      */
     static createFrom($$source = {}) {
+        const $$createField6_0 = $$createType17;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        if ("online" in $$parsedSource) {
+            $$parsedSource["online"] = $$createField6_0($$parsedSource["online"]);
+        }
         return new InfoDTO(/** @type {Partial<InfoDTO>} */($$parsedSource));
     }
 }
@@ -652,8 +663,8 @@ export class LineDTO {
      * @returns {LineDTO}
      */
     static createFrom($$source = {}) {
-        const $$createField5_0 = $$createType18;
-        const $$createField6_0 = $$createType20;
+        const $$createField5_0 = $$createType19;
+        const $$createField6_0 = $$createType21;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("words" in $$parsedSource) {
             $$parsedSource["words"] = $$createField5_0($$parsedSource["words"]);
@@ -747,7 +758,7 @@ export class LyricsDTO {
      * @returns {LyricsDTO}
      */
     static createFrom($$source = {}) {
-        const $$createField7_0 = $$createType22;
+        const $$createField7_0 = $$createType23;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("lines" in $$parsedSource) {
             $$parsedSource["lines"] = $$createField7_0($$parsedSource["lines"]);
@@ -791,6 +802,60 @@ export class NoteDTO {
     static createFrom($$source = {}) {
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         return new NoteDTO(/** @type {Partial<NoteDTO>} */($$parsedSource));
+    }
+}
+
+/**
+ * OnlineDTO reports whether online playback can work here: the feature flag
+ * plus a detected yt-dlp. The UI explains the requirement instead of offering a
+ * button that cannot work.
+ */
+export class OnlineDTO {
+    /**
+     * Creates a new OnlineDTO instance.
+     * @param {Partial<OnlineDTO>} [$$source = {}] - The source object to create the OnlineDTO.
+     */
+    constructor($$source = {}) {
+        if (!("enabled" in $$source)) {
+            /**
+             * @member
+             * @type {boolean}
+             */
+            this["enabled"] = false;
+        }
+        if (!("available" in $$source)) {
+            /**
+             * @member
+             * @type {boolean}
+             */
+            this["available"] = false;
+        }
+        if (!("version" in $$source)) {
+            /**
+             * @member
+             * @type {string}
+             */
+            this["version"] = "";
+        }
+        if (!("detail" in $$source)) {
+            /**
+             * @member
+             * @type {string}
+             */
+            this["detail"] = "";
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new OnlineDTO instance from a string or object.
+     * @param {any} [$$source = {}]
+     * @returns {OnlineDTO}
+     */
+    static createFrom($$source = {}) {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new OnlineDTO(/** @type {Partial<OnlineDTO>} */($$parsedSource));
     }
 }
 
@@ -1127,8 +1192,8 @@ export class SettingsDTO {
      * @returns {SettingsDTO}
      */
     static createFrom($$source = {}) {
-        const $$createField0_0 = $$createType23;
-        const $$createField1_0 = $$createType24;
+        const $$createField0_0 = $$createType24;
+        const $$createField1_0 = $$createType25;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("llm" in $$parsedSource) {
             $$parsedSource["llm"] = $$createField0_0($$parsedSource["llm"]);
@@ -1187,8 +1252,8 @@ export class SettingsInput {
      * @returns {SettingsInput}
      */
     static createFrom($$source = {}) {
-        const $$createField0_0 = $$createType23;
-        const $$createField1_0 = $$createType24;
+        const $$createField0_0 = $$createType24;
+        const $$createField1_0 = $$createType25;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("llm" in $$parsedSource) {
             $$parsedSource["llm"] = $$createField0_0($$parsedSource["llm"]);
@@ -1826,11 +1891,12 @@ const $$createType13 = ProviderStateDTO.createFrom;
 const $$createType14 = $Create.Array($$createType13);
 const $$createType15 = StoredCountsDTO.createFrom;
 const $$createType16 = $Create.Nullable($$createType6);
-const $$createType17 = WordTimingDTO.createFrom;
-const $$createType18 = $Create.Array($$createType17);
-const $$createType19 = AnnotationDTO.createFrom;
-const $$createType20 = $Create.Nullable($$createType19);
-const $$createType21 = LineDTO.createFrom;
-const $$createType22 = $Create.Array($$createType21);
-const $$createType23 = LLMSettingsDTO.createFrom;
-const $$createType24 = FeaturesDTO.createFrom;
+const $$createType17 = OnlineDTO.createFrom;
+const $$createType18 = WordTimingDTO.createFrom;
+const $$createType19 = $Create.Array($$createType18);
+const $$createType20 = AnnotationDTO.createFrom;
+const $$createType21 = $Create.Nullable($$createType20);
+const $$createType22 = LineDTO.createFrom;
+const $$createType23 = $Create.Array($$createType22);
+const $$createType24 = LLMSettingsDTO.createFrom;
+const $$createType25 = FeaturesDTO.createFrom;

@@ -41,3 +41,10 @@
 
 Cualquier propuesta que implique descargar audio de terceros, evadir DRM o
 reutilizar contenido sin licencia queda descartada por diseno.
+
+## Completado despues del MVP inicial
+
+- Reproduccion en linea de YouTube Music con `yt-dlp` y proxy `Range`.
+- Persistencia de resultados remotos con id estable y deduplicacion por
+  proveedor.
+- Estado real del reproductor en linea en Ajustes y apagado forzado para CI.

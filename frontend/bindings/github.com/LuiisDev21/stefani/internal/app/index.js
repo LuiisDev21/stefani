@@ -19,6 +19,7 @@ export {
     LineDTO,
     LyricsDTO,
     NoteDTO,
+    OnlineDTO,
     PlaylistDTO,
     ProgressDTO,
     ProviderStateDTO,

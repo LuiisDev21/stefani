@@ -35,6 +35,8 @@ export default defineConfig({
       STEFANI_HOME: e2eHome,
       // Tests must never read or write the developer's real stored API key.
       STEFANI_KEYRING_SERVICE: "stefani-e2e",
+      // Deterministic and offline: the suite does not hit YouTube.
+      STEFANI_DISABLE_ONLINE: "1",
     } as Record<string, string>,
     stdout: "pipe",
     stderr: "pipe",

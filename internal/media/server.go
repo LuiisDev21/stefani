@@ -100,10 +100,10 @@ func (s *Server) serve(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid media id", http.StatusBadRequest)
 		return
 	}
-	filePath, err := s.resolve(r, trackID)
+	src, err := s.resolve(r, trackID)
 	if err != nil {
 		http.Error(w, "audio not available", http.StatusNotFound)
 		return
 	}
-	serveFile(w, r, filePath)
+	serveSource(w, r, src)
 }

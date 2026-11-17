@@ -6,6 +6,13 @@
 
 export type SyncLevel = "UNSYNCED" | "LINE" | "WORD" | "SYLLABLE";
 
+export interface OnlineStatus {
+  enabled: boolean;
+  available: boolean;
+  version: string;
+  detail: string;
+}
+
 export interface Info {
   name: string;
   tagline: string;
@@ -13,6 +20,7 @@ export interface Info {
   identifier: string;
   dbPath: string;
   schema: number;
+  online: OnlineStatus;
 }
 
 export interface Track {

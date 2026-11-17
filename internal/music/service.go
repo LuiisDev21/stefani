@@ -26,13 +26,14 @@ var ErrUnavailable = errors.New("provider unavailable")
 type Catalog interface {
 	Name() string
 	Search(ctx context.Context, query string, limit int) ([]domain.SearchResult, error)
+	BrowsePlaylist(ctx context.Context, playlistID string, limit int) ([]domain.Track, error)
 }
 
 // Service aggregates the configured providers. It is the single entry point the
 // application layer uses for searching and importing.
 type Service struct {
 	db   *storage.DB
-	yt   *YTMusic
+	yt   Catalog
 	log  Logger
 	ytOn func() bool
 }
@@ -45,7 +46,7 @@ type Logger interface {
 
 // NewService wires the providers. ytOn is read on every call so the feature
 // flag takes effect without a restart.
-func NewService(db *storage.DB, yt *YTMusic, log Logger, ytOn func() bool) *Service {
+func NewService(db *storage.DB, yt Catalog, log Logger, ytOn func() bool) *Service {
 	if ytOn == nil {
 		ytOn = func() bool { return false }
 	}
@@ -73,7 +74,26 @@ func (s *Service) Search(ctx context.Context, query string, limit int) ([]domain
 		s.log.Warn("youtube music search failed", "error", err)
 		return local, nil
 	}
-	return append(local, remote...), nil
+	// A remote track that is already stored also matches the local query, so
+	// the combined list must be deduplicated by provider identity.
+	seen := make(map[string]bool, len(local)+len(remote))
+	for _, r := range local {
+		seen[providerKey(r.Track.Provider, r.Track.ProviderID)] = true
+	}
+	for _, r := range remote {
+		key := providerKey(r.Track.Provider, r.Track.ProviderID)
+		if seen[key] {
+			continue
+		}
+		seen[key] = true
+		local = append(local, r)
+	}
+	return local, nil
+}
+
+// providerKey identifies a track across providers.
+func providerKey(provider domain.Provider, providerID string) string {
+	return string(provider) + "\x00" + providerID
 }
 
 func (s *Service) searchLocal(ctx context.Context, query string, limit int) ([]domain.SearchResult, error) {
@@ -98,7 +118,7 @@ func playNote(t domain.Track) string {
 		return ""
 	}
 	if t.Provider == domain.ProviderYTMusic {
-		return "Catalogo solamente: la reproduccion de YouTube Music no esta integrada"
+		return "Catalogo solamente: activa la reproduccion en linea para escucharla"
 	}
 	return "Sin audio local asociado"
 }

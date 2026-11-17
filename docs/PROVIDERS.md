@@ -85,3 +85,25 @@ sobrescribe en el siguiente arranque (hay una prueba de regresion para eso).
 | Sin clave | `needsSetup`: la UI lleva a Ajustes en lugar de fallar |
 | Playlist privada o regional | cero resultados + aviso |
 | Cambio de contrato de YouTube | el proveedor queda no disponible y se registra; no bloquea la app |
+
+## Reproduccion en linea (YouTube Music)
+
+`music.YtDlp` resuelve una URL de audio con la herramienta local `yt-dlp` y
+`media` la reenvia al reproductor con soporte de `Range`.
+
+| Aspecto | Comportamiento |
+|---|---|
+| Deteccion | `exec.LookPath("yt-dlp")` al arrancar; la version se muestra en Ajustes |
+| Resolucion | `yt-dlp -f bestaudio -g --no-playlist <music.youtube.com/watch?v=ID>`, timeout 25 s |
+| Validacion | solo `https`, host `*.googlevideo.com`, `videoID` con forma de 11 caracteres |
+| Cache | por `videoID` hasta `expire - 90 s` (o 4 h si la URL no lo declara) |
+| Entrega | proxy en Go con `Range`/`If-Range`; el frontend solo ve `/media/<id>` |
+| Caducidad | la URL caduca y esta atada a la IP; si falla, se vuelve a resolver |
+| Sin yt-dlp | la pista queda `playable: false` con explicacion; no hay error fatal |
+| Flag | `features.youtubeMusic`, activo por defecto; `STEFANI_DISABLE_ONLINE=1` lo fuerza apagado (CI) |
+
+Capacidades reales con esta fuente: `play`, `seek`, `rate`, `abLoop` = true,
+porque el reloj es el propio `<audio>` y no un iframe.
+
+Riesgos asumidos: va contra los terminos de YouTube, puede romperse cuando
+cambie el servicio y el binario no se distribuye con la aplicacion.

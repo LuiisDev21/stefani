@@ -150,6 +150,11 @@ func run() error {
 		cfg = config.Default()
 	}
 	secrets := secret.New(keyringService())
+	// CI and offline runs must not depend on YouTube: this forces the online
+	// provider off without touching the user's saved settings.
+	if os.Getenv("STEFANI_DISABLE_ONLINE") == "1" {
+		cfg.Features.YouTubeMusic = false
+	}
 	state := &settingsState{cfg: cfg, secrets: secrets}
 
 	demoLib := demo.New(paths.DemoDir)
@@ -160,6 +165,7 @@ func run() error {
 	cancelStartup()
 
 	yt := music.NewYTMusic(12 * time.Second)
+	streamer := music.DetectYtDlp()
 	musicSvc := music.NewService(db, yt, logger, state.youtubeMusic)
 	lyricSvc := lyrics.NewService(db, lyrics.NewLRCLIB(10*time.Second), logger)
 	aiClient := ai.New(45 * time.Second)
@@ -174,14 +180,15 @@ func run() error {
 		Lyrics:         lyricSvc,
 		Phonetics:      phonSvc,
 		AI:             aiClient,
+		Streamer:       streamer,
 		Log:            logger,
 		Opener:         wailsOpener{},
 		Picker:         wailsPicker{},
 		OnConfigChange: state.set,
 	})
 
-	mediaHandler := media.StreamHandler(func(r *http.Request, trackID string) (string, error) {
-		return appSvc.ResolveAudioPath(trackID)
+	mediaHandler := media.StreamHandler(func(r *http.Request, trackID string) (media.Source, error) {
+		return appSvc.ResolveAudioSource(trackID)
 	})
 	assetMiddleware := application.Middleware(func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -249,6 +256,7 @@ func run() error {
 	})
 	wailsApp.OnShutdown(saveGeometry)
 
-	logger.Info("starting", "name", brand.Name, "version", brand.Version, "db", db.Path())
+	logger.Info("starting", "name", brand.Name, "version", brand.Version, "db", db.Path(),
+		"online", streamer.Detail())
 	return wailsApp.Run()
 }

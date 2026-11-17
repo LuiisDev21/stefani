@@ -75,3 +75,17 @@ su causa, sin credenciales.
 
 No hay programa de bug bounty. Los defectos se documentan como issues del
 repositorio con pasos de reproduccion, impacto y version afectada.
+
+## Musica en linea y proxy de audio
+
+- La app no extrae audio por si misma: delega en un `yt-dlp` instalado por el
+  usuario. El binario no se empaqueta ni se descarga automaticamente.
+- La URL resuelta (que contiene la IP del usuario y un `expire`) **no** se
+  envia al frontend, no se guarda en SQLite y no se registra en logs.
+- `internal/media` solo reenvia peticiones a `https://*.googlevideo.com`; un
+  resolver que devuelva otro host, `http` o una cadena vacia termina en 404.
+- El proxy copia unicamente cabeceras de contenido (`Content-Type`,
+  `Content-Range`, `Accept-Ranges`, etc.) y no reenvia `Cookie` ni cabeceras del
+  cliente mas alla de `Range`/`If-Range`.
+- Sin sesion de Google: no se leen ni se exportan cookies.
+- `STEFANI_DISABLE_ONLINE=1` apaga el proveedor para CI y entornos sin red.

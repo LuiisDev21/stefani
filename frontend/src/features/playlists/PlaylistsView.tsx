@@ -214,7 +214,7 @@ export function PlaylistsView() {
           <EmptyState
             icon={<ListMusic className="h-5 w-5" />}
             title="Sin listas todavia"
-            description="Crea una lista propia o importa una playlist publica de YouTube Music (solo metadatos: la reproduccion sigue en la app oficial)."
+            description="Crea una lista propia o importa una playlist publica de YouTube Music. El audio se reproduce dentro de la app cuando el reproductor en linea esta disponible."
             actions={
               <>
                 <Button size="sm" variant="primary" onClick={() => setCreating(true)}>

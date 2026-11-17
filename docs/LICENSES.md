@@ -63,3 +63,10 @@ STEFANI es un nombre de trabajo. No se usa ninguna marca de terceros en la
 interfaz ni en los instaladores. El icono de la aplicacion es el que trae la
 plantilla de Wails y queda pendiente de diseno propio: se documenta como
 provisional, no como identidad final.
+
+## yt-dlp (herramienta externa, no distribuida)
+
+`yt-dlp` es software libre (Unlicense). STEFANI **no** lo incluye en el
+instalador ni lo descarga: solo lo invoca si el usuario lo tiene instalado. Por
+eso no se agrega a la lista de dependencias distribuidas, pero se documenta aqui
+porque el usuario debe instalarlo para la musica en linea.

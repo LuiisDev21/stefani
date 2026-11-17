@@ -64,7 +64,10 @@ func Default() Config {
 			MaxRetries:     DefaultRetries,
 			JSONMode:       true,
 		},
-		Features: Features{YouTubeMusic: false},
+		// Online playback is the main source of music in the app, so it ships
+		// enabled. It still degrades cleanly when yt-dlp is not installed: the
+		// service reports the track as not streamable instead of failing.
+		Features: Features{YouTubeMusic: true},
 		Accent:   DefaultAccent,
 	}
 }

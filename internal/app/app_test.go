@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"path/filepath"
 	"strings"
@@ -13,6 +14,7 @@ import (
 	"github.com/LuiisDev21/stefani/internal/demo"
 	"github.com/LuiisDev21/stefani/internal/domain"
 	"github.com/LuiisDev21/stefani/internal/lyrics"
+	"github.com/LuiisDev21/stefani/internal/media"
 	"github.com/LuiisDev21/stefani/internal/music"
 	"github.com/LuiisDev21/stefani/internal/phonetics"
 	"github.com/LuiisDev21/stefani/internal/secret"
@@ -28,6 +30,21 @@ type testEnv struct {
 
 func newTestEnv(t *testing.T) testEnv {
 	t.Helper()
+	// Tests stay offline: online playback has its own cases below.
+	cfg := config.Default()
+	cfg.Features.YouTubeMusic = false
+	return newTestEnvFull(t, cfg, music.NewYtDlpWithRunner("", nil, nil, 0), music.NewYTMusic(time.Second))
+}
+
+// newTestEnvWith lets a test choose the feature flags and the stream resolver,
+// so online playback is exercised without yt-dlp installed.
+func newTestEnvWith(t *testing.T, cfg config.Config, streamer *music.YtDlp) testEnv {
+	t.Helper()
+	return newTestEnvFull(t, cfg, streamer, music.NewYTMusic(time.Second))
+}
+
+func newTestEnvFull(t *testing.T, cfg config.Config, streamer *music.YtDlp, catalog music.Catalog) testEnv {
+	t.Helper()
 	dir := t.TempDir()
 	db, err := storage.Open(filepath.Join(dir, "app.db"))
 	if err != nil {
@@ -42,7 +59,6 @@ func newTestEnv(t *testing.T) testEnv {
 	}
 
 	cfgStore := config.NewStore(filepath.Join(dir, "config.json"))
-	cfg := config.Default()
 	secrets := secret.NewMemory()
 
 	phoneticsCfg := func() (config.LLM, string, error) {
@@ -58,10 +74,11 @@ func newTestEnv(t *testing.T) testEnv {
 		Configs:   cfgStore,
 		Config:    cfg,
 		Secrets:   secrets,
-		Music:     music.NewService(db, music.NewYTMusic(time.Second), logger, func() bool { return false }),
+		Music:     music.NewService(db, catalog, logger, func() bool { return cfg.Features.YouTubeMusic }),
 		Lyrics:    lyrics.NewService(db, nil, logger),
 		Phonetics: phonetics.NewService(db, ai.New(time.Second), phoneticsCfg, logger),
 		AI:        ai.New(time.Second),
+		Streamer:  streamer,
 		Log:       logger,
 	})
 	return testEnv{app: svc, db: db, secrets: secrets, configs: cfgStore}
@@ -285,5 +302,186 @@ func TestOpenExternalRejectsUnknownSchemes(t *testing.T) {
 	}
 	if err := env.app.OpenExternal("javascript:alert(1)"); err == nil {
 		t.Fatal("expected javascript: to be rejected")
+	}
+}
+
+const testStreamURL = "https://rr1---sn-test.googlevideo.com/videoplayback?expire=1893456000&itag=251"
+
+func fakeStreamer(t *testing.T) *music.YtDlp {
+	t.Helper()
+	return music.NewYtDlpWithRunner("yt-dlp", func(ctx context.Context, name string, args ...string) ([]byte, []byte, error) {
+		return []byte(testStreamURL + "\n"), nil, nil
+	}, nil, time.Hour)
+}
+
+func onlineTrack(t *testing.T, env testEnv) string {
+	t.Helper()
+	id, err := env.db.SaveTrack(context.Background(), domain.Track{
+		Provider:   domain.ProviderYTMusic,
+		ProviderID: "dQw4w9WgXcQ",
+		Title:      "Never Gonna Give You Up",
+		Artist:     "Rick Astley",
+		Album:      "Whenever You Need Somebody",
+		DurationMs: 213000,
+	})
+	if err != nil {
+		t.Fatalf("save online track: %v", err)
+	}
+	return id
+}
+
+func TestOnlinePlaybackRequiresYtDlp(t *testing.T) {
+	cfg := config.Default()
+	env := newTestEnvWith(t, cfg, music.NewYtDlpWithRunner("", nil, nil, 0))
+	id := onlineTrack(t, env)
+
+	dto, err := env.app.Track(id)
+	if err != nil {
+		t.Fatalf("track: %v", err)
+	}
+	if dto.Playable || dto.AudioURL != "" {
+		t.Fatalf("online track must not be playable without yt-dlp: %+v", dto)
+	}
+	if _, err := env.app.ResolveAudioSource(id); !errors.Is(err, media.ErrNoAudio) {
+		t.Fatalf("resolver error = %v, want ErrNoAudio", err)
+	}
+	if info := env.app.Info(); info.Online.Available {
+		t.Fatalf("online status should be unavailable: %+v", info.Online)
+	}
+}
+
+func TestOnlinePlaybackStreamsWithYtDlp(t *testing.T) {
+	cfg := config.Default()
+	env := newTestEnvWith(t, cfg, fakeStreamer(t))
+	id := onlineTrack(t, env)
+
+	dto, err := env.app.Track(id)
+	if err != nil {
+		t.Fatalf("track: %v", err)
+	}
+	if !dto.Playable || dto.AudioURL != "/media/"+id {
+		t.Fatalf("expected a playable stream url: %+v", dto)
+	}
+	src, err := env.app.ResolveAudioSource(id)
+	if err != nil {
+		t.Fatalf("resolve source: %v", err)
+	}
+	if src.URL != testStreamURL || src.Path != "" {
+		t.Fatalf("unexpected source: %+v", src)
+	}
+	info := env.app.Info()
+	if !info.Online.Available || !info.Online.Enabled {
+		t.Fatalf("online status = %+v", info.Online)
+	}
+}
+
+func TestOnlinePlaybackHonoursTheFlag(t *testing.T) {
+	cfg := config.Default()
+	cfg.Features.YouTubeMusic = false
+	env := newTestEnvWith(t, cfg, fakeStreamer(t))
+	id := onlineTrack(t, env)
+
+	dto, _ := env.app.Track(id)
+	if dto.Playable {
+		t.Fatalf("flag off must disable online playback: %+v", dto)
+	}
+	if _, err := env.app.ResolveAudioSource(id); !errors.Is(err, media.ErrNoAudio) {
+		t.Fatalf("resolver error = %v, want ErrNoAudio", err)
+	}
+}
+
+func TestLocalTracksKeepStreamingWithoutOnline(t *testing.T) {
+	cfg := config.Default()
+	cfg.Features.YouTubeMusic = false
+	env := newTestEnvWith(t, cfg, music.NewYtDlpWithRunner("", nil, nil, 0))
+
+	data, err := env.app.Bootstrap()
+	if err != nil {
+		t.Fatalf("bootstrap: %v", err)
+	}
+	if len(data.DemoTracks) == 0 {
+		t.Fatal("expected demo tracks")
+	}
+	src, err := env.app.ResolveAudioSource(data.DemoTracks[0].ID)
+	if err != nil {
+		t.Fatalf("demo source: %v", err)
+	}
+	if src.Path == "" || src.URL != "" {
+		t.Fatalf("demo tracks must resolve to a file: %+v", src)
+	}
+}
+
+// fakeCatalog returns canned remote results and records the call.
+type fakeCatalog struct {
+	results []domain.SearchResult
+	calls   int
+	fail    bool
+}
+
+func (f *fakeCatalog) Name() string { return "fake" }
+
+func (f *fakeCatalog) BrowsePlaylist(ctx context.Context, playlistID string, limit int) ([]domain.Track, error) {
+	return nil, nil
+}
+
+func (f *fakeCatalog) Search(ctx context.Context, query string, limit int) ([]domain.SearchResult, error) {
+	f.calls++
+	if f.fail {
+		return nil, errors.New("provider down")
+	}
+	return f.results, nil
+}
+
+func TestSearchPersistsOnlineResultsWithStableID(t *testing.T) {
+	cfg := config.Default()
+	catalog := &fakeCatalog{results: []domain.SearchResult{{
+		Track: domain.Track{
+			Provider:   domain.ProviderYTMusic,
+			ProviderID: "dQw4w9WgXcQ",
+			Title:      "Never Gonna Give You Up",
+			Artist:     "Rick Astley",
+			DurationMs: 213000,
+		},
+		ProviderName: "ytmusic",
+		Playable:     false,
+	}}}
+	env := newTestEnvFull(t, cfg, fakeStreamer(t), catalog)
+
+	first, err := env.app.Search("never gonna", 5)
+	if err != nil {
+		t.Fatalf("search: %v", err)
+	}
+	if len(first.Items) != 1 {
+		t.Fatalf("items = %d, want 1", len(first.Items))
+	}
+	item := first.Items[0]
+	if item.ID == "" {
+		t.Fatal("remote results must be persisted to get a stable id")
+	}
+	if !item.Playable || item.AudioURL != "/media/"+item.ID {
+		t.Fatalf("online result should be playable with yt-dlp: %+v", item)
+	}
+	if item.Note != "" {
+		t.Fatalf("playable results must not carry the catalogue note: %q", item.Note)
+	}
+
+	second, err := env.app.Search("never gonna", 5)
+	if err != nil {
+		t.Fatalf("second search: %v", err)
+	}
+	if len(second.Items) != 1 || second.Items[0].ID != item.ID {
+		t.Fatalf("the id is not stable: %+v", second.Items)
+	}
+}
+
+func TestSearchDegradesWhenTheProviderFails(t *testing.T) {
+	cfg := config.Default()
+	env := newTestEnvFull(t, cfg, fakeStreamer(t), &fakeCatalog{fail: true})
+	data, err := env.app.Search("paper", 5)
+	if err != nil {
+		t.Fatalf("a failing provider must not fail the search: %v", err)
+	}
+	if len(data.Items) != 1 || data.Items[0].Provider != "demo" {
+		t.Fatalf("local results should survive: %+v", data.Items)
 	}
 }

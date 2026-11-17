@@ -100,3 +100,26 @@ Windows/Linux con `go build ./...`.
 `go vet ./...`; el target iOS queda fuera del alcance del MVP.
 **Consecuencia**: pipeline determinista; si se retoma movil, se agrega un job con
 `GOOS=ios` y Xcode.
+
+## ADR-013: reproduccion no oficial de YouTube Music con yt-dlp
+
+**Contexto**: el pliego inicial prohibia extraer audio. El producto necesita
+musica en linea real: sin ella, la app solo reproduce archivos locales y el
+estudio depende de que el usuario los tenga. Las apps de referencia resuelven
+esto en un backend propio (Liner) o con un wrapper de la web oficial.
+
+**Decision** (aprobada por el dueno del producto, uso personal y no comercial):
+resolver la URL de audio con `yt-dlp` local y reproducirla en el `<audio>` de la
+app mediante un proxy con `Range`. El flag `features.youtubeMusic` es la fuente
+principal de musica en linea y viene activo; se degrada solo si falta la
+herramienta.
+
+**Alternativas descartadas**: iframe oficial (limitado a videos embebibles y sin
+control de velocidad ni A-B), wrapper de `music.youtube.com` (exige sesion de
+Google dentro de la app y rompe el reloj unico), backend propio tipo Liner
+(infraestructura y responsabilidad legal que el MVP no necesita).
+
+**Consecuencia**: la app depende de una herramienta externa y de un servicio que
+puede cambiar sin aviso. Se mitiga con cache, validacion, mensajes claros y
+fallback a local/demo. yt-dlp no se empaqueta. El riesgo de terminos de servicio
+queda documentado y asumido.

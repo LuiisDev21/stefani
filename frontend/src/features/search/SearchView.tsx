@@ -94,12 +94,12 @@ export function SearchView() {
           ) : result && result.query ? (
             <EmptyState
               title="Sin resultados"
-              description={`No encontre nada para "${result.query}". Prueba con otra grafia o activa el catalogo de YouTube Music en Ajustes.`}
+              description={`No encontre nada para "${result.query}". Prueba con otra grafia o revisa la musica en linea en Ajustes.`}
             />
           ) : (
             <EmptyState
               title="Busca en tu musica"
-              description="Escribe el titulo o el artista. Si activas el catalogo experimental en Ajustes, la busqueda tambien consulta YouTube Music (solo metadatos)."
+              description="Escribe el titulo o el artista. La busqueda consulta tu biblioteca y el catalogo de YouTube Music si la musica en linea esta activa."
             />
           )}
         </div>

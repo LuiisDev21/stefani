@@ -77,7 +77,7 @@ export function SettingsView() {
     <div className="min-h-0">
       <TopBar
         title="Ajustes"
-        subtitle="Conexion de IA, catalogo experimental y datos locales"
+        subtitle="Conexion de IA, musica en linea y datos locales"
         actions={
           <Button size="sm" variant="primary" onClick={() => void submit()}>
             Guardar cambios
@@ -219,8 +219,8 @@ export function SettingsView() {
 
         <section>
           <SectionTitle
-            title="Catalogo experimental"
-            hint="Busqueda de metadatos mediante el cliente web publico de YouTube Music. No descarga audio ni evade restricciones."
+            title="Musica en linea"
+            hint="Catalogo y reproduccion de YouTube Music mediante yt-dlp, una herramienta local y no oficial. Uso personal: puede dejar de funcionar si YouTube cambia, y va contra sus terminos de servicio."
           />
           <label className="flex items-start gap-3 rounded-[9px] border border-line bg-elevated/40 px-3 py-3">
             <input
@@ -230,13 +230,34 @@ export function SettingsView() {
               className="mt-0.5 h-4 w-4 accent-[#85afff]"
             />
             <span>
-              <span className="block text-[12.5px] text-ink">Activar busqueda en YouTube Music</span>
+              <span className="block text-[12.5px] text-ink">Buscar y reproducir desde YouTube Music</span>
               <span className="mt-0.5 block text-[11.5px] leading-relaxed text-muted">
-                Los resultados se pueden guardar y ordenar, pero no se reproducen dentro de la app: se abren en el
-                reproductor oficial.
+                La busqueda usa el catalogo publico. El audio se resuelve en esta maquina y se reproduce dentro de la
+                app, con letra, velocidad y repeticion.
               </span>
             </span>
           </label>
+
+          <div className="mt-3 flex items-start gap-2 rounded-[9px] border border-line/70 px-3 py-2.5">
+            <span
+              className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full"
+              style={{ background: info?.online.available ? "#85afff" : "#ff9b9b" }}
+              aria-hidden
+            />
+            <p className="text-[11.5px] leading-relaxed text-muted">
+              {info?.online.available ? (
+                <>
+                  Reproductor en linea listo. <span className="text-ink">{info.online.detail}</span>
+                </>
+              ) : (
+                <>
+                  <span className="text-ink">Falta yt-dlp.</span> Instalalo con{" "}
+                  <span className="font-mono text-[11px] text-ink">winget install yt-dlp</span> y reinicia STEFANI. Sin
+                  el, las pistas de YouTube Music se pueden guardar y abrir en la app oficial, pero no suenan aqui.
+                </>
+              )}
+            </p>
+          </div>
         </section>
 
         <div className="signal-line my-6" />

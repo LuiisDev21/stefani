@@ -73,7 +73,7 @@ export function PlayerBar() {
                 <p className="truncate text-[13px] font-medium text-ink">{current.title}</p>
                 <p className="truncate text-[11.5px] text-muted">
                   {current.artist || "Artista desconocido"}
-                  {!current.playable ? " · solo catalogo" : ""}
+                  {!current.playable ? " · sin reproduccion" : ""}
                 </p>
               </div>
               <IconButton

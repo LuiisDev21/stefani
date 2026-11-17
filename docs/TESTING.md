@@ -4,7 +4,7 @@
 
 | Capa | Comando | Resultado |
 |---|---|---|
-| Go (dominio, storage, proveedores, letras, IA, demo, medios, app) | `go test ./internal/... -count=1` | **59 pruebas, 8 paquetes, todas pasan** |
+| Go (dominio, storage, proveedores, letras, IA, demo, medios, app) | `go test ./internal/... -count=1` | **79 pruebas, 8 paquetes, todas pasan** |
 | Go estatico | `go vet ./...` | sin hallazgos |
 | Frontend unitario | `pnpm test` (Vitest + Testing Library) | **29 pruebas, 3 archivos, todas pasan** |
 | Tipos | `pnpm exec tsc --noEmit` | sin errores, `strict: true` |
@@ -27,7 +27,12 @@
   palabras por la mitad.
 - **media**: servidor loopback con token (403 sin token), 200 con cuerpo completo,
   206 con `Range` y `Content-Range`, 404 para pista desconocida, rechazo de
-  traversal, tipos MIME correctos.
+  traversal, tipos MIME correctos. Proxy remoto: reenvia `Range` al origen,
+  conserva `Content-Range`/`Content-Type`, responde 404 ante hosts ajenos,
+  `http` plano o fuente vacia.
+- **music (yt-dlp)**: deteccion ausente, URL valida y cache (una sola invocacion),
+  identificadores invalidos sin ejecutar el binario, host no permitido, rechazo
+  de `http`, error con detalle saneado (sin URLs) y expiracion de la cache.
 - **music**: parseo de metadatos de InnerTube, refresco de credenciales una sola
   vez, `parseClock`, importacion de archivos no soportados, catalogo sin
   `Playable`.
@@ -60,7 +65,8 @@ Contra `go run -tags server,production .`, con `STEFANI_HOME` y
 `STEFANI_KEYRING_SERVICE` propios:
 
 1. carga la biblioteca de demostracion desde el servicio Go y no registra errores
-   de consola;
+   de consola (la suite corre con `STEFANI_DISABLE_ONLINE=1`: determinista y sin
+   red);
 2. navega las siete secciones y mantiene `aria-current`;
 3. muestra letra con tiempos por palabra, IPA, aproximacion y traduccion;
 4. crea una playlist que sobrevive a un `reload`;

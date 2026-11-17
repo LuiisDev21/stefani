@@ -13,12 +13,23 @@ import (
 
 // InfoDTO is the About panel and window metadata.
 type InfoDTO struct {
-	Name       string `json:"name"`
-	Tagline    string `json:"tagline"`
-	Version    string `json:"version"`
-	Identifier string `json:"identifier"`
-	DBPath     string `json:"dbPath"`
-	Schema     int    `json:"schema"`
+	Name       string    `json:"name"`
+	Tagline    string    `json:"tagline"`
+	Version    string    `json:"version"`
+	Identifier string    `json:"identifier"`
+	DBPath     string    `json:"dbPath"`
+	Schema     int       `json:"schema"`
+	Online     OnlineDTO `json:"online"`
+}
+
+// OnlineDTO reports whether online playback can work here: the feature flag
+// plus a detected yt-dlp. The UI explains the requirement instead of offering a
+// button that cannot work.
+type OnlineDTO struct {
+	Enabled   bool   `json:"enabled"`
+	Available bool   `json:"available"`
+	Version   string `json:"version"`
+	Detail    string `json:"detail"`
 }
 
 // TrackDTO is a track as the UI sees it.
@@ -271,7 +282,7 @@ type WindowStateInput struct {
 
 // ---- converters ----
 
-func toTrackDTO(t domain.Track, inLibrary, favorite bool) TrackDTO {
+func toTrackDTO(t domain.Track, inLibrary, favorite, playable bool) TrackDTO {
 	dto := TrackDTO{
 		ID:          t.ID,
 		Provider:    string(t.Provider),
@@ -281,11 +292,11 @@ func toTrackDTO(t domain.Track, inLibrary, favorite bool) TrackDTO {
 		DurationMs:  t.DurationMs,
 		ArtworkURL:  t.ArtworkURL,
 		ExternalURL: t.ExternalURL,
-		Playable:    t.Playable(),
+		Playable:    playable,
 		InLibrary:   inLibrary,
 		Favorite:    favorite,
 	}
-	if t.Playable() {
+	if playable {
 		dto.AudioURL = "/media/" + url.PathEscape(t.ID)
 	}
 	return dto

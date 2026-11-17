@@ -29,12 +29,18 @@ las limitaciones conocidas, en la seccion final de este documento.
 - **Traduccion y vocabulario**: traduccion contextual al espanol y consulta de
   palabras con el proveedor de IA configurado.
 - **Repeticion de versos (A-B)** y control de velocidad 0.75x / 1x / 1.25x.
+- **Musica en linea**: busqueda en el catalogo de YouTube Music y reproduccion
+  dentro de la app mediante `yt-dlp`, con las mismas letras, velocidad y A-B que
+  el audio local. Es una integracion no oficial, activa por defecto y se apaga
+  sola si la herramienta no esta instalada.
 - **Biblioteca, favoritos, playlists locales e importacion de playlists de
-  YouTube Music (solo metadatos)**.
+  YouTube Music**.
 - **Progreso persistente**: tiempo de practica, versos trabajados, vocabulario.
 - **Modo inmersivo** de pantalla completa para estudiar la letra.
 - **Ajustes de IA**: cualquier endpoint compatible con OpenAI Chat Completions;
   la clave se guarda en el almacen de credenciales del sistema.
+- **Ajustes de musica en linea**: interruptor propio y estado real del
+  reproductor (`yt-dlp` detectado o ausente) con la instruccion de instalacion.
 
 ## Requisitos
 
@@ -44,6 +50,9 @@ las limitaciones conocidas, en la seccion final de este documento.
 - Windows: WebView2 (viene con Windows 11) y un compilador C para cgo
 - Linux: `libgtk-3-dev` y `libwebkit2gtk-4.1-dev`
 - macOS: Xcode Command Line Tools
+- Opcional, para musica en linea: `yt-dlp` en el PATH
+  (`winget install yt-dlp`). No se empaqueta con la aplicacion: sin el, la app
+  funciona igual con audio local y demo.
 
 ## Desarrollo
 
