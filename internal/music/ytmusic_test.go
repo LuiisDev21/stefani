@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/LuiisDev21/stefani/internal/domain"
 )
@@ -163,5 +164,77 @@ func TestYTMusicRefreshesCredentialsOnce(t *testing.T) {
 	}
 	if *calls < 3 {
 		t.Fatalf("expected a page fetch plus two search calls, got %d calls", *calls)
+	}
+}
+
+func TestYTMusicSearchAsksForTheSongsTab(t *testing.T) {
+	// The general search tab returns podcasts and reaction videos; the song
+	// request must carry the Songs filter parameter.
+	var gotParams string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/":
+			w.Write([]byte(`<script>{"INNERTUBE_API_KEY":"k","INNERTUBE_CLIENT_VERSION":"1"}</script>`))
+		case "/search":
+			var body map[string]any
+			json.NewDecoder(r.Body).Decode(&body)
+			params, _ := body["params"].(string)
+			if gotParams == "" {
+				gotParams = params
+			}
+			w.Write([]byte(`{"contents":{}}`))
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	t.Cleanup(srv.Close)
+
+	client := NewYTMusic(10*time.Second).WithBaseURL(srv.URL+"/search", srv.URL+"/")
+	if _, err := client.Search(context.Background(), "slow", 5); err != nil {
+		t.Fatalf("search: %v", err)
+	}
+	if gotParams != "EgWKAQIIAWoKEAkQBRAKEAMQBA==" {
+		t.Fatalf("params = %q, want the Songs filter", gotParams)
+	}
+}
+
+func TestCollectSongItemsKeepsTheRicherRowForTheSameVideo(t *testing.T) {
+	// The top-result card and the list row share a videoId; only the row has
+	// the artist and the duration the lyric matcher needs.
+	column := func(parts ...string) map[string]any {
+		runs := make([]any, 0, len(parts))
+		for _, part := range parts {
+			runs = append(runs, map[string]any{"text": part})
+		}
+		return map[string]any{
+			"musicResponsiveListItemFlexColumnRenderer": map[string]any{
+				"text": map[string]any{"runs": runs},
+			},
+		}
+	}
+	node := func(videoID string, columns ...map[string]any) map[string]any {
+		cols := make([]any, 0, len(columns))
+		for _, c := range columns {
+			cols = append(cols, c)
+		}
+		return map[string]any{
+			"playlistItemData": map[string]any{"videoId": videoID},
+			"flexColumns":      cols,
+		}
+	}
+
+	root := map[string]any{"contents": []any{
+		node("vid1", column("Never Gonna Give You Up"), column("Song")),
+		node("vid1", column("Never Gonna Give You Up"), column("Rick Astley • Whenever You Need Somebody • 3:34"), column("2B plays")),
+	}}
+	items := collectSongItems(root)
+	if len(items) != 1 {
+		t.Fatalf("items = %d, want one entry per video", len(items))
+	}
+	if items[0].artist != "Rick Astley" {
+		t.Fatalf("artist = %q, want the row with metadata", items[0].artist)
+	}
+	if items[0].durationMs != 214000 {
+		t.Fatalf("duration = %d, want 214000", items[0].durationMs)
 	}
 }

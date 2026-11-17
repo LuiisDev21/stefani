@@ -58,7 +58,7 @@ func (a *App) Lyrics(trackID string, refresh bool) (dto LyricsDTO, err error) {
 	track, err := a.db.Track(ctx, trackID)
 	if err != nil {
 		a.log.Warn("lyrics: track not found", "track", trackID, "error", err)
-		return LyricsDTO{}, fmt.Errorf("no encontre esa cancion")
+		return LyricsDTO{}, fmt.Errorf("no encontré esa canción")
 	}
 	doc, err := a.lyrics.ForTrack(ctx, track, refresh)
 	if err != nil {
@@ -84,7 +84,7 @@ func (a *App) Lyrics(trackID string, refresh bool) (dto LyricsDTO, err error) {
 
 func noLyricsNotice(track domain.Track) string {
 	if track.Provider == domain.ProviderYTMusic {
-		return "No encontre letra para esta cancion en LRCLIB. Puedes importar un archivo .lrc para estudiarla."
+		return "No encontré letra para esta canción en LRCLIB. Puedes importar un archivo .lrc para estudiarla."
 	}
 	return "No hay letra disponible para esta cancion. Puedes importar un archivo .lrc."
 }
@@ -105,7 +105,7 @@ func (a *App) ImportLyricsFile(trackID string) (LyricsDTO, error) {
 	defer cancel()
 	track, err := a.db.Track(ctx, trackID)
 	if err != nil {
-		return LyricsDTO{}, fmt.Errorf("no encontre esa cancion")
+		return LyricsDTO{}, fmt.Errorf("no encontré esa canción")
 	}
 	if _, err := a.lyrics.ImportFile(ctx, track, path); err != nil {
 		return LyricsDTO{}, err

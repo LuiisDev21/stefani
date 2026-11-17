@@ -135,7 +135,16 @@ func (y *YTMusic) Search(ctx context.Context, query string, limit int) ([]domain
 
 var errStaleCredentials = errors.New("stale innertube credentials")
 
+// songsFilter is the InnerTube search parameter for the "Songs" tab. Without
+// it the endpoint answers with the general tab: podcasts, interviews and
+// reaction videos whose titles have nothing to do with the song being searched.
+const songsFilter = "EgWKAQIIAWoKEAkQBRAKEAMQBA=="
+
 func (y *YTMusic) searchOnce(ctx context.Context, query string) ([]domain.SearchResult, error) {
+	return y.searchRequest(ctx, query, true)
+}
+
+func (y *YTMusic) searchRequest(ctx context.Context, query string, filtered bool) ([]domain.SearchResult, error) {
 	apiKey, version, err := y.credentials(ctx)
 	if err != nil {
 		return nil, err
@@ -151,6 +160,9 @@ func (y *YTMusic) searchOnce(ctx context.Context, query string) ([]domain.Search
 			"user": map[string]any{"lockedSafetyMode": false},
 		},
 		"query": query,
+	}
+	if filtered {
+		payload["params"] = songsFilter
 	}
 	body, err := json.Marshal(payload)
 	if err != nil {
@@ -188,10 +200,20 @@ func (y *YTMusic) searchOnce(ctx context.Context, query string) ([]domain.Search
 		return nil, fmt.Errorf("%w: search response is not JSON: %v", ErrUnavailable, err)
 	}
 	items := collectSongItems(doc)
+	if len(items) == 0 && filtered {
+		// If YouTube retires the filter value, fall back to the general tab
+		// instead of returning "no results".
+		return y.searchRequest(ctx, query, false)
+	}
 	out := make([]domain.SearchResult, 0, len(items))
 	seen := make(map[string]bool, len(items))
 	for _, item := range items {
 		if item.videoID == "" || seen[item.videoID] {
+			continue
+		}
+		// A row with neither artist nor duration is a card, not a song: without
+		// metadata it cannot be matched to lyrics or told apart from a cover.
+		if item.artist == "" && item.durationMs == 0 {
 			continue
 		}
 		seen[item.videoID] = true
@@ -228,6 +250,7 @@ type songItem struct {
 // those changes.
 func collectSongItems(node any) []songItem {
 	var out []songItem
+	index := map[string]int{}
 	var walk func(n any)
 	walk = func(n any) {
 		switch v := n.(type) {
@@ -235,7 +258,17 @@ func collectSongItems(node any) []songItem {
 			if pid, ok := v["playlistItemData"].(map[string]any); ok {
 				if videoID, ok := pid["videoId"].(string); ok && videoID != "" {
 					if item, ok := parseSongNode(v, videoID); ok {
-						out = append(out, item)
+						// The same video appears twice: as the "top result" card,
+						// which carries no metadata, and as a row in the list,
+						// which carries artist and duration. Keep the richer one.
+						if pos, seen := index[videoID]; seen {
+							if itemScore(item) > itemScore(out[pos]) {
+								out[pos] = item
+							}
+						} else {
+							index[videoID] = len(out)
+							out = append(out, item)
+						}
 					}
 				}
 			}
@@ -276,7 +309,47 @@ func parseSongNode(node map[string]any, videoID string) (songItem, bool) {
 	}
 	item.artwork = largestThumbnail(node)
 	item.durationMs = durationFromNode(node)
+	if item.durationMs == 0 {
+		// In the Songs tab the duration travels inside the metadata column
+		// ("Rick Astley • Album • 3:34"), not in a fixed column.
+		for _, value := range texts {
+			if ms := lastClock(value); ms > 0 {
+				item.durationMs = ms
+				break
+			}
+		}
+	}
 	return item, true
+}
+
+// itemScore ranks two renderers of the same video: artist and duration are the
+// fields the matcher needs, so the row that has them wins.
+func itemScore(it songItem) int {
+	score := 0
+	if it.artist != "" {
+		score += 2
+	}
+	if it.album != "" {
+		score++
+	}
+	if it.durationMs > 0 {
+		score += 2
+	}
+	if it.artwork != "" {
+		score++
+	}
+	return score
+}
+
+// lastClock reads the trailing "m:ss" segment of a bullet-separated subtitle.
+func lastClock(value string) int64 {
+	parts := strings.Split(value, " • ")
+	for i := len(parts) - 1; i >= 0; i-- {
+		if ms, ok := parseClock(parts[i]); ok {
+			return ms
+		}
+	}
+	return 0
 }
 
 // runsText concatenates every run of text inside a renderer node.

@@ -125,3 +125,22 @@ red y sin IA. Es la fuente por defecto de la columna de pronunciacion.
 Limitaciones honestas: el diccionario da la pronunciacion de cada palabra, no la
 prosodia de la frase ni las reducciones del canto; y el acento britanico no esta
 cubierto (el diccionario es americano).
+
+## LRCLIB (letras)
+
+Cliente: `internal/lyrics/lrclib.go`. Sin clave, con `User-Agent` que identifica
+la app (`STEFANI/0.1`), y una consulta por pista con caché en SQLite.
+
+Contrato que respeta el cliente, segun `https://lrclib.net/docs`:
+
+| Regla | Por que |
+|---|---|
+| `/api/get` exige `track_name` **y** `artist_name` | sin artista el framework responde `400` en texto plano, no JSON |
+| `duration` es la senal fuerte del match (±2 s) | con duracion 0 se omite; el ranking usa titulo y artista |
+| Busqueda con `/api/v2/search` y luego `/api/get/{id}` | v2 devuelve 20 resumenes sin letra; descargar solo el elegido ahorra ancho de banda |
+| `400` = "sin letra", no caida | una query invalida no debe romper el panel ni impedir el fallback |
+| `429`/`503` con `Retry-After` | se reintenta hasta 3 veces con jitter; si la espera supera 5 s se informa al usuario |
+| Titulos y artistas limpios antes de consultar | YouTube añade "(Official Video)" y " - Topic", que rompen el match |
+
+Si v2 falla, el cliente cae a `/api/search` (v1), que trae la letra en la misma
+respuesta.

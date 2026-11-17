@@ -165,3 +165,19 @@ spec):
 
 **Consecuencia**: el tema oscuro unico (ADR-008) queda superado para la
 interfaz; el modo inmersivo sigue siendo oscuro por funcion, no por defecto.
+
+## ADR-016: cliente LRCLIB sobre v2 y tolerancia al 400
+
+**Contexto**: con la busqueda de YouTube devolviendo filas sin artista, el panel
+mostraba «LRCLIB answered 400». El endpoint `/api/get` exige `track_name` y
+`artist_name`; sin artista el framework responde 400 en texto plano y el error
+abortaba el fallback.
+
+**Decision**: el flujo pasa a `/api/v2/search` (solo metadatos y flags) y
+`/api/get/{id}` para el registro elegido. El 400 se trata como "sin letra", el
+cliente limpia titulos y artistas de YouTube antes de consultar, y respeta
+`Retry-After` en 429/503 con un maximo de 5 s para no bloquear la UI.
+
+**Consecuencia**: una consulta ya no descarga 20 letras completas, el panel cae
+a "sin letra" en vez de error, y un catalogo con metadatos incompletos se
+corrige al primer resultado (la fila local se refresca).

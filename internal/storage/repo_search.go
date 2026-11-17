@@ -16,10 +16,14 @@ func (d *DB) SearchTracks(ctx context.Context, query, provider string, limit int
 		limit = 25
 	}
 	like := "%" + strings.ToLower(strings.TrimSpace(query)) + "%"
+	// Online rows cached before the search asked for the Songs tab can be
+	// podcasts or reaction videos: no artist, no duration. They are kept (the
+	// lyric may be cached) but never offered as a search result again.
 	rows, err := d.sql.QueryContext(ctx, `
 		SELECT `+trackColumns+` FROM tracks
 		WHERE (LOWER(title) LIKE ? OR LOWER(artist) LIKE ? OR LOWER(album) LIKE ?)
 		  AND (? = '' OR provider = ?)
+		  AND NOT (provider = 'ytmusic' AND COALESCE(artist, '') = '' AND COALESCE(duration_ms, 0) = 0)
 		ORDER BY title COLLATE NOCASE LIMIT ?`, like, like, like, provider, provider, limit)
 	if err != nil {
 		return nil, fmt.Errorf("search tracks: %w", err)

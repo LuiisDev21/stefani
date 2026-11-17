@@ -61,10 +61,10 @@ func (s *Service) ForTrack(ctx context.Context, track domain.Track, refresh bool
 	if remote == nil {
 		return domain.Lyrics{}, ErrNoLyrics
 	}
-	raw := remote.SyncedLyrics
+	raw := stringValue(remote.SyncedLyrics)
 	source := "lrclib:synced"
 	if raw == "" {
-		raw = remote.PlainLyrics
+		raw = stringValue(remote.PlainLyrics)
 		source = "lrclib:plain"
 	}
 	parsed := Parse(raw)

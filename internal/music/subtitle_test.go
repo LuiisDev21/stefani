@@ -25,3 +25,17 @@ func TestCleanSubtitleKeepsArtistsAndSplitsBullets(t *testing.T) {
 		}
 	}
 }
+
+func TestLastClockReadsTheTrailingDuration(t *testing.T) {
+	// The Songs tab puts the duration at the end of the metadata column.
+	cases := map[string]int64{
+		"Rick Astley • Whenever You Need Somebody • 3:34": 214000,
+		"Rick Astley":     0,
+		"Album • 1:02:03": 3723000,
+	}
+	for raw, want := range cases {
+		if got := lastClock(raw); got != want {
+			t.Fatalf("lastClock(%q) = %d, want %d", raw, got, want)
+		}
+	}
+}

@@ -319,7 +319,7 @@ func (a *App) Track(id string) (TrackDTO, error) {
 	defer cancel()
 	track, err := a.db.Track(ctx, id)
 	if err != nil {
-		return TrackDTO{}, fmt.Errorf("no encontre esa cancion")
+		return TrackDTO{}, fmt.Errorf("no encontré esa canción")
 	}
 	fav, inLibrary := a.db.IsFavorite(ctx, id)
 	return a.trackDTO(track, inLibrary, fav), nil
@@ -342,7 +342,32 @@ func (a *App) Search(query string, limit int) (SearchDTO, error) {
 		fav, inLibrary := false, false
 		if existing, err := a.db.TrackByProviderID(ctx, r.Track.Provider, r.Track.ProviderID); err == nil {
 			fav, inLibrary = a.db.IsFavorite(ctx, existing.ID)
-			r.Track = existing
+			// The catalog just told us the artist and duration. Rows written by
+			// an older build can be empty, so metadata is taken from the fresh
+			// result and only the local identity is kept.
+			fresh := r.Track
+			fresh.ID = existing.ID
+			fresh.AudioPath = existing.AudioPath
+			if fresh.Artist == "" {
+				fresh.Artist = existing.Artist
+			}
+			if fresh.Album == "" {
+				fresh.Album = existing.Album
+			}
+			if fresh.DurationMs == 0 {
+				fresh.DurationMs = existing.DurationMs
+			}
+			if fresh.ArtworkURL == "" {
+				fresh.ArtworkURL = existing.ArtworkURL
+			}
+			if fresh.ExternalURL == "" {
+				fresh.ExternalURL = existing.ExternalURL
+			}
+			r.Track = fresh
+			// Refresh the stored row so the next search starts from good data.
+			if _, err := a.db.SaveTrack(ctx, fresh); err != nil {
+				a.log.Warn("refresh cached track failed", "track", fresh.ProviderID, "error", err)
+			}
 		} else if r.Track.Provider != domain.ProviderDemo {
 			// Remote results need a local row: that is what gives the player a
 			// stable id, the library state and a media URL.
@@ -464,7 +489,7 @@ func (a *App) SetInLibrary(trackID string, save bool) (TrackDTO, error) {
 	}
 	track, err := a.db.Track(ctx, trackID)
 	if err != nil {
-		return TrackDTO{}, fmt.Errorf("no encontre esa cancion")
+		return TrackDTO{}, fmt.Errorf("no encontré esa canción")
 	}
 	fav, inLibrary := a.db.IsFavorite(ctx, trackID)
 	return a.trackDTO(track, inLibrary, fav), nil
@@ -479,7 +504,7 @@ func (a *App) SetFavorite(trackID string, favorite bool) (TrackDTO, error) {
 	}
 	track, err := a.db.Track(ctx, trackID)
 	if err != nil {
-		return TrackDTO{}, fmt.Errorf("no encontre esa cancion")
+		return TrackDTO{}, fmt.Errorf("no encontré esa canción")
 	}
 	fav, inLibrary := a.db.IsFavorite(ctx, trackID)
 	return a.trackDTO(track, inLibrary, fav), nil

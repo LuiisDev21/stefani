@@ -563,3 +563,41 @@ func TestGeneratedAnnotationsWinOverLocal(t *testing.T) {
 		t.Fatalf("generated annotation should win: %+v", ann)
 	}
 }
+
+func TestSearchRefreshesStaleOnlineMetadata(t *testing.T) {
+	// A row written before the Songs filter existed has no artist and no
+	// duration. The catalog now returns both, and the result must use the fresh
+	// values instead of the stale row.
+	cfg := config.Default()
+	catalog := &fakeCatalog{results: []domain.SearchResult{{
+		Track: domain.Track{
+			Provider:    domain.ProviderYTMusic,
+			ProviderID:  "dQw4w9WgXcQ",
+			Title:       "Never Gonna Give You Up",
+			Artist:      "Rick Astley",
+			DurationMs:  214000,
+			ExternalURL: "https://music.youtube.com/watch?v=dQw4w9WgXcQ",
+		},
+		ProviderName: "YouTube Music",
+	}}}
+	env := newTestEnvFull(t, cfg, nil, catalog)
+
+	stale := domain.Track{
+		Provider: domain.ProviderYTMusic, ProviderID: "dQw4w9WgXcQ",
+		Title: "Never Gonna Give You Up",
+	}
+	if _, err := env.db.SaveTrack(context.Background(), stale); err != nil {
+		t.Fatalf("save stale: %v", err)
+	}
+
+	dto, err := env.app.Search("never gonna", 10)
+	if err != nil {
+		t.Fatalf("search: %v", err)
+	}
+	if len(dto.Items) != 1 {
+		t.Fatalf("items = %d, want 1", len(dto.Items))
+	}
+	if dto.Items[0].Artist != "Rick Astley" || dto.Items[0].DurationMs != 214000 {
+		t.Fatalf("item = %+v, want the fresh catalog metadata", dto.Items[0])
+	}
+}

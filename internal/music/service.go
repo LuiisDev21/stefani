@@ -74,21 +74,31 @@ func (s *Service) Search(ctx context.Context, query string, limit int) ([]domain
 		s.log.Warn("youtube music search failed", "error", err)
 		return local, nil
 	}
-	// A remote track that is already stored also matches the local query, so
-	// the combined list must be deduplicated by provider identity.
+	// The catalog order is the relevance signal YouTube provides: remote hits
+	// come first, and stored tracks fill the rest. Rows cached by earlier
+	// searches must not push the actual song off the first screen.
 	seen := make(map[string]bool, len(local)+len(remote))
-	for _, r := range local {
-		seen[providerKey(r.Track.Provider, r.Track.ProviderID)] = true
-	}
+	combined := make([]domain.SearchResult, 0, len(local)+len(remote))
 	for _, r := range remote {
 		key := providerKey(r.Track.Provider, r.Track.ProviderID)
 		if seen[key] {
 			continue
 		}
 		seen[key] = true
-		local = append(local, r)
+		combined = append(combined, r)
 	}
-	return local, nil
+	for _, r := range local {
+		key := providerKey(r.Track.Provider, r.Track.ProviderID)
+		if seen[key] {
+			continue
+		}
+		seen[key] = true
+		combined = append(combined, r)
+	}
+	if len(combined) > limit {
+		combined = combined[:limit]
+	}
+	return combined, nil
 }
 
 // providerKey identifies a track across providers.
@@ -118,7 +128,7 @@ func playNote(t domain.Track) string {
 		return ""
 	}
 	if t.Provider == domain.ProviderYTMusic {
-		return "Catalogo solamente: activa la reproduccion en linea para escucharla"
+		return "Catálogo solamente: activa la reproducción en línea para escucharla"
 	}
 	return "Sin audio local asociado"
 }

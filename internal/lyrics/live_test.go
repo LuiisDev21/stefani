@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -59,3 +60,21 @@ type noopLogger struct{}
 
 func (noopLogger) Info(msg string, args ...any) {}
 func (noopLogger) Warn(msg string, args ...any) {}
+
+func TestLiveLookupWithoutArtist(t *testing.T) {
+	if os.Getenv("STEFANI_LIVE") != "1" {
+		t.Skip("set STEFANI_LIVE=1 to hit the real LRCLIB API")
+	}
+	lib := NewLRCLIB(20 * time.Second)
+	// The exact shape a YouTube Music row produces: decorated title, no artist.
+	doc, err := lib.Lookup(context.Background(), domain.Track{
+		Title: "Never Gonna Give You Up (Official Video)",
+	})
+	if err != nil {
+		t.Fatalf("lookup: %v", err)
+	}
+	if doc == nil || stringValue(doc.SyncedLyrics) == "" {
+		t.Fatalf("no synced lyrics: %+v", doc)
+	}
+	t.Logf("%s — %s (%d lines)", doc.TrackName, doc.ArtistName, strings.Count(stringValue(doc.SyncedLyrics), "\n")+1)
+}

@@ -4,12 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/LuiisDev21/stefani/internal/domain"
 	"github.com/LuiisDev21/stefani/internal/storage"
@@ -130,8 +132,53 @@ func fakeLRCLIB(t *testing.T, searchResults []map[string]any) (*LRCLIB, *int) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/get", func(w http.ResponseWriter, r *http.Request) {
 		hits++
+		if r.URL.Query().Get("artist_name") == "" {
+			// LRCLIB's actual behaviour: /get without artist_name is a 400.
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(`{"message":"Failed to deserialize query string: missing field artist_name"}`))
+			return
+		}
 		w.WriteHeader(http.StatusNotFound)
 		w.Write([]byte(`{}`))
+	})
+	// /get/{id}: the v2 flow fetches only the chosen record.
+	mux.HandleFunc("/get/", func(w http.ResponseWriter, r *http.Request) {
+		hits++
+		id := strings.TrimPrefix(r.URL.Path, "/get/")
+		for _, item := range searchResults {
+			if fmt.Sprint(item["id"]) == id {
+				json.NewEncoder(w).Encode(item)
+				return
+			}
+		}
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte(`{"message":"Failed to find specified track","name":"TrackNotFound","statusCode":404}`))
+	})
+	// /v2/search: summaries only, exactly as the beta endpoint documents.
+	mux.HandleFunc("/v2/search", func(w http.ResponseWriter, r *http.Request) {
+		hits++
+		out := make([]map[string]any, 0, len(searchResults))
+		for _, item := range searchResults {
+			if r.URL.Query().Get("track_name") != "" {
+				title, _ := item["trackName"].(string)
+				if !strings.Contains(strings.ToLower(title), strings.ToLower(r.URL.Query().Get("track_name"))) {
+					continue
+				}
+			}
+			summary := map[string]any{
+				"id":              item["id"],
+				"trackName":       item["trackName"],
+				"artistName":      item["artistName"],
+				"duration":        item["duration"],
+				"instrumental":    item["instrumental"],
+				"hasWordSync":     item["hasWordSync"],
+				"hasSyncedLyrics": item["syncedLyrics"] != nil,
+				"hasPlainLyrics":  item["plainLyrics"] != nil,
+				"hasLyricsfile":   true,
+			}
+			out = append(out, summary)
+		}
+		json.NewEncoder(w).Encode(out)
 	})
 	mux.HandleFunc("/search", func(w http.ResponseWriter, r *http.Request) {
 		hits++
@@ -162,8 +209,9 @@ func TestLookupFallsBackToSearchAndMatchesDuration(t *testing.T) {
 	if got.ID != 2 {
 		t.Fatalf("picked record %d, want the duration match (2)", got.ID)
 	}
-	if *hits != 2 {
-		t.Fatalf("expected an exact attempt plus a search, got %d requests", *hits)
+	// One exact attempt, one v2 search and one fetch of the chosen record.
+	if *hits != 3 {
+		t.Fatalf("expected exact attempt + v2 search + record fetch, got %d requests", *hits)
 	}
 }
 
@@ -268,5 +316,149 @@ func TestLookupIgnoresCandidatesWithoutLyrics(t *testing.T) {
 		Title: "Never Gonna Give You Up", Artist: "Rick Astley",
 	}); !errors.Is(err, ErrNoLyrics) {
 		t.Fatalf("error = %v, want ErrNoLyrics", err)
+	}
+}
+
+func TestLookupWithoutArtistDoesNotFail(t *testing.T) {
+	// A YouTube row can arrive with no artist at all. /api/get would answer 400,
+	// and the lyric must still be found through the search fallback.
+	lib, _ := fakeLRCLIB(t, []map[string]any{
+		{
+			"id": 1.0, "trackName": "Never Gonna Give You Up", "artistName": "Rick Astley",
+			"duration": 213.0, "syncedLyrics": "[00:01.00]We're no strangers to love",
+		},
+	})
+	got, err := lib.Lookup(context.Background(), domain.Track{Title: "Never Gonna Give You Up"})
+	if err != nil {
+		t.Fatalf("Lookup: %v", err)
+	}
+	if got == nil || got.ArtistName != "Rick Astley" {
+		t.Fatalf("document = %+v, want the Rick Astley record", got)
+	}
+}
+
+func TestSearchBadRequestIsNoLyrics(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusBadRequest)
+	}))
+	t.Cleanup(srv.Close)
+	lib := NewLRCLIB(0).WithBaseURL(srv.URL)
+	if _, err := lib.Lookup(context.Background(), domain.Track{Title: "x"}); !errors.Is(err, ErrNoLyrics) {
+		t.Fatalf("error = %v, want ErrNoLyrics: a rejected query is not an outage", err)
+	}
+}
+
+func TestCleanTitleRemovesVideoDecoration(t *testing.T) {
+	cases := map[string]string{
+		"Never Gonna Give You Up (Official Video)": "Never Gonna Give You Up",
+		"Song [Lyrics]":          "Song",
+		"Song (Remastered 2011)": "Song",
+		"Song (Live at Wembley)": "Song",
+		"Live and Let Die":       "Live and Let Die",
+		"Song (feat. Someone)":   "Song (feat. Someone)",
+	}
+	for raw, want := range cases {
+		if got := cleanTitle(raw); got != want {
+			t.Fatalf("cleanTitle(%q) = %q, want %q", raw, got, want)
+		}
+	}
+}
+
+func TestCleanArtistRemovesTopicSuffix(t *testing.T) {
+	cases := map[string]string{
+		"Rick Astley - Topic": "Rick Astley",
+		"  Queen  ":           "Queen",
+		"":                    "",
+	}
+	for raw, want := range cases {
+		if got := cleanArtist(raw); got != want {
+			t.Fatalf("cleanArtist(%q) = %q, want %q", raw, got, want)
+		}
+	}
+}
+
+func TestLookupUsesV2SearchAndFetchesOnlyTheChosenRecord(t *testing.T) {
+	var requested []string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		requested = append(requested, r.URL.Path)
+		switch {
+		case r.URL.Path == "/v2/search":
+			w.Write([]byte(`[{"id":7,"trackName":"Slow Morning","artistName":"Stefani Studio","duration":210,"hasSyncedLyrics":true}]`))
+		case r.URL.Path == "/get/7":
+			w.Write([]byte(`{"id":7,"trackName":"Slow Morning","artistName":"Stefani Studio","duration":210,"syncedLyrics":"[00:01.00]one line"}`))
+		case r.URL.Path == "/get":
+			w.WriteHeader(http.StatusBadRequest)
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	t.Cleanup(srv.Close)
+
+	lib := NewLRCLIB(5 * time.Second).WithBaseURL(srv.URL)
+	doc, err := lib.Lookup(context.Background(), domain.Track{Title: "Slow Morning (Official Video)", DurationMs: 210_000})
+	if err != nil {
+		t.Fatalf("lookup: %v", err)
+	}
+	if doc == nil || doc.ID != 7 {
+		t.Fatalf("document = %+v, want record 7", doc)
+	}
+	if len(requested) < 2 || requested[0] != "/v2/search" || requested[1] != "/get/7" {
+		t.Fatalf("request path = %v, want v2 search then the chosen record", requested)
+	}
+}
+
+func TestRateLimitHonorsRetryAfter(t *testing.T) {
+	attempts := 0
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		attempts++
+		if attempts == 1 {
+			w.Header().Set("Retry-After", "1")
+			w.WriteHeader(http.StatusTooManyRequests)
+			return
+		}
+		w.Write([]byte(`[]`))
+	}))
+	t.Cleanup(srv.Close)
+
+	lib := NewLRCLIB(5 * time.Second).WithBaseURL(srv.URL)
+	var slept []time.Duration
+	lib.sleep = func(d time.Duration) { slept = append(slept, d) }
+
+	if _, err := lib.SearchSummaries(context.Background(), "x", "", ""); err != nil {
+		t.Fatalf("search: %v", err)
+	}
+	if attempts != 2 {
+		t.Fatalf("attempts = %d, want 2 after the Retry-After retry", attempts)
+	}
+	if len(slept) != 1 || slept[0] < time.Second {
+		t.Fatalf("waited %v, want at least the Retry-After second", slept)
+	}
+}
+
+func TestLongRetryAfterFailsWithoutBlocking(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Retry-After", "120")
+		w.WriteHeader(http.StatusServiceUnavailable)
+	}))
+	t.Cleanup(srv.Close)
+
+	lib := NewLRCLIB(5 * time.Second).WithBaseURL(srv.URL)
+	lib.sleep = func(time.Duration) { t.Fatal("must not block for a two-minute Retry-After") }
+	_, err := lib.SearchSummaries(context.Background(), "x", "", "")
+	if err == nil || !strings.Contains(err.Error(), "retry in") {
+		t.Fatalf("error = %v, want a readable rate-limit message", err)
+	}
+}
+
+func TestParseRetryAfterAcceptsSecondsAndDates(t *testing.T) {
+	now := time.Date(2026, 1, 1, 12, 0, 0, 0, time.UTC)
+	if got := parseRetryAfter("3", now); got != 3*time.Second {
+		t.Fatalf("seconds = %v", got)
+	}
+	if got := parseRetryAfter(now.Add(5*time.Second).Format(http.TimeFormat), now); got != 5*time.Second {
+		t.Fatalf("date = %v", got)
+	}
+	if got := parseRetryAfter("", now); got != 0 {
+		t.Fatalf("empty = %v", got)
 	}
 }
