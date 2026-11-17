@@ -13,6 +13,7 @@ import type {
   StoredCounts,
   Track,
   Word,
+  TestOutcome,
 } from "../lib/types";
 import { usePlayer } from "./playerStore";
 
@@ -104,7 +105,7 @@ interface AppState {
   deleteWord: (id: string) => Promise<void>;
 
   saveSettings: (input: Parameters<typeof api.saveSettings>[0]) => Promise<boolean>;
-  testLLM: () => Promise<void>;
+  testLLM: () => Promise<TestOutcome | null>;
   clearKey: () => Promise<void>;
 
   refreshLibrary: () => Promise<void>;
@@ -444,8 +445,10 @@ export const useApp = create<AppState>((set, get) => ({
     try {
       const outcome = await api.testLLM();
       get().notify(outcome.ok ? "ok" : "error", `${outcome.message} (${outcome.latencyMs} ms)`);
+      return outcome;
     } catch (error) {
       get().notify("error", errorMessage(error));
+      return null;
     }
   },
 

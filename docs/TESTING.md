@@ -4,7 +4,7 @@
 
 | Capa | Comando | Resultado |
 |---|---|---|
-| Go (dominio, storage, proveedores, letras, IA, demo, medios, app) | `go test ./internal/... -count=1` | **106 pruebas, 8 paquetes, todas pasan** |
+| Go (dominio, storage, proveedores, letras, IA, demo, medios, app) | `go test ./internal/... -count=1` | **115 pruebas, 8 paquetes, todas pasan** |
 | Go estatico | `go vet ./...` | sin hallazgos |
 | Frontend unitario | `pnpm test` (Vitest + Testing Library) | **29 pruebas, 3 archivos, todas pasan** |
 | Tipos | `pnpm exec tsc --noEmit` | sin errores, `strict: true` |

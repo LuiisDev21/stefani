@@ -144,3 +144,45 @@ Contrato que respeta el cliente, segun `https://lrclib.net/docs`:
 
 Si v2 falla, el cliente cae a `/api/search` (v1), que trae la letra en la misma
 respuesta.
+
+## IA (presets, descubrimiento y OpenCode Go)
+
+La app habla **OpenAI Chat Completions** contra cualquier endpoint compatible.
+Los presets viven en `frontend/src/lib/llmPresets.ts` y solo rellenan URL y
+modelo: la lista de modelos que se muestra sale de `GET {baseURL}/models` al
+pulsar **Probar y buscar modelos**, nunca de una tabla fija.
+
+| Preset | Base URL | Modelo inicial |
+|---|---|---|
+| OpenCode Go | `https://opencode.ai/inference/go/openai/v1` | `deepseek-v4.1-flash` |
+| DeepSeek | `https://api.deepseek.com/v1` | `deepseek-flash` |
+| OpenAI | `https://api.openai.com/v1` | `gpt-6-luna` |
+| Google Gemini | `https://generativelanguage.googleapis.com/v1beta/openai/` | `gemini-3.8-flash` |
+| xAI | `https://api.x.ai/v1` | `grok-4.7` |
+| Groq | `https://api.groq.com/openai/v1` | `llama-3.3-70b-versatile` |
+| Mistral | `https://api.mistral.ai/v1` | `mistral-large-latest` |
+| OpenRouter | `https://openrouter.ai/api/v1` | `deepseek/deepseek-chat` |
+| Ollama / LM Studio | `http://127.0.0.1:11434/v1` · `:1234/v1` | local |
+
+### OpenCode Go
+
+- Plan de suscripcion (Go $10/mes). Se usa con una API key del console.
+- El endpoint compatible es `https://opencode.ai/inference/go/openai/v1`; el
+  catalogo incluye GLM, Kimi, Qwen, MiMo, MiniMax, DeepSeek, Grok, GPT, Gemini y
+  Claude traducidos al formato OpenAI.
+- **Requiere `x-opencode-session`**: un id estable por conversacion para enrutado
+  y cache de prompt. La app lo compone como `<client-id>-<scope>` (`ping`,
+  `annotate`), donde `client-id` es un valor aleatorio persistido en
+  `client-id` junto a la configuracion (no viaja en config.json).
+- Tambien exige un **User-Agent propio**; el cliente envia
+  `STEFANI/0.1 (desktop study app; +https://github.com/LuiisDev21/stefani)` en
+  todas las peticiones, incluidas `/models`.
+- Los modelos DeepSeek de Go necesitan region **Global** activada en
+  Settings › Privacy del workspace.
+
+### Descubrimiento de modelos
+
+`ai.Client.Models` hace `GET /models`, valida el sobre `{data:[{id}]}` y
+devuelve los ids ordenados y sin duplicados. Si el proveedor responde 404/405
+no se considera un fallo: `TestLLM` devuelve `modelsNotice` y la UI mantiene el
+campo editable. Un 401 si es un error de credenciales.

@@ -361,6 +361,7 @@ func (a *App) Settings() (SettingsDTO, error) {
 	cfg := a.currentConfig()
 	dto := SettingsDTO{
 		LLM: LLMSettingsDTO{
+			Provider:       cfg.LLM.Provider,
 			BaseURL:        cfg.LLM.BaseURL,
 			Model:          cfg.LLM.Model,
 			Temperature:    cfg.LLM.Temperature,
@@ -388,6 +389,8 @@ func (a *App) SaveSettings(in SettingsInput) (SettingsDTO, error) {
 	}
 	cfg := a.currentConfig()
 	cfg.LLM = config.LLM{
+		Provider:       strings.TrimSpace(in.LLM.Provider),
+		ClientID:       cfg.LLM.ClientID,
 		BaseURL:        strings.TrimRight(strings.TrimSpace(in.LLM.BaseURL), "/"),
 		Model:          strings.TrimSpace(in.LLM.Model),
 		Temperature:    in.LLM.Temperature,
@@ -467,7 +470,9 @@ func (a *App) TestLLM() (TestOutcome, error) {
 		time.Duration(cfg.LLM.TimeoutSeconds)*time.Second)
 	defer cancel()
 	start := time.Now()
-	if err := a.ai.Ping(ctx, ai.Config{
+	clientCfg := ai.Config{
+		Provider:    cfg.LLM.Provider,
+		SessionID:   ai.SessionID(cfg.LLM.ClientID, "ping"),
 		BaseURL:     cfg.LLM.BaseURL,
 		Model:       cfg.LLM.Model,
 		APIKey:      key,
@@ -475,10 +480,28 @@ func (a *App) TestLLM() (TestOutcome, error) {
 		Timeout:     time.Duration(cfg.LLM.TimeoutSeconds) * time.Second,
 		MaxRetries:  0,
 		JSONMode:    cfg.LLM.JSONMode,
-	}); err != nil {
+	}
+	if err := a.ai.Ping(ctx, clientCfg); err != nil {
 		return TestOutcome{OK: false, Message: annotateMessage(err), LatencyMs: time.Since(start).Milliseconds()}, nil
 	}
-	return TestOutcome{OK: true, Message: "Conexion correcta", LatencyMs: time.Since(start).Milliseconds()}, nil
+	outcome := TestOutcome{OK: true, Message: "Conexión correcta", LatencyMs: time.Since(start).Milliseconds()}
+	// Discovery runs inside the same action: pressing "test" is what loads the
+	// real model list, so nothing is hardcoded in the client.
+	models, err := a.ai.Models(ctx, clientCfg)
+	switch {
+	case err == nil:
+		outcome.Models = models
+		if len(models) == 0 {
+			outcome.ModelsNotice = "El proveedor respondio sin modelos."
+		}
+	case errors.Is(err, ai.ErrNoModelList):
+		outcome.ModelsNotice = "Este proveedor no publica /models; escribe el modelo a mano."
+	case errors.Is(err, ai.ErrAuth):
+		outcome.ModelsNotice = "La clave no permite listar modelos."
+	default:
+		outcome.ModelsNotice = "No pude listar los modelos: " + annotateMessage(err)
+	}
+	return outcome, nil
 }
 
 // ClearLLMKey deletes the stored API key.

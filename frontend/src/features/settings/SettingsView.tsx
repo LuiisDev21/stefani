@@ -7,8 +7,10 @@ import { Button } from "../../components/ui/Button";
 import { SectionTitle } from "../../components/ui/SectionTitle";
 import { Switch } from "../../components/ui/Switch";
 import { TopBar } from "../../components/layout/TopBar";
+import { LLM_PRESETS, presetByID, type LLMPreset } from "../../lib/llmPresets";
 
 const llmSchema = z.object({
+  provider: z.string().optional().default(""),
   baseUrl: z
     .string()
     .trim()
@@ -41,6 +43,12 @@ export function SettingsView() {
   const [form, setForm] = useState<Settings | null>(settings);
   const [apiKey, setApiKey] = useState("");
   const [errors, setErrors] = useState<string[]>([]);
+  // Models discovered by the provider on /models. Empty until the connection is
+  // tested, so the selector always reflects the API instead of a hardcoded list.
+  const [models, setModels] = useState<string[]>([]);
+  const [modelsNotice, setModelsNotice] = useState("");
+  const [testing, setTesting] = useState(false);
+  const [testResult, setTestResult] = useState<{ ok: boolean; message: string; latencyMs: number } | null>(null);
 
   useEffect(() => {
     setForm(settings);
@@ -58,11 +66,28 @@ export function SettingsView() {
     setForm({ ...form, llm: { ...form.llm, ...patch } });
   };
 
-  const submit = async () => {
+  const applyPreset = (preset: LLMPreset | undefined) => {
+    // The models belong to the previous endpoint: drop them with the change.
+    setModels([]);
+    setModelsNotice("");
+    setTestResult(null);
+    if (!preset) {
+      update({ provider: "" });
+      return;
+    }
+    // A preset fills a working endpoint and model; both stay editable.
+    update({ provider: preset.id, baseUrl: preset.baseUrl, model: preset.model });
+  };
+
+  const activePreset =
+    presetByID(form.llm.provider) ??
+    LLM_PRESETS.find((preset) => preset.baseUrl.replace(/\/$/, "") === form.llm.baseUrl.replace(/\/$/, ""));
+
+  const persist = async () => {
     const parsed = llmSchema.safeParse(form.llm);
     if (!parsed.success) {
       setErrors(parsed.error.issues.map((issue) => issue.message));
-      return;
+      return false;
     }
     setErrors([]);
     const ok = await saveSettings({
@@ -72,13 +97,37 @@ export function SettingsView() {
       apiKey,
     });
     if (ok) setApiKey("");
+    return ok;
+  };
+
+  const submit = async () => {
+    await persist();
+  };
+
+  const runTest = async () => {
+    setTesting(true);
+    try {
+      // The backend tests what is saved, so an edited endpoint is saved first:
+      // "probar" must test what the screen shows, not the previous value.
+      const saved = await persist();
+      if (!saved) return;
+      const outcome = await testLLM();
+      if (!outcome) return;
+      setTestResult({ ok: outcome.ok, message: outcome.message, latencyMs: outcome.latencyMs });
+      if (outcome.ok) {
+        setModels(outcome.models ?? []);
+        setModelsNotice(outcome.modelsNotice ?? "");
+      }
+    } finally {
+      setTesting(false);
+    }
   };
 
   return (
     <div className="min-h-0">
       <TopBar
         title="Ajustes"
-        subtitle="Conexión de IA, música en linea y datos locales"
+        subtitle="Conexión de IA, música en línea y datos locales"
         actions={
           <Button size="sm" variant="primary" onClick={() => void submit()}>
             Guardar cambios
@@ -90,9 +139,56 @@ export function SettingsView() {
         <section>
           <SectionTitle
             title="Proveedor de IA"
-            hint="Cualquier API compatible con OpenAI Chat Completions. La clave se guarda en el almacen de credenciales del sistema, nunca en la base de datos."
+            hint="Elige un proveedor para rellenar el endpoint, prueba la conexión para descubrir sus modelos y guarda. La clave vive en el almacén de credenciales del sistema."
           />
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="mt-4">
+            <p className="text-[12px] font-semibold text-ink">Proveedor</p>
+            <div className="mt-2 flex flex-wrap gap-2" role="group" aria-label="Presets de proveedor de IA">
+              {LLM_PRESETS.map((preset) => {
+                const active = activePreset?.id === preset.id;
+                return (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() => applyPreset(preset)}
+                    className={
+                      active
+                        ? "rounded-full border border-accent bg-accent/6 px-3.5 py-1.5 text-[13px] text-accent"
+                        : "rounded-full border border-line px-3.5 py-1.5 text-[13px] text-muted transition-colors hover:bg-elevated hover:text-ink"
+                    }
+                  >
+                    {preset.name}
+                  </button>
+                );
+              })}
+              <button
+                type="button"
+                aria-pressed={!activePreset}
+                onClick={() => applyPreset(undefined)}
+                className={
+                  !activePreset
+                    ? "rounded-full border border-accent bg-accent/6 px-3.5 py-1.5 text-[13px] text-accent"
+                    : "rounded-full border border-line px-3.5 py-1.5 text-[13px] text-muted transition-colors hover:bg-elevated hover:text-ink"
+                }
+              >
+                Personalizado
+              </button>
+            </div>
+            {activePreset ? (
+              <div className="mt-3 rounded-[14px] bg-elevated px-4 py-3">
+                <p className="text-[13px] leading-[1.43] text-muted">{activePreset.note}</p>
+                <p className="mt-1.5 text-[12px] text-faint">{activePreset.docsUrl}</p>
+                {activePreset.session ? (
+                  <p className="mt-1.5 text-[12px] text-accent">
+                    Sesión automática: cada petición lleva x-opencode-session con un id estable.
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
+          </div>
+
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <Field label="URL base">
               <input
                 value={form.llm.baseUrl}
@@ -103,13 +199,46 @@ export function SettingsView() {
               />
             </Field>
             <Field label="Modelo">
-              <input
-                value={form.llm.model}
-                onChange={(event) => update({ model: event.target.value })}
-                placeholder="gpt-4o-mini"
-                className={inputClass}
-                spellCheck={false}
-              />
+              {models.length > 0 ? (
+                <select
+                  value={form.llm.model}
+                  onChange={(event) => update({ model: event.target.value })}
+                  className={inputClass}
+                  aria-label="Modelo disponible en el proveedor"
+                >
+                  <option value="" disabled>
+                    Elegir modelo…
+                  </option>
+                  {Array.from(new Set([...(form.llm.model ? [form.llm.model] : []), ...models])).map((model) => (
+                    <option key={model} value={model}>
+                      {model === form.llm.model ? `${model} (actual)` : model}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  list="llm-model-options"
+                  value={form.llm.model}
+                  onChange={(event) => update({ model: event.target.value })}
+                  placeholder={activePreset?.model ?? "nombre-del-modelo"}
+                  className={inputClass}
+                  spellCheck={false}
+                />
+              )}
+              <datalist id="llm-model-options">
+                {(activePreset?.models ?? []).map((model) => (
+                  <option key={model} value={model} />
+                ))}
+              </datalist>
+              {models.length > 0 ? (
+                <p className="mt-1 text-[11px] text-faint">{models.length} modelos descubiertos. Elige uno y pulsa Guardar cambios.</p>
+              ) : modelsNotice ? (
+                <p className="mt-1 text-[11px] text-faint">{modelsNotice}</p>
+              ) : (
+                <p className="mt-1 text-[11px] text-faint">
+                  Prueba la conexión para cargar los modelos reales del proveedor.
+                </p>
+              )}
             </Field>
             <Field label="Temperatura">
               <input
@@ -196,8 +325,14 @@ export function SettingsView() {
           ) : null}
 
           <div className="mt-4 flex flex-wrap items-center gap-2">
-            <Button size="sm" variant="subtle" icon={<PlugZap className="h-3.5 w-3.5" />} onClick={() => void testLLM()}>
-              Probar conexión
+            <Button
+              size="sm"
+              variant="subtle"
+              icon={<PlugZap className="h-3.5 w-3.5" />}
+              disabled={testing}
+              onClick={() => void runTest()}
+            >
+              {testing ? "Probando…" : "Probar y buscar modelos"}
             </Button>
             <Button
               size="sm"
@@ -212,6 +347,20 @@ export function SettingsView() {
               {form.hasKey ? "Hay una clave guardada en el sistema" : "Sin clave guardada"}
             </span>
           </div>
+          {testResult ? (
+            <p
+              role="status"
+              className={
+                testResult.ok
+                  ? "mt-2 flex items-center gap-2 text-[13px] text-ink"
+                  : "mt-2 flex items-center gap-2 text-[13px] text-danger"
+              }
+            >
+              <CheckCircle2 className={testResult.ok ? "h-4 w-4 text-accent" : "h-4 w-4"} aria-hidden="true" />
+              {testResult.message}
+              <span className="text-[12px] text-faint tnum">{testResult.latencyMs} ms</span>
+            </p>
+          ) : null}
         </section>
 
         <div className="hairline my-8" />

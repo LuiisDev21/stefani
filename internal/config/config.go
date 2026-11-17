@@ -3,11 +3,14 @@
 package config
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 // Defaults are the values a fresh install starts with.
@@ -22,6 +25,12 @@ const (
 // LLM describes the OpenAI-compatible endpoint used for phonetics, translation
 // and vocabulary. Any provider that speaks the same protocol works.
 type LLM struct {
+	// Provider is the preset id (openai, deepseek, opencode-go, ...). It is what
+	// tells the client whether the endpoint needs a session header.
+	Provider string `json:"provider"`
+	// ClientID is stable per installation, filled on load from a side file. It
+	// never round-trips through config.json or the settings DTO.
+	ClientID       string  `json:"-"`
 	BaseURL        string  `json:"baseUrl"`
 	Model          string  `json:"model"`
 	Temperature    float64 `json:"temperature"`
@@ -91,7 +100,15 @@ func (s *Store) Path() string { return s.path }
 
 // Load reads the file, filling defaults for missing fields. A missing file is
 // not an error: first run starts from defaults.
+// Load reads the config file and attaches the installation id that session
+// headers need. The id lives in a side file so it survives config edits.
 func (s *Store) Load() (Config, error) {
+	cfg, err := s.load()
+	cfg.LLM.ClientID = s.ensureClientID()
+	return cfg, err
+}
+
+func (s *Store) load() (Config, error) {
 	cfg := Default()
 	data, err := os.ReadFile(s.path)
 	if os.IsNotExist(err) {
@@ -207,4 +224,29 @@ func ResolvePathsAt(root string) (Paths, error) {
 		}
 	}
 	return p, nil
+}
+
+// ensureClientID returns a stable, random installation id. It is used as the
+// prefix of the x-opencode-session header so routing and prompt caching stay
+// stable across restarts without exposing anything personal.
+func (s *Store) ensureClientID() string {
+	path := filepath.Join(filepath.Dir(s.path), "client-id")
+	if data, err := os.ReadFile(path); err == nil {
+		if id := strings.TrimSpace(string(data)); id != "" {
+			return id
+		}
+	}
+	id := randomID(16)
+	if err := os.MkdirAll(filepath.Dir(path), 0o700); err == nil {
+		_ = os.WriteFile(path, []byte(id+"\n"), 0o600)
+	}
+	return id
+}
+
+func randomID(bytes int) string {
+	buf := make([]byte, bytes)
+	if _, err := rand.Read(buf); err != nil {
+		return fmt.Sprintf("stefani-%d", time.Now().UnixNano())
+	}
+	return hex.EncodeToString(buf)
 }

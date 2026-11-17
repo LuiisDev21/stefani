@@ -151,6 +151,9 @@ type HistoryDTO struct {
 
 // LLMSettingsDTO is the editable AI configuration (never the key).
 type LLMSettingsDTO struct {
+	// Provider is the preset id; it decides whether the client sends the
+	// OpenCode session header.
+	Provider       string  `json:"provider"`
 	BaseURL        string  `json:"baseUrl"`
 	Model          string  `json:"model"`
 	Temperature    float64 `json:"temperature"`
@@ -237,6 +240,12 @@ type TestOutcome struct {
 	OK        bool   `json:"ok"`
 	Message   string `json:"message"`
 	LatencyMs int64  `json:"latencyMs"`
+	// Models is the list the provider publishes on /models, sorted. Empty when
+	// the endpoint does not offer one.
+	Models []string `json:"models"`
+	// ModelsNotice explains why the list is empty, without turning a healthy
+	// connection into an error.
+	ModelsNotice string `json:"modelsNotice"`
 }
 
 // WordRequest asks for a dictionary lookup.

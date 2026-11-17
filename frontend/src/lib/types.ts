@@ -130,6 +130,7 @@ export interface HistoryEntry {
 }
 
 export interface LLMSettings {
+  provider: string;
   baseUrl: string;
   model: string;
   temperature: number;
@@ -207,6 +208,8 @@ export interface TestOutcome {
   ok: boolean;
   message: string;
   latencyMs: number;
+  models?: string[];
+  modelsNotice?: string;
 }
 
 export interface WordRequest {

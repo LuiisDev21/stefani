@@ -12,6 +12,7 @@ import (
 	"io"
 	"math/rand"
 	"net/http"
+	"sort"
 	"strings"
 	"time"
 )
@@ -22,10 +23,25 @@ var (
 	ErrRateLimited = errors.New("the AI provider rate limited the request")
 	ErrNoEndpoint  = errors.New("no AI endpoint is configured")
 	ErrEmptyAnswer = errors.New("the AI provider returned an empty answer")
+	// ErrNoModelList means the endpoint is healthy but does not publish /models.
+	ErrNoModelList = errors.New("the AI provider does not expose a model list")
 )
+
+// Provider identifiers that change transport behaviour.
+const ProviderOpenCodeGo = "opencode-go"
+
+// userAgent identifies the app. OpenCode Go requires clients to name
+// themselves instead of presenting as a generic HTTP library.
+const userAgent = "STEFANI/0.1 (desktop study app; +https://github.com/LuiisDev21/stefani)"
 
 // Config is everything needed to call a compatible endpoint.
 type Config struct {
+	// Provider selects transport quirks; empty means a plain OpenAI-compatible
+	// endpoint.
+	Provider string
+	// SessionID is sent as x-opencode-session for OpenCode Go routing and
+	// prompt caching. Stable per conversation.
+	SessionID   string
 	BaseURL     string
 	Model       string
 	APIKey      string
@@ -126,6 +142,12 @@ func (c *Client) ChatJSON(ctx context.Context, cfg Config, system, user string) 
 		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("Authorization", "Bearer "+cfg.APIKey)
 		req.Header.Set("Accept", "application/json")
+		req.Header.Set("User-Agent", userAgent)
+		if cfg.Provider == ProviderOpenCodeGo && cfg.SessionID != "" {
+			// Documented requirement: one stable id per conversation, so requests
+			// from the same session share routing and prompt cache.
+			req.Header.Set("x-opencode-session", cfg.SessionID)
+		}
 
 		resp, err := c.http.Do(req)
 		if err != nil {
@@ -161,6 +183,67 @@ func (c *Client) ChatJSON(ctx context.Context, cfg Config, system, user string) 
 		lastErr = ErrEmptyAnswer
 	}
 	return nil, lastErr
+}
+
+// Models lists the model ids the endpoint publishes. It is what turns the
+// settings screen from a hardcoded list into a real selector.
+func (c *Client) Models(ctx context.Context, cfg Config) ([]string, error) {
+	if strings.TrimSpace(cfg.BaseURL) == "" {
+		return nil, ErrNoEndpoint
+	}
+	endpoint := strings.TrimRight(cfg.BaseURL, "/") + "/models"
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
+	if err != nil {
+		return nil, fmt.Errorf("build models request: %w", err)
+	}
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("User-Agent", userAgent)
+	if cfg.APIKey != "" {
+		req.Header.Set("Authorization", "Bearer "+cfg.APIKey)
+	}
+	if cfg.Provider == ProviderOpenCodeGo && cfg.SessionID != "" {
+		req.Header.Set("x-opencode-session", cfg.SessionID)
+	}
+
+	resp, err := c.http.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("models request failed: %w", err)
+	}
+	defer resp.Body.Close()
+	raw, readErr := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
+	if readErr != nil {
+		return nil, fmt.Errorf("read models response: %w", readErr)
+	}
+	switch {
+	case resp.StatusCode == http.StatusOK:
+	case resp.StatusCode == http.StatusUnauthorized || resp.StatusCode == http.StatusForbidden:
+		return nil, fmt.Errorf("%w (status %d)", ErrAuth, resp.StatusCode)
+	case resp.StatusCode == http.StatusNotFound || resp.StatusCode == http.StatusMethodNotAllowed:
+		return nil, ErrNoModelList
+	default:
+		return nil, fmt.Errorf("models endpoint answered %d: %s", resp.StatusCode, snippet(raw))
+	}
+
+	var payload struct {
+		Data []struct {
+			ID string `json:"id"`
+		} `json:"data"`
+	}
+	if err := json.Unmarshal(raw, &payload); err != nil {
+		return nil, fmt.Errorf("models response is not JSON: %w", err)
+	}
+	seen := make(map[string]bool, len(payload.Data))
+	out := make([]string, 0, len(payload.Data))
+	for _, model := range payload.Data {
+		id := strings.TrimSpace(model.ID)
+		if id == "" || seen[id] {
+			continue
+		}
+		seen[id] = true
+		out = append(out, id)
+	}
+	sort.Strings(out)
+	return out, nil
 }
 
 // Ping verifies connectivity and credentials with a tiny request.

@@ -181,3 +181,20 @@ cliente limpia titulos y artistas de YouTube antes de consultar, y respeta
 **Consecuencia**: una consulta ya no descarga 20 letras completas, el panel cae
 a "sin letra" en vez de error, y un catalogo con metadatos incompletos se
 corrige al primer resultado (la fila local se refresca).
+
+## ADR-017: presets de IA con descubrimiento real y OpenCode Go
+
+**Contexto**: ajustar la IA exigia conocer de memoria la URL y el modelo de cada
+proveedor, y OpenCode Go no funcionaba porque su API pide un header de sesion
+(`x-opencode-session`) y un User-Agent identificable.
+
+**Decision**: los presets son datos del frontend que rellenan endpoint y modelo;
+la lista definitiva de modelos se pide al proveedor con `GET /models` dentro de
+la accion "Probar y buscar modelos" (guardar + ping + descubrimiento). El
+backend gana `ai.Client.Models`, `LLM.Provider` y un `client-id` de instalacion
+persistido aparte; el cliente envia `x-opencode-session` solo para
+`opencode-go` y siempre manda su User-Agent.
+
+**Consecuencia**: no hay modelos hardcodeados en la UI (los presets son solo un
+punto de partida editable), un proveedor sin `/models` sigue siendo usable, y el
+session id sobrevive a cambios de configuracion sin exponerse en config.json.

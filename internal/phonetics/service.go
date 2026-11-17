@@ -252,6 +252,8 @@ func (s *Service) ResetCache(ctx context.Context, trackID string) error {
 
 func aiConfig(llm config.LLM, key string) ai.Config {
 	return ai.Config{
+		Provider:    llm.Provider,
+		SessionID:   ai.SessionID(llm.ClientID, "annotate"),
 		BaseURL:     llm.BaseURL,
 		Model:       llm.Model,
 		APIKey:      key,

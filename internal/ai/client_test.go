@@ -153,3 +153,124 @@ func TestBackoffIsBounded(t *testing.T) {
 		}
 	}
 }
+
+func TestOpenCodeGoSendsSessionAndUserAgent(t *testing.T) {
+	var gotSession, gotUA string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotSession = r.Header.Get("x-opencode-session")
+		gotUA = r.Header.Get("User-Agent")
+		w.Write([]byte(`{"choices":[{"message":{"content":"{\"ok\":true}"}}]}`))
+	}))
+	t.Cleanup(srv.Close)
+
+	client := New(5 * time.Second)
+	_, err := client.ChatJSON(context.Background(), Config{
+		Provider:  ProviderOpenCodeGo,
+		SessionID: "abc123-annotate",
+		BaseURL:   srv.URL,
+		Model:     "deepseek-v4.1-flash",
+		APIKey:    "test-key",
+	}, "system", "user")
+	if err != nil {
+		t.Fatalf("chat: %v", err)
+	}
+	if gotSession != "abc123-annotate" {
+		t.Fatalf("x-opencode-session = %q, want the stable session id", gotSession)
+	}
+	if !strings.Contains(gotUA, "STEFANI") {
+		t.Fatalf("user agent = %q, want the client to identify itself", gotUA)
+	}
+}
+
+func TestOtherProvidersDoNotSendSessionHeader(t *testing.T) {
+	var gotSession string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotSession = r.Header.Get("x-opencode-session")
+		w.Write([]byte(`{"choices":[{"message":{"content":"{\"ok\":true}"}}]}`))
+	}))
+	t.Cleanup(srv.Close)
+
+	client := New(5 * time.Second)
+	_, err := client.ChatJSON(context.Background(), Config{
+		Provider:  "deepseek",
+		SessionID: "abc123-annotate",
+		BaseURL:   srv.URL,
+		Model:     "deepseek-flash",
+		APIKey:    "test-key",
+	}, "system", "user")
+	if err != nil {
+		t.Fatalf("chat: %v", err)
+	}
+	if gotSession != "" {
+		t.Fatalf("x-opencode-session = %q, want it only for OpenCode Go", gotSession)
+	}
+}
+
+func TestSessionIDIsStableAndScoped(t *testing.T) {
+	a := SessionID("client", "annotate")
+	if a != "client-annotate" {
+		t.Fatalf("session = %q", a)
+	}
+	if a == SessionID("client", "ping") {
+		t.Fatal("scopes must differ so routing does not mix tasks")
+	}
+	if SessionID("", "") != "stefani-main" {
+		t.Fatalf("fallback = %q", SessionID("", ""))
+	}
+}
+
+func TestModelsListsAndSortsIDs(t *testing.T) {
+	var gotSession string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/models" {
+			http.NotFound(w, r)
+			return
+		}
+		gotSession = r.Header.Get("x-opencode-session")
+		w.Write([]byte(`{"data":[{"id":"zeta"},{"id":"alpha"},{"id":"alpha"},{"id":""}]}`))
+	}))
+	t.Cleanup(srv.Close)
+
+	client := New(5 * time.Second)
+	models, err := client.Models(context.Background(), Config{
+		Provider:  ProviderOpenCodeGo,
+		SessionID: "abc-ping",
+		BaseURL:   srv.URL,
+		APIKey:    "test-key",
+	})
+	if err != nil {
+		t.Fatalf("models: %v", err)
+	}
+	if len(models) != 2 || models[0] != "alpha" || models[1] != "zeta" {
+		t.Fatalf("models = %v, want sorted unique ids", models)
+	}
+	if gotSession != "abc-ping" {
+		t.Fatalf("session header = %q on /models, want it too", gotSession)
+	}
+}
+
+func TestModelsReportsMissingEndpoint(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	t.Cleanup(srv.Close)
+
+	client := New(5 * time.Second)
+	_, err := client.Models(context.Background(), Config{BaseURL: srv.URL, APIKey: "k"})
+	if !errors.Is(err, ErrNoModelList) {
+		t.Fatalf("error = %v, want ErrNoModelList", err)
+	}
+}
+
+func TestModelsRejectsBadKey(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusUnauthorized)
+	}))
+	t.Cleanup(srv.Close)
+
+	client := New(5 * time.Second)
+	_, err := client.Models(context.Background(), Config{BaseURL: srv.URL, APIKey: "bad"})
+	if !errors.Is(err, ErrAuth) {
+		t.Fatalf("error = %v, want ErrAuth", err)
+	}
+}

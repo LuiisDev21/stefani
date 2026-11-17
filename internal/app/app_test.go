@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"log/slog"
+	"net/http"
+	"net/http/httptest"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -599,5 +601,100 @@ func TestSearchRefreshesStaleOnlineMetadata(t *testing.T) {
 	}
 	if dto.Items[0].Artist != "Rick Astley" || dto.Items[0].DurationMs != 214000 {
 		t.Fatalf("item = %+v, want the fresh catalog metadata", dto.Items[0])
+	}
+}
+
+func TestTestLLMListsProviderModels(t *testing.T) {
+	var modelsHit int
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/chat/completions":
+			w.Write([]byte(`{"choices":[{"message":{"content":"{\"ok\":true}"}}]}`))
+		case "/models":
+			modelsHit++
+			if got := r.Header.Get("Authorization"); got != "Bearer test-key" {
+				t.Errorf("authorization on /models = %q", got)
+			}
+			w.Write([]byte(`{"data":[{"id":"model-b"},{"id":"model-a"}]}`))
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	t.Cleanup(srv.Close)
+
+	env := newTestEnv(t)
+	env.app.mu.Lock()
+	env.app.cfg.LLM.BaseURL = srv.URL
+	env.app.cfg.LLM.Model = "model-a"
+	env.app.cfg.LLM.Provider = "custom"
+	env.app.cfg.LLM.TimeoutSeconds = 3
+	env.app.mu.Unlock()
+	if err := env.secrets.Set(secret.KeyLLMAPIKey, "test-key"); err != nil {
+		t.Fatalf("secret: %v", err)
+	}
+
+	outcome, err := env.app.TestLLM()
+	if err != nil {
+		t.Fatalf("test llm: %v", err)
+	}
+	if !outcome.OK {
+		t.Fatalf("outcome = %+v, want a successful connection", outcome)
+	}
+	if modelsHit != 1 {
+		t.Fatalf("/models hit %d times, want 1", modelsHit)
+	}
+	if len(outcome.Models) != 2 || outcome.Models[0] != "model-a" || outcome.Models[1] != "model-b" {
+		t.Fatalf("models = %v, want the ids the API returned", outcome.Models)
+	}
+}
+
+func TestSaveSettingsKeepsOpenCodeSessionWiring(t *testing.T) {
+	var gotSession string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotSession = r.Header.Get("x-opencode-session")
+		switch r.URL.Path {
+		case "/chat/completions":
+			w.Write([]byte(`{"choices":[{"message":{"content":"{\"ok\":true}"}}]}`))
+		case "/models":
+			w.Write([]byte(`{"data":[{"id":"m"}]}`))
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	t.Cleanup(srv.Close)
+
+	env := newTestEnv(t)
+	// A client id normally comes from Store.Load; set it explicitly here.
+	env.app.mu.Lock()
+	env.app.cfg.LLM.ClientID = "client-abc"
+	env.app.mu.Unlock()
+	if err := env.secrets.Set(secret.KeyLLMAPIKey, "test-key"); err != nil {
+		t.Fatalf("secret: %v", err)
+	}
+
+	if _, err := env.app.SaveSettings(SettingsInput{
+		LLM: LLMSettingsDTO{
+			Provider:       "opencode-go",
+			BaseURL:        srv.URL,
+			Model:          "deepseek-v4.1-flash",
+			TimeoutSeconds: 5,
+			MaxRetries:     0,
+		},
+	}); err != nil {
+		t.Fatalf("save settings: %v", err)
+	}
+	if provider := env.app.currentConfig().LLM.Provider; provider != "opencode-go" {
+		t.Fatalf("provider = %q after save, want it persisted", provider)
+	}
+	if clientID := env.app.currentConfig().LLM.ClientID; clientID != "client-abc" {
+		t.Fatalf("client id = %q, want it preserved across saves", clientID)
+	}
+
+	outcome, err := env.app.TestLLM()
+	if err != nil || !outcome.OK {
+		t.Fatalf("test llm: %+v %v", outcome, err)
+	}
+	if gotSession != "client-abc-ping" {
+		t.Fatalf("x-opencode-session = %q, want the installation id plus the scope", gotSession)
 	}
 }
