@@ -4,12 +4,28 @@ import (
 	"context"
 	"encoding/binary"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/LuiisDev21/stefani/internal/domain"
 	"github.com/LuiisDev21/stefani/internal/media"
 	"github.com/LuiisDev21/stefani/internal/storage"
 )
+
+func TestBuildKeepsWordsWhole(t *testing.T) {
+	for _, song := range Songs {
+		built := build(song)
+		for _, line := range built.lyrics.Lines {
+			var parts []string
+			for _, w := range line.Words {
+				parts = append(parts, w.Text)
+			}
+			if got := strings.Join(parts, " "); got != line.Text {
+				t.Fatalf("%s: word timings do not rebuild the verse\n got: %q\nwant: %q", song.Slug, got, line.Text)
+			}
+		}
+	}
+}
 
 func TestBuildProducesMonotonicWordTimings(t *testing.T) {
 	for _, song := range Songs {

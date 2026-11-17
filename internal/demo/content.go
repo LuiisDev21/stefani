@@ -53,7 +53,7 @@ var Songs = []Song{
 		Lines: []Line{
 			{
 				Text:        "The city hums under my feet",
-				Words:       []Word{w("The", 0.5), w("ci", 0.5), w("ty", 0.5), w("hums", 1), w("un", 0.5), w("der", 0.5), w("my", 0.5), w("feet", 1.5)},
+				Words:       []Word{w("The", 0.5), w("city", 1), w("hums", 1), w("under", 1), w("my", 0.5), w("feet", 1.5)},
 				IPA:         "/ðə ˈsɪti hʌmz ˈʌndər maɪ fiːt/",
 				Approx:      "də síri jams ánder mai fiit",
 				Translation: "La ciudad zumba bajo mis pies",
@@ -61,14 +61,14 @@ var Songs = []Song{
 			},
 			{
 				Text:        "Neon rivers down the street",
-				Words:       []Word{w("Ne", 0.5), w("on", 0.5), w("ri", 0.5), w("vers", 1), w("down", 1), w("the", 0.5), w("street", 1.5)},
+				Words:       []Word{w("Neon", 0.8), w("rivers", 1.2), w("down", 1), w("the", 0.5), w("street", 1.5)},
 				IPA:         "/ˈniːɒn ˈrɪvərz daʊn ðə striːt/",
 				Approx:      "níion rívers dáun də striit",
 				Translation: "Ríos de neón calle abajo",
 			},
 			{
 				Text:        "I keep walking through the noise",
-				Words:       []Word{w("I", 0.5), w("keep", 1), w("wal", 0.5), w("king", 0.5), w("through", 1), w("the", 0.5), w("noise", 1.5)},
+				Words:       []Word{w("I", 0.5), w("keep", 1), w("walking", 1.2), w("through", 1), w("the", 0.5), w("noise", 1.5)},
 				IPA:         "/aɪ kiːp ˈwɔːkɪŋ θruː ðə nɔɪz/",
 				Approx:      "ái kiip uóokin zruu də nóis",
 				Translation: "Sigo caminando entre el ruido",
@@ -76,14 +76,14 @@ var Songs = []Song{
 			},
 			{
 				Text:        "Looking for a friendly voice",
-				Words:       []Word{w("Loo", 0.5), w("king", 0.5), w("for", 1), w("a", 0.5), w("friend", 1), w("ly", 0.5), w("voice", 1.5)},
+				Words:       []Word{w("Looking", 1.2), w("for", 0.8), w("a", 0.5), w("friendly", 1.2), w("voice", 1.5)},
 				IPA:         "/ˈlʊkɪŋ fɔːr ə ˈfrendli vɔɪs/",
 				Approx:      "lúkin foor a fréndli vóis",
 				Translation: "Buscando una voz amable",
 			},
 			{
 				Text:        "Every window holds a light",
-				Words:       []Word{w("Ev", 0.5), w("ery", 0.5), w("win", 0.5), w("dow", 0.5), w("holds", 1), w("a", 0.5), w("light", 1.5)},
+				Words:       []Word{w("Every", 0.8), w("window", 1.2), w("holds", 1), w("a", 0.5), w("light", 1.5)},
 				IPA:         "/ˈevri ˈwɪndoʊ hoʊldz ə laɪt/",
 				Approx:      "évri uíndou joulds a láit",
 				Translation: "Cada ventana guarda una luz",
@@ -91,7 +91,7 @@ var Songs = []Song{
 			},
 			{
 				Text:        "Someone's waking up tonight",
-				Words:       []Word{w("Some", 0.5), w("one's", 1), w("wa", 0.5), w("king", 0.5), w("up", 0.5), w("to", 0.5), w("night", 1.5)},
+				Words:       []Word{w("Someone's", 1.2), w("waking", 1), w("up", 0.5), w("tonight", 1.5)},
 				IPA:         "/ˈsʌmwʌnz ˈweɪkɪŋ ʌp təˈnaɪt/",
 				Approx:      "sám-uans uéikin ap tu-náit",
 				Translation: "Alguien despierta esta noche",
@@ -110,7 +110,7 @@ var Songs = []Song{
 		Lines: []Line{
 			{
 				Text:        "We folded words into a boat",
-				Words:       []Word{w("We", 0.5), w("fol", 0.5), w("ded", 0.5), w("words", 1), w("in", 0.5), w("to", 0.5), w("a", 0.5), w("boat", 1.5)},
+				Words:       []Word{w("We", 0.5), w("folded", 1.2), w("words", 1), w("into", 0.8), w("a", 0.5), w("boat", 1.5)},
 				IPA:         "/wiː ˈfoʊldɪd wɜːrdz ˈɪntuː ə boʊt/",
 				Approx:      "uii fóuldid uérds íntu a bóut",
 				Translation: "Doblamos palabras en un barco",
@@ -125,21 +125,21 @@ var Songs = []Song{
 			},
 			{
 				Text:        "Every wave can carry news",
-				Words:       []Word{w("Ev", 0.5), w("ery", 0.5), w("wave", 1), w("can", 0.5), w("car", 0.5), w("ry", 0.5), w("news", 1.5)},
+				Words:       []Word{w("Every", 0.8), w("wave", 1), w("can", 0.5), w("carry", 1.2), w("news", 1.5)},
 				IPA:         "/ˈevri weɪv kæn ˈkæri nuːz/",
 				Approx:      "évri uéiv can kári niuz",
 				Translation: "Cada ola puede llevar noticias",
 			},
 			{
 				Text:        "Every river has a muse",
-				Words:       []Word{w("Ev", 0.5), w("ery", 0.5), w("ri", 0.5), w("ver", 0.5), w("has", 0.5), w("a", 0.5), w("muse", 1.5)},
+				Words:       []Word{w("Every", 0.8), w("river", 1.2), w("has", 0.5), w("a", 0.5), w("muse", 1.5)},
 				IPA:         "/ˈevri ˈrɪvər hæz ə mjuːz/",
 				Approx:      "évri ríver jas a miuz",
 				Translation: "Cada río tiene una musa",
 			},
 			{
 				Text:        "If it sinks I'll build again",
-				Words:       []Word{w("If", 0.5), w("it", 0.5), w("sinks", 1), w("I'll", 0.5), w("build", 1), w("a", 0.5), w("gain", 1.5)},
+				Words:       []Word{w("If", 0.5), w("it", 0.5), w("sinks", 1), w("I'll", 0.5), w("build", 1), w("again", 1.5)},
 				IPA:         "/ɪf ɪt sɪŋks aɪl bɪld əˈɡen/",
 				Approx:      "if it sinks áil bild a-guén",
 				Translation: "Si se hunde, construiré otro",
@@ -147,7 +147,7 @@ var Songs = []Song{
 			},
 			{
 				Text:        "Paper remembers what I pen",
-				Words:       []Word{w("Pa", 0.5), w("per", 0.5), w("re", 0.5), w("mem", 1), w("bers", 0.5), w("what", 0.5), w("I", 0.5), w("pen", 1.0)},
+				Words:       []Word{w("Paper", 0.8), w("remembers", 1.5), w("what", 0.5), w("I", 0.5), w("pen", 1.2)},
 				IPA:         "/ˈpeɪpər rɪˈmembərz wʌt aɪ pen/",
 				Approx:      "péiper ri-mémbers uat ái pen",
 				Translation: "El papel recuerda lo que escribo",
@@ -166,7 +166,7 @@ var Songs = []Song{
 		Lines: []Line{
 			{
 				Text:        "Coffee steams against the glass",
-				Words:       []Word{w("Cof", 0.5), w("fee", 0.5), w("steams", 1), w("a", 0.5), w("gainst", 1), w("the", 0.5), w("glass", 1.5)},
+				Words:       []Word{w("Coffee", 0.8), w("steams", 1), w("against", 1.2), w("the", 0.5), w("glass", 1.5)},
 				IPA:         "/ˈkɔːfi stiːmz əˈɡenst ðə ɡlæs/",
 				Approx:      "kóofi stiims a-guénst də glas",
 				Translation: "El café humea contra el cristal",
@@ -174,21 +174,21 @@ var Songs = []Song{
 			},
 			{
 				Text:        "Minutes move but do not pass",
-				Words:       []Word{w("Min", 0.5), w("utes", 0.5), w("move", 1), w("but", 0.5), w("do", 0.5), w("not", 0.5), w("pass", 1.5)},
+				Words:       []Word{w("Minutes", 1), w("move", 1), w("but", 0.5), w("do", 0.5), w("not", 0.5), w("pass", 1.5)},
 				IPA:         "/ˈmɪnɪts muːv bʌt duː nɒt pæs/",
 				Approx:      "mínits muuv bat duu not pas",
 				Translation: "Los minutos avanzan pero no pasan",
 			},
 			{
 				Text:        "Sunlight leans across the floor",
-				Words:       []Word{w("Sun", 0.5), w("light", 0.5), w("leans", 1), w("a", 0.5), w("cross", 1), w("the", 0.5), w("floor", 1.5)},
+				Words:       []Word{w("Sunlight", 1), w("leans", 1), w("across", 1.2), w("the", 0.5), w("floor", 1.5)},
 				IPA:         "/ˈsʌnlaɪt liːnz əˈkrɔːs ðə flɔːr/",
 				Approx:      "sánlait liinz a-króos də floor",
 				Translation: "La luz del sol se inclina por el suelo",
 			},
 			{
 				Text:        "I don't need to rush anymore",
-				Words:       []Word{w("I", 0.5), w("don't", 0.5), w("need", 1), w("to", 0.5), w("rush", 1), w("any", 0.5), w("more", 1.5)},
+				Words:       []Word{w("I", 0.5), w("don't", 0.5), w("need", 1), w("to", 0.5), w("rush", 1), w("anymore", 1.5)},
 				IPA:         "/aɪ doʊnt niːd tə rʌʃ ˌeniˈmɔːr/",
 				Approx:      "ái dóunt niid tu rash e-ni-móor",
 				Translation: "Ya no necesito apurarme",
@@ -196,14 +196,14 @@ var Songs = []Song{
 			},
 			{
 				Text:        "Let the morning take its time",
-				Words:       []Word{w("Let", 0.5), w("the", 0.5), w("morn", 1), w("ing", 0.5), w("take", 1), w("its", 0.5), w("time", 1.5)},
+				Words:       []Word{w("Let", 0.5), w("the", 0.5), w("morning", 1.2), w("take", 1), w("its", 0.5), w("time", 1.5)},
 				IPA:         "/let ðə ˈmɔːrnɪŋ teɪk ɪts taɪm/",
 				Approx:      "let də mórnin téik its táim",
 				Translation: "Deja que la mañana tome su tiempo",
 			},
 			{
 				Text:        "Every quiet hour is mine",
-				Words:       []Word{w("Ev", 0.5), w("ery", 0.5), w("qui", 0.5), w("et", 0.5), w("hour", 1), w("is", 0.5), w("mine", 1.5)},
+				Words:       []Word{w("Every", 0.8), w("quiet", 1), w("hour", 1), w("is", 0.5), w("mine", 1.5)},
 				IPA:         "/ˈevri ˈkwaɪət ˈaʊər ɪz maɪn/",
 				Approx:      "évri kuáiet áuer is máin",
 				Translation: "Cada hora tranquila es mía",

@@ -4,7 +4,7 @@
 
 | Capa | Comando | Resultado |
 |---|---|---|
-| Go (dominio, storage, proveedores, letras, IA, demo, medios, app) | `go test ./internal/... -count=1` | **58 pruebas, 8 paquetes, todas pasan** |
+| Go (dominio, storage, proveedores, letras, IA, demo, medios, app) | `go test ./internal/... -count=1` | **59 pruebas, 8 paquetes, todas pasan** |
 | Go estatico | `go vet ./...` | sin hallazgos |
 | Frontend unitario | `pnpm test` (Vitest + Testing Library) | **29 pruebas, 3 archivos, todas pasan** |
 | Tipos | `pnpm exec tsc --noEmit` | sin errores, `strict: true` |
@@ -22,7 +22,9 @@
   versos sin cambios y descarta las de versos modificados.
 - **demo**: tiempos monotonos por palabra, WAV valido (RIFF, mono, 44100),
   `Ensure` idempotente y **regresion**: una anotacion generada por el usuario
-  sobrevive a un segundo arranque.
+  sobrevive a un segundo arranque. Ademas, un invariante: unir los tiempos de
+  palabra reconstruye el verso exacto, lo que impide que el karaoke parta
+  palabras por la mitad.
 - **media**: servidor loopback con token (403 sin token), 200 con cuerpo completo,
   206 con `Range` y `Content-Range`, 404 para pista desconocida, rechazo de
   traversal, tipos MIME correctos.

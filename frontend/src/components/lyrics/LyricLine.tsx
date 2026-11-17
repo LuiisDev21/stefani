@@ -47,7 +47,7 @@ export const LyricLine = memo(function LyricLine({
     <li
       className={cn(
         "group relative scroll-mt-24 py-2 transition-colors duration-200",
-        active ? "opacity-100" : past ? "opacity-35" : "opacity-60",
+        active ? "opacity-100" : past ? "opacity-[0.55]" : "opacity-[0.75]",
       )}
       data-line-id={line.id}
     >
@@ -59,7 +59,7 @@ export const LyricLine = memo(function LyricLine({
       >
         <span className={cn("block font-medium tracking-[-0.01em] transition-colors", sizeClass)}>
           {hasWords ? (
-            <span className="flex flex-wrap items-baseline gap-x-[0.32em] gap-y-1">
+            <span className="flex flex-wrap items-baseline gap-x-[0.26em] gap-y-1">
               {line.words.map((word, index) => {
                 const progress = active ? wordProgress(word, timeMs) : past ? 1 : 0;
                 /* One span per word, filled with a clipped gradient: no duplicate
@@ -94,7 +94,7 @@ export const LyricLine = memo(function LyricLine({
                     className={cn(
                       "relative inline-block cursor-pointer rounded-[3px] outline-offset-4",
                       "hover:bg-white/5",
-                      active ? "text-ink" : past ? "text-ink/75" : "text-muted",
+                      active ? "text-ink" : "text-muted",
                     )}
                   >
                     {word.text}
