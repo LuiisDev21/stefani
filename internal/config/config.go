@@ -12,11 +12,11 @@ import (
 
 // Defaults are the values a fresh install starts with.
 const (
-	DefaultBaseURL   = "https://api.openai.com/v1"
-	DefaultModel     = "gpt-4o-mini"
-	DefaultAccent    = "en-US"
-	DefaultTimeout   = 45
-	DefaultRetries   = 2
+	DefaultBaseURL = "https://api.openai.com/v1"
+	DefaultModel   = "gpt-4o-mini"
+	DefaultAccent  = "en-US"
+	DefaultTimeout = 45
+	DefaultRetries = 2
 )
 
 // LLM describes the OpenAI-compatible endpoint used for phonetics, translation
@@ -163,7 +163,12 @@ func ResolvePaths(appFolder string) (Paths, error) {
 	if err != nil {
 		return Paths{}, fmt.Errorf("resolve user config directory: %w", err)
 	}
-	root := filepath.Join(base, appFolder)
+	return ResolvePathsAt(filepath.Join(base, appFolder))
+}
+
+// ResolvePathsAt computes the same layout inside an explicit root. The E2E host
+// and portable runs use it to keep test data away from the real profile.
+func ResolvePathsAt(root string) (Paths, error) {
 	p := Paths{
 		ConfigDir: root,
 		DataDir:   filepath.Join(root, "data"),

@@ -127,17 +127,17 @@ type Annotation struct {
 
 // WordEntry is a dictionary/vocabulary item.
 type WordEntry struct {
-	ID          string
-	Word        string
-	Lemma       string
+	ID           string
+	Word         string
+	Lemma        string
 	PartOfSpeech string
-	Meaning     string
-	IPA         string
-	Translation string
-	Example     string
-	Source      string // "ai" | "manual" | "provider"
-	TrackID     string
-	CreatedAt   time.Time
+	Meaning      string
+	IPA          string
+	Translation  string
+	Example      string
+	Source       string // "ai" | "manual" | "provider"
+	TrackID      string
+	CreatedAt    time.Time
 }
 
 // Progress tracks study activity for a track.
@@ -170,26 +170,26 @@ type PlaylistItem struct {
 
 // HistoryEntry is one playback record.
 type HistoryEntry struct {
-	ID           int64
-	TrackID      string
-	PlayedAt     time.Time
-	ListenedMs   int64
-	TrackTitle   string
-	TrackArtist  string
+	ID          int64
+	TrackID     string
+	PlayedAt    time.Time
+	ListenedMs  int64
+	TrackTitle  string
+	TrackArtist string
 }
 
 // SearchResult is one provider hit.
 type SearchResult struct {
-	Track         Track
-	ProviderName  string
-	Playable      bool
-	Note          string
+	Track        Track
+	ProviderName string
+	Playable     bool
+	Note         string
 }
 
 // ImportedPlaylist is the outcome of importing an external playlist.
 type ImportedPlaylist struct {
-	Playlist     Playlist
-	Imported     int
-	Unavailable  []string
-	Source       string
+	Playlist    Playlist
+	Imported    int
+	Unavailable []string
+	Source      string
 }

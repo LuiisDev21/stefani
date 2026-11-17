@@ -117,6 +117,45 @@ func TestEnsureIsIdempotent(t *testing.T) {
 	}
 }
 
+func TestEnsureDoesNotOverwriteGeneratedAnnotations(t *testing.T) {
+	ctx := context.Background()
+	db, err := storage.Open(filepath.Join(t.TempDir(), "demo.db"))
+	if err != nil {
+		t.Fatalf("open db: %v", err)
+	}
+	defer db.Close()
+
+	lib := New(filepath.Join(t.TempDir(), "audio"))
+	if err := lib.Ensure(ctx, db); err != nil {
+		t.Fatalf("first ensure: %v", err)
+	}
+
+	lines, err := db.Lyrics(ctx, "demo:"+Songs[0].Slug)
+	if err != nil {
+		t.Fatalf("load lyrics: %v", err)
+	}
+	line := lines.Lines[0]
+	if err := db.SaveAnnotation(ctx, domain.Annotation{
+		LineID: line.ID, Accent: "en-US", IPA: "/dʒenəˈreɪtɪd/",
+		SpanishApprox: "ye-ne-réi-tid", Translation: "generado", Model: "test-model",
+		Version: "test", CacheKey: "test",
+	}); err != nil {
+		t.Fatalf("save generated annotation: %v", err)
+	}
+
+	// A second start must not replace the generated data with the bundled seed.
+	if err := lib.Ensure(ctx, db); err != nil {
+		t.Fatalf("second ensure: %v", err)
+	}
+	stored, err := db.AnnotationForLine(ctx, line.ID, "en-US")
+	if err != nil {
+		t.Fatalf("load annotation: %v", err)
+	}
+	if stored.IPA != "/dʒenəˈreɪtɪd/" || stored.Model != "test-model" {
+		t.Fatalf("generated annotation was overwritten: %+v", stored)
+	}
+}
+
 func TestRenderedWAVHasValidHeader(t *testing.T) {
 	built := build(Songs[0])
 	// Render a shortened version to keep the test fast.

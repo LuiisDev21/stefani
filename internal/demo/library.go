@@ -2,13 +2,10 @@ package demo
 
 import (
 	"context"
-	"crypto/sha1"
-	"encoding/hex"
 	"fmt"
 	"math"
 	"os"
 	"path/filepath"
-	"strconv"
 
 	"github.com/LuiisDev21/stefani/internal/domain"
 	"github.com/LuiisDev21/stefani/internal/media"
@@ -35,11 +32,10 @@ func New(dir string) *Library { return &Library{dir: dir} }
 func (l *Library) Dir() string { return l.dir }
 
 type builtSong struct {
-	track   domain.Track
-	lyrics  domain.Lyrics
-	annot   []domain.Annotation
-	spec    media.Spec
-	durance float64
+	track  domain.Track
+	lyrics domain.Lyrics
+	annot  []domain.Annotation
+	spec   media.Spec
 }
 
 // Ensure renders and stores every demo song. Missing audio is rendered again;
@@ -64,7 +60,9 @@ func (l *Library) Ensure(ctx context.Context, db *storage.DB) error {
 			return err
 		}
 		for _, a := range built.annot {
-			if err := db.SaveAnnotation(ctx, a); err != nil {
+			// Precomputed study data is a seed, not a source of truth: a user's
+			// generated annotation must survive the next start.
+			if err := db.SeedAnnotation(ctx, a); err != nil {
 				return err
 			}
 		}
@@ -225,21 +223,9 @@ func build(song Song) builtSong {
 			License:  "Original material created for STEFANI (MIT)",
 			Lines:    lines,
 		},
-		annot:   annot,
-		spec:    spec,
-		durance: duration,
+		annot: annot,
+		spec:  spec,
 	}
-}
-
-// fingerprint is used to detect a stale rendered file after a content change.
-func fingerprint(song Song) string {
-	h := sha1.New()
-	h.Write([]byte(song.Slug))
-	h.Write([]byte(strconv.FormatFloat(song.BPM, 'f', 2, 64)))
-	for _, line := range song.Lines {
-		h.Write([]byte(line.Text))
-	}
-	return hex.EncodeToString(h.Sum(nil))[:10]
 }
 
 func midiFreq(note int) float64 {

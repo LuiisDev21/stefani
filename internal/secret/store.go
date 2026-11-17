@@ -79,7 +79,7 @@ func (s *keyringStore) Available() bool {
 // Memory is an in-memory Store for tests and for the browser E2E host, where no
 // OS keychain exists.
 type Memory struct {
-	values     map[string]string
+	values      map[string]string
 	unavailable bool
 }
 

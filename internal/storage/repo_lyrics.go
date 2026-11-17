@@ -9,7 +9,6 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/LuiisDev21/stefani/internal/domain"
 )
@@ -154,6 +153,30 @@ func (d *DB) Lyrics(ctx context.Context, trackID string) (domain.Lyrics, error) 
 	return l, nil
 }
 
+// SeedsAnnotation inserts an annotation only when the line does not have one for
+// that accent yet. Demo content uses it so a generated annotation is never
+// overwritten by the bundled seed on the next start.
+func (d *DB) SeedAnnotation(ctx context.Context, a domain.Annotation) error {
+	if a.Accent == "" {
+		a.Accent = "en-US"
+	}
+	notes, err := json.Marshal(a.Notes)
+	if err != nil {
+		return fmt.Errorf("encode notes: %w", err)
+	}
+	_, err = d.sql.ExecContext(ctx, `
+		INSERT INTO phonetic_annotations
+			(id, line_id, accent, ipa, spanish_approx, translation, notes_json, model, generator_version, cache_key, created_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		ON CONFLICT(line_id, accent) DO NOTHING`,
+		newID("ann"), a.LineID, a.Accent, a.IPA, a.SpanishApprox, a.Translation,
+		string(notes), a.Model, a.Version, a.CacheKey, nowMs())
+	if err != nil {
+		return fmt.Errorf("seed annotation: %w", err)
+	}
+	return nil
+}
+
 // SaveAnnotation upserts one annotation for a line and accent.
 func (d *DB) SaveAnnotation(ctx context.Context, a domain.Annotation) error {
 	if a.Accent == "" {
@@ -246,12 +269,19 @@ func (d *DB) DeleteAnnotationsForTrack(ctx context.Context, trackID string) erro
 	return nil
 }
 
+// DeleteLyrics removes the stored document for a track, including its lines,
+// words and annotations.
+func (d *DB) DeleteLyrics(ctx context.Context, trackID string) error {
+	_, err := d.sql.ExecContext(ctx, `DELETE FROM lyrics_documents WHERE track_id = ?`, trackID)
+	if err != nil {
+		return fmt.Errorf("delete lyrics: %w", err)
+	}
+	return nil
+}
+
 func def(value, fallback string) string {
 	if value == "" {
 		return fallback
 	}
 	return value
 }
-
-// nowTime is used by repositories that expose creation timestamps to callers.
-func nowTime() time.Time { return time.Now().UTC() }
