@@ -28,7 +28,7 @@ export function LibraryView() {
               Importar audio
             </Button>
             <Button size="sm" variant="ghost" onClick={() => go("search")}>
-              Buscar mas musica
+              Buscar mas música
             </Button>
           </>
         }
@@ -39,7 +39,7 @@ export function LibraryView() {
           <EmptyState
             icon={<LibraryBig className="h-5 w-5" />}
             title="Tu biblioteca esta vacia"
-            description="Guarda una cancion con el corazon, o importa archivos de audio desde tu equipo. Los archivos se referencian en su ubicacion original, no se copian."
+            description="Guarda una canción con el corazon, o importa archivos de audio desde tu equipo. Los archivos se referencian en su ubicacion original, no se copian."
             actions={
               <>
                 <Button size="sm" variant="primary" onClick={() => go("search")}>

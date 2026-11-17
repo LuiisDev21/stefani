@@ -141,3 +141,27 @@ ensenar), eSpeak NG (GPL y proceso externo), exigir clave para ver fonetica.
 **Consecuencia**: el binario crece ~3,5 MB y el diccionario se parsea en el
 primer uso (~150 ms). La pronunciacion funciona offline desde el primer arranque
 y la IA pasa a ser una mejora, no un requisito.
+
+## ADR-015: rediseno sobre apple.design.md (tema claro, un solo azul)
+
+**Contexto**: el MVP nacio con un tema oscuro propio. El dueno del producto
+aporto `apple.design.md` como referencia y pidio redisenar toda la interfaz sobre
+ese sistema: lienzo claro, Parchment, tipografia SF Pro, Action Blue unico,
+tiles full-bleed, una sola sombra reservada al artwork y navegacion superior en
+lugar de barra lateral.
+
+**Decision**: adoptar la spec como fuente de tokens y estructura. La navegacion
+pasa a una barra negra de 44 px; el panel de estudio queda como columna de
+400 px; la barra de reproduccion es la sticky bar frosted; el modo inmersivo
+invierte a negro puro. El violeta y los degradados decorativos desaparecen.
+
+**Desviaciones conscientes** (documentadas porque se apartan de la letra de la
+spec):
+1. El cuerpo de la app usa 14-15 px, no 17: es una superficie de listas densas.
+   La lectura (letra, hero) si mantiene los pasos editoriales.
+2. La spec es de marketing; una app necesita estados vacios, loading y error.
+   Se resolvieron con superficie y hairlines, sin tarjetas de relleno.
+3. El placeholder de portada es un sleeve tipografico, no una imagen fingida.
+
+**Consecuencia**: el tema oscuro unico (ADR-008) queda superado para la
+interfaz; el modo inmersivo sigue siendo oscuro por funcion, no por defecto.

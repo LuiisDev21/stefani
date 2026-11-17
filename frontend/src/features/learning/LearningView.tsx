@@ -26,7 +26,7 @@ export function LearningView() {
       await openTrack(track);
       go("home");
     } catch {
-      notify("error", "No pude abrir esa cancion");
+      notify("error", "No pude abrir esa canción");
     }
   };
 
@@ -44,25 +44,25 @@ export function LearningView() {
 
   return (
     <div className="min-h-0">
-      <TopBar title="Aprendizaje" subtitle="Tiempo de practica, versos trabajados y vocabulario guardado" />
+      <TopBar title="Aprendizaje" subtitle="Tiempo de práctica, versos trabajados y vocabulario guardado" />
 
       <div className="px-7 pb-10">
         <dl className="flex flex-wrap items-baseline gap-x-10 gap-y-3">
-          <Stat label="Tiempo de practica" value={formatStudyTime(totalSeconds)} />
+          <Stat label="Tiempo de práctica" value={formatStudyTime(totalSeconds)} />
           <Stat label="Versos trabajados" value={String(totalLines)} />
           <Stat label="Canciones con progreso" value={String(progress.length)} />
           <Stat label="Palabras guardadas" value={String(vocabulary.length)} />
         </dl>
 
-        <div className="signal-line my-6" />
+        <div className="hairline my-8" />
 
         <section>
-          <SectionTitle title="Progreso por cancion" />
+          <SectionTitle title="Progreso por canción" />
           {progress.length === 0 ? (
             <EmptyState
               icon={<GraduationCap className="h-5 w-5" />}
               title="Sin sesiones registradas"
-              description="Escucha una cancion con la letra abierta: el tiempo se acumula automaticamente mientras suena, y cada verso que repites suma practica."
+              description="Escucha una canción con la letra abierta: el tiempo se acumula automaticamente mientras suena, y cada verso que repites suma práctica."
               actions={
                 <Button size="sm" variant="primary" onClick={() => go("home")}>
                   Empezar con la demo
@@ -98,13 +98,13 @@ export function LearningView() {
           )}
         </section>
 
-        <div className="signal-line my-6" />
+        <div className="hairline my-8" />
 
         <section>
           <SectionTitle title="Vocabulario" hint="Palabras que guardaste desde la letra" />
           {vocabulary.length === 0 ? (
             <p className="text-[12.5px] leading-relaxed text-muted">
-              Toca una palabra en la letra para consultarla; si te sirve, guardala y aparecera aqui.
+              Toca una palabra en la letra para consultarla; si te sirve, guardala y aparecerá aquí.
             </p>
           ) : (
             <ul className="grid gap-2 md:grid-cols-2">
@@ -114,7 +114,7 @@ export function LearningView() {
                     <div className="min-w-0">
                       <p className="truncate text-[13px] font-medium text-ink">{word.word}</p>
                       <p className="truncate text-[11.5px] text-muted">{word.translation || word.meaning}</p>
-                      {word.ipa ? <p className="mt-0.5 text-[11.5px] text-violet/85">{word.ipa}</p> : null}
+                      {word.ipa ? <p className="mt-0.5 text-[12px] text-muted">{word.ipa}</p> : null}
                     </div>
                     <div className="flex shrink-0 items-center">
                       <IconButton label={`Escuchar ${word.word}`} size="sm" onClick={() => speak(word.word)}>

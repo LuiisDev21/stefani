@@ -41,6 +41,10 @@ export function StudyPanel() {
     () => Boolean(lyrics?.lines.some((line) => line.annotation?.source === "local")),
     [lyrics],
   );
+  const hasGeneratedAnnotations = useMemo(
+    () => Boolean(lyrics?.lines.some((line) => line.annotation?.source === "ai")),
+    [lyrics],
+  );
   // A track can start playing from anywhere (search, queue, immersive view):
   // the panel is the single owner of loading its lyric, once per track.
   const requested = useRef<string | null>(null);
@@ -76,7 +80,7 @@ export function StudyPanel() {
 
   const repeatLine = () => {
     if (!lyrics?.lines || activeIndex < 0) {
-      notify("info", "Reproduce la cancion para saber que verso estas escuchando");
+      notify("info", "Reproduce la canción para saber que verso estas escuchando");
       return;
     }
     const bounds = loopFromLines(lyrics.lines, activeIndex, activeIndex);
@@ -110,16 +114,16 @@ export function StudyPanel() {
 
   return (
     <aside
-      className="flex h-full w-[382px] shrink-0 flex-col border-l border-line/70 bg-elevated/35"
+      className="flex h-full w-[400px] shrink-0 flex-col bg-bg"
       data-lyrics-state={lyrics ? (lyrics.available ? "ready" : "empty") : "none"}
       data-lyrics-lines={lyrics?.lines.length ?? 0}
       data-lyrics-notice={lyrics?.notice ?? ""}
     >
-      <div className="px-4 pt-3.5">
+      <div className="px-6 pt-6">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
-            <p className="text-[12.5px] font-semibold text-ink/90">Letra y pronunciacion</p>
-            <p className="mt-1 truncate text-[11.5px] text-muted">
+            <p className="text-[17px] font-semibold tracking-[-0.2px] text-ink">Letra y pronunciación</p>
+            <p className="mt-1 truncate text-[12px] text-muted">
               {lyrics?.available
                 ? `${lyrics.provider} · ${syncLabel}${lyrics.hasWords ? "" : " (sin tiempos por palabra)"}${
                     hasLocalPronunciation ? " · IPA local" : ""
@@ -128,7 +132,7 @@ export function StudyPanel() {
                   ? "Buscando letra…"
                   : current
                     ? "Sin letra cargada"
-                    : "Elige una cancion"}
+                    : "Elige una canción"}
             </p>
           </div>
           <div className="flex items-center gap-0.5">
@@ -146,19 +150,22 @@ export function StudyPanel() {
           </div>
         </div>
 
-        <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+        <div className="mt-4 flex flex-wrap items-center gap-2">
           <Chip active={showIPA} onClick={toggleIPA} label="IPA + ES" />
-          <Chip active={showTranslation} onClick={toggleTranslation} label="Traduccion" />
-          <Button
-            size="sm"
-            variant={lyrics?.available ? "subtle" : "ghost"}
-            className="ml-auto"
-            icon={<PenLine className="h-3.5 w-3.5" />}
-            disabled={!lyrics?.available || annotating}
-            onClick={() => void annotate()}
-          >
-            {annotating ? "Anotando…" : "Anotar con IA"}
-          </Button>
+          <Chip active={showTranslation} onClick={toggleTranslation} label="Traducción" />
+          {lyrics?.available ? (
+            <Button
+              size="sm"
+              variant={hasGeneratedAnnotations ? "subtle" : "primary"}
+              className="ml-auto"
+              icon={<PenLine className="h-3.5 w-3.5" />}
+              disabled={annotating}
+              title="Traducir y anotar los versos con tu proveedor de IA"
+              onClick={() => void annotate()}
+            >
+              {annotating ? "Anotando…" : "Anotar con IA"}
+            </Button>
+          ) : null}
         </div>
 
         {annotating && progress && progress.total > 0 ? (
@@ -176,7 +183,7 @@ export function StudyPanel() {
         ) : null}
       </div>
 
-      <div className="mt-2 min-h-0 flex-1 px-2">
+      <div className="mt-4 min-h-0 flex-1 px-6">
         <LyricsView
           lyrics={lyrics}
           loading={loading}
@@ -234,7 +241,7 @@ export function StudyPanel() {
             >
               −
             </button>
-            <span className="w-12 text-center text-[10.5px] text-muted tnum">{offsetMs} ms</span>
+            <span className="w-12 text-center text-[12px] text-muted tnum">{offsetMs} ms</span>
             <button
               type="button"
               aria-label="Atrasar la letra 100 milisegundos"
@@ -267,10 +274,10 @@ function Chip({ active, onClick, label }: { active: boolean; onClick: () => void
       onClick={onClick}
       aria-pressed={active}
       className={cn(
-        "rounded-[5px] border px-2 py-[3px] text-[10.5px] font-medium transition-colors",
+        "rounded-full border px-3 py-1 text-[12px] transition-colors",
         active
-          ? "border-accent/40 bg-accent/10 text-accent"
-          : "border-line bg-transparent text-faint hover:text-muted",
+          ? "border-accent bg-accent/6 text-accent"
+          : "border-line bg-transparent text-muted hover:bg-elevated hover:text-ink",
       )}
     >
       {label}

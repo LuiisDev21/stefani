@@ -61,7 +61,7 @@ export function PlaylistPicker({ track, playlists, onClose }: PlaylistPickerProp
     >
       <div className="space-y-3">
         {playlists.length === 0 ? (
-          <p className="text-[12.5px] text-muted">Todavia no tienes listas. Crea la primera aqui abajo.</p>
+          <p className="text-[12.5px] text-muted">Todavía no tienes listas. Crea la primera aquí abajo.</p>
         ) : (
           <ul className="max-h-[220px] space-y-1 overflow-y-auto pr-1">
             {playlists.map((playlist) => (

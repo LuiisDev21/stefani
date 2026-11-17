@@ -228,7 +228,7 @@ export const useApp = create<AppState>((set, get) => ({
       } else if (outcome.generated > 0) {
         get().notify("ok", `${outcome.generated} verso(s) anotados`);
       } else {
-        get().notify("info", "La letra ya tenia todas las anotaciones");
+        get().notify("info", "La letra ya tenía todas las anotaciones");
       }
       await get().loadLyrics(track.id);
     } catch (error) {
@@ -287,7 +287,7 @@ export const useApp = create<AppState>((set, get) => ({
   importLyrics: async () => {
     const track = usePlayer.getState().current;
     if (!track) {
-      get().notify("info", "Elige una cancion primero");
+      get().notify("info", "Elige una canción primero");
       return;
     }
     try {

@@ -22,9 +22,9 @@ import { IconButton } from "../ui/IconButton";
 import { Slider } from "../ui/Slider";
 
 /**
- * Persistent transport bar. It is the only element with an elevation shadow:
- * everything else on screen is flat, so the bar reads as a separate plane that
- * stays reachable from any view.
+ * Persistent transport: the design system's floating sticky bar. Parchment at
+ * 82% with a 20px blur, one hairline on top, no shadow — the only elevation on
+ * screen belongs to the artwork.
  */
 export function PlayerBar() {
   const current = usePlayer((state) => state.current);
@@ -62,18 +62,18 @@ export function PlayerBar() {
   };
 
   return (
-    <footer className="border-t border-line/80 bg-elevated/85 px-4 py-2.5 backdrop-blur-md shadow-[0_-14px_30px_rgba(3,5,10,0.45)]">
-      <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_minmax(0,1fr)] items-center gap-4">
+    <footer className="frosted shrink-0 border-t border-line px-6 py-3">
+      <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)_minmax(0,1fr)] items-center gap-6">
         {/* Now playing */}
         <div className="flex min-w-0 items-center gap-3">
           {current ? (
             <>
-              <Cover title={current.title} src={current.artworkUrl} size={44} />
+              <Cover title={current.title} src={current.artworkUrl} size={48} />
               <div className="min-w-0">
-                <p className="truncate text-[13px] font-medium text-ink">{current.title}</p>
-                <p className="truncate text-[11.5px] text-muted">
+                <p className="truncate text-[13.5px] font-semibold tracking-[-0.2px] text-ink">{current.title}</p>
+                <p className="truncate text-[12px] text-muted">
                   {current.artist || "Artista desconocido"}
-                  {!current.playable ? " · sin reproduccion" : ""}
+                  {!current.playable ? " · sin reproducción" : ""}
                 </p>
               </div>
               <IconButton
@@ -86,12 +86,12 @@ export function PlayerBar() {
               </IconButton>
             </>
           ) : (
-            <p className="text-[12px] text-faint">Elige una cancion para empezar</p>
+            <p className="text-[13px] text-faint">Elige una canción para empezar</p>
           )}
         </div>
 
         {/* Transport */}
-        <div className="flex flex-col items-center gap-1">
+        <div className="flex flex-col items-center gap-1.5">
           <div className="flex items-center gap-1">
             <IconButton label="Anterior" onClick={previous} disabled={!current}>
               <SkipBack className="h-4 w-4" />
@@ -102,8 +102,8 @@ export function PlayerBar() {
               disabled={!current}
               aria-label={playing ? "Pausar" : "Reproducir"}
               className={cn(
-                "mx-1 flex h-9 w-9 items-center justify-center rounded-full transition-colors",
-                "bg-ink text-[#0b0e16] hover:bg-white disabled:opacity-40",
+                "mx-1 flex h-10 w-10 items-center justify-center rounded-full transition-[background-color,transform]",
+                "bg-ink text-white hover:bg-black active:scale-[0.95] disabled:opacity-40",
               )}
             >
               {playing ? <Pause className="h-4 w-4 fill-current" /> : <Play className="ml-0.5 h-4 w-4 fill-current" />}
@@ -128,9 +128,9 @@ export function PlayerBar() {
           </div>
 
           <div className="flex w-full items-center gap-2">
-            <span className="w-9 text-right text-[10.5px] text-faint tnum">{formatTime(timeMs)}</span>
+            <span className="w-9 text-right text-[11px] text-faint tnum">{formatTime(timeMs)}</span>
             <Slider
-              label="Progreso de la cancion"
+              label="Progreso de la canción"
               value={Math.min(timeMs, totalMs)}
               max={totalMs}
               onChange={seekMs}
@@ -138,16 +138,14 @@ export function PlayerBar() {
               className="flex-1"
               disabled={!current?.playable}
             />
-            <span className="w-9 text-[10.5px] text-faint tnum">{formatTime(totalMs)}</span>
+            <span className="w-9 text-[11px] text-faint tnum">{formatTime(totalMs)}</span>
           </div>
           {error ? (
-            <p className="max-w-[52ch] truncate text-[10.5px] text-danger" role="status">
+            <p className="max-w-[52ch] truncate text-[11px] text-danger" role="status">
               {error}
             </p>
           ) : loop ? (
-            <p className="max-w-[52ch] truncate text-[10.5px] text-accent/85">
-              Repitiendo: {loop.label}
-            </p>
+            <p className="max-w-[52ch] truncate text-[11px] text-muted">Repitiendo: {loop.label}</p>
           ) : null}
         </div>
 
@@ -157,9 +155,9 @@ export function PlayerBar() {
             type="button"
             onClick={cycleRate}
             disabled={!caps.rate}
-            aria-label={`Velocidad de reproduccion: ${rate}x. Cambiar`}
+            aria-label={`Velocidad de reproducción: ${rate}x. Cambiar`}
             title={caps.rate ? "Cambiar velocidad" : "Esta fuente no controla la velocidad"}
-            className="rounded-[6px] px-2 py-1 text-[11px] font-medium text-muted tnum transition-colors hover:bg-surface hover:text-ink disabled:opacity-40"
+            className="rounded-full px-2.5 py-1 text-[12px] font-medium text-muted tnum transition-colors hover:bg-surface hover:text-ink disabled:opacity-40"
           >
             {rate}x
           </button>
@@ -180,11 +178,7 @@ export function PlayerBar() {
             format={(value) => `${value}%`}
             className="w-[86px]"
           />
-          <IconButton
-            label="Abrir modo inmersivo"
-            onClick={() => setImmersive(true)}
-            disabled={!current}
-          >
+          <IconButton label="Abrir modo inmersivo" onClick={() => setImmersive(true)} disabled={!current}>
             <Maximize2 className="h-4 w-4" />
           </IconButton>
         </div>

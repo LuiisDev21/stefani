@@ -151,7 +151,7 @@ export function PlaylistsView() {
               />
             </label>
             <label className="block">
-              <span className="mb-1 block text-[11px] text-faint">Descripcion</span>
+              <span className="mb-1 block text-[11px] text-faint">Descripción</span>
               <textarea
                 value={editDescription}
                 onChange={(event) => setEditDescription(event.target.value)}
@@ -213,8 +213,8 @@ export function PlaylistsView() {
         {playlists.length === 0 ? (
           <EmptyState
             icon={<ListMusic className="h-5 w-5" />}
-            title="Sin listas todavia"
-            description="Crea una lista propia o importa una playlist publica de YouTube Music. El audio se reproduce dentro de la app cuando el reproductor en linea esta disponible."
+            title="Sin listas todavía"
+            description="Crea una lista propia o importa una playlist pública de YouTube Music. El audio se reproduce dentro de la app cuando el reproductor en linea esta disponible."
             actions={
               <>
                 <Button size="sm" variant="primary" onClick={() => setCreating(true)}>
@@ -256,7 +256,7 @@ export function PlaylistsView() {
         open={creating}
         onOpenChange={setCreating}
         title="Nueva lista"
-        description="Ponle un nombre; despues agrega canciones desde cualquier lista de pistas."
+        description="Ponle un nombre; después agrega canciones desde cualquier lista de pistas."
         footer={
           <>
             <Button variant="ghost" size="sm" onClick={() => setCreating(false)}>
@@ -293,7 +293,7 @@ export function PlaylistsView() {
         open={importing}
         onOpenChange={setImporting}
         title="Importar playlist"
-        description="Pega la URL de una playlist publica de YouTube Music. Se importan los metadatos; la reproduccion se hace en la pagina oficial."
+        description="Pega la URL de una playlist pública de YouTube Music. Se importan los metadatos; la reproducción se hace en la pagina oficial."
         footer={
           <>
             <Button variant="ghost" size="sm" onClick={() => setImporting(false)}>
@@ -342,7 +342,7 @@ interface PlaylistRowProps {
 
 function PlaylistRow({ track, index, total, active, playing, onPlay, onUp, onDown, onRemove }: PlaylistRowProps) {
   return (
-    <li className="group flex items-center gap-3 rounded-[7px] px-2 py-1.5 transition-colors hover:bg-surface/40">
+    <li className="group flex items-center gap-3 rounded-[7px] px-2 py-1.5 transition-colors hover:bg-surface">
       <button
         type="button"
         onClick={onPlay}

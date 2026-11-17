@@ -2,7 +2,8 @@
 
 /*
   Inter is bundled locally (OFL) rather than fetched: a desktop app must not
-  depend on a CDN, and the tall x-height keeps dense lyric rows legible at 14px.
+  depend on a CDN. On Apple platforms SF Pro resolves first, which is the face
+  the design system was drawn for.
 */
 @font-face {
   font-family: "Inter";
@@ -13,34 +14,43 @@
 }
 
 /*
-  STEFANI design tokens.
+  STEFANI design tokens, derived from apple.design.md.
 
-  One accent (signal blue), one secondary (violet) used only inside artwork
-  gradients, and a three-step surface ramp. Depth comes from hairline borders
-  and a single elevation shadow reserved for the player bar and dialogs, not
-  from glows on every card.
+  One interactive color (Action Blue #0066cc), a light canvas with a parchment
+  second surface, near-black ink, and hairlines instead of borders. Elevation is
+  surface change plus one reserved product shadow; there are no decorative
+  gradients, no glows and no second accent.
 
-  Dark-only is a deliberate product decision: this is a listening and reading
-  surface, artwork is the brightest element on screen, and the app is used at
-  night. See docs/DESIGN_SYSTEM.md.
+  The design system is written for marketing surfaces where body copy runs at
+  17px. Inside the app the reading surface (lyrics, study panel) keeps that
+  pace; chrome and list rows use 13-15px, which is what Apple Music uses for
+  the same information density.
 */
 @theme {
-  --color-bg: #0b0e16;
-  --color-elevated: #121725;
-  --color-surface: #1b2232;
-  --color-ink: #f4f6fa;
-  --color-muted: #a7b3c4;
-  --color-faint: #8b98ac;
-  --color-accent: #85afff;
-  --color-violet: #b0a0ff;
-  --color-line: #273044;
-  --color-danger: #ff9b9b;
+  --color-bg: #ffffff;
+  --color-elevated: #f5f5f7;
+  --color-surface: #ededf0;
+  --color-ink: #1d1d1f;
+  --color-muted: #5f5f64;
+  --color-faint: #737378;
+  --color-accent: #0066cc;
+  --color-accent-focus: #0071e3;
+  --color-line: #e0e0e0;
+  --color-line-soft: #f0f0f0;
+  --color-danger: #d70015;
+  --color-on-accent: #ffffff;
+  --color-dark: #1d1d1f;
+  --color-dark-tile: #272729;
 
-  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-sans: "SF Pro Text", "SF Pro Display", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "SF Pro Display", "SF Pro Text", "Inter", system-ui, -apple-system, sans-serif;
 
-  --radius-chip: 4px;
+  --radius-chip: 9999px;
   --radius-control: 8px;
-  --radius-panel: 14px;
+  --radius-panel: 18px;
+
+  --shadow-product: 3px 5px 30px rgba(0, 0, 0, 0.18);
+  --shadow-overlay: 0 12px 32px rgba(0, 0, 0, 0.12);
 }
 
 @layer base {
@@ -56,36 +66,47 @@
     color: var(--color-ink);
     font-family: var(--font-sans);
     font-size: 14px;
-    line-height: 1.45;
+    line-height: 1.47;
+    letter-spacing: -0.14px;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
     overflow: hidden;
   }
 
-  /* The focus ring is part of the identity: a thin signal-blue outline with a
-     dark gap, visible on every surface. */
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: -0.374px;
+    color: var(--color-ink);
+  }
+
+  /* Focus is a real state: Action Blue, 2px, with an offset ring. */
   :focus-visible {
-    outline: 2px solid var(--color-accent);
+    outline: 2px solid var(--color-accent-focus);
     outline-offset: 2px;
-    border-radius: 4px;
+    border-radius: 6px;
   }
 
   ::selection {
-    background: color-mix(in oklab, var(--color-accent) 35%, transparent);
+    background: color-mix(in oklab, var(--color-accent) 22%, transparent);
     color: var(--color-ink);
   }
 
   ::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
+    width: 12px;
+    height: 12px;
   }
   ::-webkit-scrollbar-thumb {
-    background: #2a3244;
-    border: 3px solid var(--color-bg);
+    background: rgba(0, 0, 0, 0.14);
+    border: 4px solid transparent;
+    background-clip: padding-box;
     border-radius: 999px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: #354056;
+    background: rgba(0, 0, 0, 0.26);
+    background-clip: padding-box;
   }
   ::-webkit-scrollbar-track {
     background: transparent;
@@ -110,36 +131,55 @@
     font-feature-settings: "tnum" 1;
   }
 
-  /* The signal line: the identity motif. It divides sections and becomes the
-     progress rail, so the same shape means "this is where you are". */
-  .signal-line {
+  /* Hairline divider. The old gradient "signal line" was decoration; the
+     design system separates with a 1px hairline and a surface change. */
+  .hairline {
     height: 1px;
-    background: linear-gradient(
-      to right,
-      var(--color-line),
-      var(--color-line) 55%,
-      transparent
-    );
+    background: var(--color-line);
   }
 
   .surface-panel {
-    background-color: var(--color-elevated);
+    background-color: var(--color-bg);
     border: 1px solid var(--color-line);
     border-radius: var(--radius-panel);
+  }
+
+  .product-shadow {
+    box-shadow: var(--shadow-product);
   }
 
   .scroll-area {
     overflow-y: auto;
     overscroll-behavior: contain;
-    scrollbar-gutter: stable;
+  }
+  /* A faint overlay thumb: it signals that there is more content without
+     becoming the second vertical line next to the study panel. */
+  .scroll-area::-webkit-scrollbar {
+    width: 10px;
+  }
+  .scroll-area::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.12);
+    border: 4px solid transparent;
+    background-clip: padding-box;
+    border-radius: 999px;
+  }
+  .scroll-area::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.24);
+    background-clip: padding-box;
   }
 
   .text-balance {
     text-wrap: balance;
   }
 
-  /* Range control drawn as the signal line: 2px rail, thumb appears on hover
-     or focus so the control stays quiet until used. */
+  /* Frosted sub-navigation and transport bar: the functional blur the design
+     system allows, on 82% parchment. */
+  .frosted {
+    background: color-mix(in srgb, var(--color-elevated) 82%, transparent);
+    backdrop-filter: saturate(180%) blur(20px);
+  }
+
+  /* Range control as a thin rail: ink fill, hairline track, thumb on hover. */
   .stefani-slider {
     appearance: none;
     width: 100%;
@@ -148,21 +188,21 @@
     cursor: pointer;
   }
   .stefani-slider::-webkit-slider-runnable-track {
-    height: 2px;
+    height: 3px;
     border-radius: 999px;
     background: linear-gradient(
       to right,
-      var(--color-accent) 0,
-      var(--color-accent) var(--fill),
-      #2a3244 var(--fill),
-      #2a3244 100%
+      var(--color-ink) 0,
+      var(--color-ink) var(--fill),
+      #d2d2d7 var(--fill),
+      #d2d2d7 100%
     );
   }
   .stefani-slider::-webkit-slider-thumb {
     appearance: none;
-    width: 10px;
-    height: 10px;
-    margin-top: -4px;
+    width: 12px;
+    height: 12px;
+    margin-top: -4.5px;
     border-radius: 999px;
     background: var(--color-ink);
     opacity: 0;
@@ -171,6 +211,18 @@
   .stefani-slider:hover::-webkit-slider-thumb,
   .stefani-slider:focus-visible::-webkit-slider-thumb {
     opacity: 1;
+  }
+  .stefani-slider.on-dark::-webkit-slider-runnable-track {
+    background: linear-gradient(
+      to right,
+      #ffffff 0,
+      #ffffff var(--fill),
+      #48484a var(--fill),
+      #48484a 100%
+    );
+  }
+  .stefani-slider.on-dark::-webkit-slider-thumb {
+    background: #ffffff;
   }
   .stefani-slider:disabled {
     cursor: not-allowed;

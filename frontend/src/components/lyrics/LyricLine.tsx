@@ -19,10 +19,11 @@ interface LyricLineProps {
 /**
  * One lyric line.
  *
- * When the document carries word timings each word is a fill gradient whose
- * progress is derived from the clock; otherwise the whole line is highlighted
- * for its span. Words are buttons so they can be reached with Tab and read by a
- * screen reader, and clicking one opens the dictionary.
+ * When the document carries word timings each word is filled by a hard two-stop
+ * gradient clipped to the text: that is the only way to show progress inside a
+ * single text node, so selection and screen readers still see the lyric once.
+ * Words are buttons so they can be reached with Tab and opened in the
+ * dictionary.
  */
 export const LyricLine = memo(function LyricLine({
   line,
@@ -38,16 +39,16 @@ export const LyricLine = memo(function LyricLine({
   const hasWords = line.words.length > 0;
   const annotation = line.annotation;
   const sizeClass = immersive
-    ? "text-[clamp(22px,2.6vw,34px)] leading-[1.35]"
+    ? "text-[clamp(24px,3vw,40px)] leading-[1.3]"
     : active
-      ? "text-[19px] leading-[1.4]"
-      : "text-[15px] leading-[1.45]";
+      ? "text-[21px] leading-[1.35] font-semibold tracking-[-0.3px]"
+      : "text-[16px] leading-[1.45]";
 
   return (
     <li
       className={cn(
-        "group relative scroll-mt-24 py-2 transition-colors duration-200",
-        active ? "opacity-100" : past ? "opacity-[0.55]" : "opacity-[0.75]",
+        "group relative scroll-mt-24 py-2.5 transition-opacity duration-200",
+        active ? "opacity-100" : past ? "opacity-55" : "opacity-80",
       )}
       data-line-id={line.id}
     >
@@ -57,20 +58,21 @@ export const LyricLine = memo(function LyricLine({
         aria-label={`Ir a: ${line.text}`}
         className="block w-full cursor-pointer text-left"
       >
-        <span className={cn("block font-medium tracking-[-0.01em] transition-colors", sizeClass)}>
+        <span className={cn("block transition-colors", sizeClass)}>
           {hasWords ? (
             <span className="flex flex-wrap items-baseline gap-x-[0.26em] gap-y-1">
               {line.words.map((word, index) => {
                 const progress = active ? wordProgress(word, timeMs) : past ? 1 : 0;
-                /* One span per word, filled with a clipped gradient: no duplicate
-                   text nodes, so selection, screen readers and tests see the lyric
-                   once. */
+                /* One span per word: a hard gradient fills it left to right
+                   without duplicating text nodes. */
+                const base = immersive ? "#ffffff" : "#1d1d1f";
+                const rest = immersive ? "#6e6e73" : "#a1a1a6";
                 const fillStyle = active
                   ? {
-                      backgroundImage: `linear-gradient(to right, #f4f6fa ${progress * 100}%, #a7b3c4 ${progress * 100}%)`,
+                      backgroundImage: `linear-gradient(to right, ${base} ${progress * 100}%, ${rest} ${progress * 100}%)`,
                       WebkitBackgroundClip: "text",
                       backgroundClip: "text",
-                      color: "transparent",
+                      WebkitTextFillColor: "transparent",
                     }
                   : undefined;
                 return (
@@ -92,9 +94,9 @@ export const LyricLine = memo(function LyricLine({
                     }}
                     style={fillStyle}
                     className={cn(
-                      "relative inline-block cursor-pointer rounded-[3px] outline-offset-4",
-                      "hover:bg-white/5",
-                      active ? "text-ink" : "text-muted",
+                      "relative inline-block cursor-pointer rounded-[4px] outline-offset-4 transition-colors",
+                      immersive ? "hover:bg-white/10" : "hover:bg-accent/8",
+                      active ? (immersive ? "text-white" : "text-ink") : immersive ? "text-white/55" : "text-muted",
                     )}
                   >
                     {word.text}
@@ -103,28 +105,37 @@ export const LyricLine = memo(function LyricLine({
               })}
             </span>
           ) : (
-            <span className={active ? "text-ink" : "text-muted"}>{line.text || "\u00a0"}</span>
+            <span className={active ? (immersive ? "text-white" : "text-ink") : immersive ? "text-white/55" : "text-muted"}>
+              {line.text || "\u00a0"}
+            </span>
           )}
         </span>
       </button>
 
       {active && annotation ? (
-        <div className="mt-1.5 space-y-1 pl-0.5">
+        <div className="mt-2 space-y-1">
           {showIPA ? (
-            <p className="text-[13px] font-normal text-violet/90" lang="en-Latn-fonipa">
+            <p className={immersive ? "text-[14px] text-white/55" : "text-[14px] text-muted"} lang="en-Latn-fonipa">
               {annotation.ipa}
             </p>
           ) : null}
           {showIPA ? (
-            <p className="text-[13px] font-normal text-accent/85">{annotation.spanishApprox}</p>
+            <p className={immersive ? "text-[14px] text-white/80" : "text-[14px] text-ink/75"}>
+              {annotation.spanishApprox}
+            </p>
           ) : null}
           {showTranslation ? (
-            <p className="text-[12.5px] text-muted">{annotation.translation}</p>
+            <p className={immersive ? "text-[14px] leading-[1.43] text-white/55" : "text-[14px] leading-[1.43] text-muted"}>
+              {annotation.translation}
+            </p>
           ) : null}
           {annotation.notes.length > 0 ? (
             <ul className="space-y-1 pt-0.5">
               {annotation.notes.map((note) => (
-                <li key={note.text} className="text-[11.5px] leading-relaxed text-faint">
+                <li
+                  key={note.text}
+                  className={immersive ? "text-[12.5px] leading-[1.45] text-white/40" : "text-[12.5px] leading-[1.45] text-faint"}
+                >
                   {note.text}
                 </li>
               ))}

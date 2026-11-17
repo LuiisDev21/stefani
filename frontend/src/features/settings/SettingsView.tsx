@@ -5,6 +5,7 @@ import { useApp } from "../../stores/appStore";
 import type { Settings } from "../../lib/types";
 import { Button } from "../../components/ui/Button";
 import { SectionTitle } from "../../components/ui/SectionTitle";
+import { Switch } from "../../components/ui/Switch";
 import { TopBar } from "../../components/layout/TopBar";
 
 const llmSchema = z.object({
@@ -77,7 +78,7 @@ export function SettingsView() {
     <div className="min-h-0">
       <TopBar
         title="Ajustes"
-        subtitle="Conexion de IA, musica en linea y datos locales"
+        subtitle="Conexión de IA, música en linea y datos locales"
         actions={
           <Button size="sm" variant="primary" onClick={() => void submit()}>
             Guardar cambios
@@ -85,7 +86,7 @@ export function SettingsView() {
         }
       />
 
-      <div className="max-w-[720px] px-7 pb-12">
+      <div className="mx-auto max-w-[820px] px-8 pb-16">
         <section>
           <SectionTitle
             title="Proveedor de IA"
@@ -141,20 +142,18 @@ export function SettingsView() {
                 className={inputClass}
               />
             </Field>
-            <Field label="Modo JSON">
-              <label className="flex h-9 items-center gap-2 text-[12.5px] text-muted">
-                <input
-                  type="checkbox"
-                  checked={form.llm.jsonMode}
-                  onChange={(event) => update({ jsonMode: event.target.checked })}
-                  className="h-4 w-4 accent-[#85afff]"
-                />
-                Pedir respuesta JSON al proveedor
-              </label>
-            </Field>
           </div>
 
-          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <div className="mt-4 border-t border-line-soft pt-4">
+            <Switch
+              checked={form.llm.jsonMode}
+              onChange={(value) => update({ jsonMode: value })}
+              label="Pedir respuesta JSON al proveedor"
+              description="Recomendado: la app valida la respuesta contra el esquema de anotación."
+            />
+          </div>
+
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <Field label={form.hasKey ? "Clave guardada (escribe otra para reemplazarla)" : "Clave de API"}>
               <div className="relative">
                 <KeyRound className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-faint" />
@@ -168,14 +167,14 @@ export function SettingsView() {
                 />
               </div>
             </Field>
-            <Field label="Variedad de ingles">
+            <Field label="Variedad de inglés">
               <select
                 value={form.accent}
                 onChange={(event) => setForm({ ...form, accent: event.target.value })}
                 className={inputClass}
               >
-                <option value="en-US">Ingles estadounidense (en-US)</option>
-                <option value="en-GB">Ingles britanico (en-GB)</option>
+                <option value="en-US">Inglés estadounidense (en-US)</option>
+                <option value="en-GB">Inglés britanico (en-GB)</option>
               </select>
             </Field>
           </div>
@@ -198,7 +197,7 @@ export function SettingsView() {
 
           <div className="mt-4 flex flex-wrap items-center gap-2">
             <Button size="sm" variant="subtle" icon={<PlugZap className="h-3.5 w-3.5" />} onClick={() => void testLLM()}>
-              Probar conexion
+              Probar conexión
             </Button>
             <Button
               size="sm"
@@ -215,33 +214,24 @@ export function SettingsView() {
           </div>
         </section>
 
-        <div className="signal-line my-6" />
+        <div className="hairline my-8" />
 
         <section>
           <SectionTitle
-            title="Musica en linea"
-            hint="Catalogo y reproduccion de YouTube Music mediante yt-dlp, una herramienta local y no oficial. Uso personal: puede dejar de funcionar si YouTube cambia, y va contra sus terminos de servicio."
+            title="Música en linea"
+            hint="Catalogo y reproducción de YouTube Music mediante yt-dlp, una herramienta local y no oficial. Uso personal: puede dejar de funcionar si YouTube cambia, y va contra sus terminos de servicio."
           />
-          <label className="flex items-start gap-3 rounded-[9px] border border-line bg-elevated/40 px-3 py-3">
-            <input
-              type="checkbox"
-              checked={form.features.youtubeMusic}
-              onChange={(event) => setForm({ ...form, features: { ...form.features, youtubeMusic: event.target.checked } })}
-              className="mt-0.5 h-4 w-4 accent-[#85afff]"
-            />
-            <span>
-              <span className="block text-[12.5px] text-ink">Buscar y reproducir desde YouTube Music</span>
-              <span className="mt-0.5 block text-[11.5px] leading-relaxed text-muted">
-                La busqueda usa el catalogo publico. El audio se resuelve en esta maquina y se reproduce dentro de la
-                app, con letra, velocidad y repeticion.
-              </span>
-            </span>
-          </label>
+          <Switch
+            checked={form.features.youtubeMusic}
+            onChange={(value) => setForm({ ...form, features: { ...form.features, youtubeMusic: value } })}
+            label="Buscar y reproducir desde YouTube Music"
+            description="La búsqueda usa el catálogo público. El audio se resuelve en esta máquina y se reproduce dentro de la app, con letra, velocidad y repetición."
+          />
 
           <div className="mt-3 flex items-start gap-2 rounded-[9px] border border-line/70 px-3 py-2.5">
             <span
               className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full"
-              style={{ background: info?.online.available ? "#85afff" : "#ff9b9b" }}
+              style={{ background: info?.online.available ? "#0066cc" : "#ff9b9b" }}
               aria-hidden
             />
             <p className="text-[11.5px] leading-relaxed text-muted">
@@ -253,14 +243,14 @@ export function SettingsView() {
                 <>
                   <span className="text-ink">Falta yt-dlp.</span> Instalalo con{" "}
                   <span className="font-mono text-[11px] text-ink">winget install yt-dlp</span> y reinicia STEFANI. Sin
-                  el, las pistas de YouTube Music se pueden guardar y abrir en la app oficial, pero no suenan aqui.
+                  el, las pistas de YouTube Music se pueden guardar y abrir en la app oficial, pero no suenan aquí.
                 </>
               )}
             </p>
           </div>
         </section>
 
-        <div className="signal-line my-6" />
+        <div className="hairline my-8" />
 
         <section>
           <SectionTitle title="Proveedores" />
@@ -269,7 +259,7 @@ export function SettingsView() {
               <li key={provider.name} className="flex items-start gap-2 text-[12px]">
                 <CheckCircle2
                   className="mt-0.5 h-3.5 w-3.5 shrink-0"
-                  style={{ color: provider.state === "disabled" ? "#6b7789" : "#85afff" }}
+                  style={{ color: provider.state === "disabled" ? "#8e8e93" : "#0066cc" }}
                 />
                 <span>
                   <span className="text-ink">{provider.name}</span>
@@ -280,16 +270,16 @@ export function SettingsView() {
           </ul>
         </section>
 
-        <div className="signal-line my-6" />
+        <div className="hairline my-8" />
 
         <section>
           <SectionTitle title="Acerca de" />
           <dl className="space-y-1 text-[11.5px] text-muted">
-            <Row label="Version" value={info ? `${info.name} ${info.version}` : "—"} />
+            <Row label="Versión" value={info ? `${info.name} ${info.version}` : "—"} />
             <Row label="Identificador" value={info?.identifier ?? "—"} />
             <Row label="Base de datos" value={info?.dbPath ?? "—"} mono />
             <Row label="Esquema" value={info ? `v${info.schema}` : "—"} />
-            <Row label="Configuracion" value={form.configPath} mono />
+            <Row label="Configuración" value={form.configPath} mono />
           </dl>
         </section>
       </div>

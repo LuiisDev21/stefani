@@ -55,7 +55,7 @@ export function SearchView() {
             type="search"
             value={text}
             onChange={(event) => schedule(event.target.value)}
-            placeholder="Cancion, artista o album"
+            placeholder="Canción, artista o álbum"
             aria-label="Buscar canciones"
             className="h-10 w-full rounded-[9px] border border-line bg-elevated pl-9 pr-10 text-[13px] text-ink placeholder:text-faint focus:border-accent/60"
           />
@@ -69,7 +69,7 @@ export function SearchView() {
             <span key={provider.name} className="flex items-center gap-1.5" title={provider.detail}>
               <span
                 className="h-1.5 w-1.5 rounded-full"
-                style={{ background: provider.state === "ready" || provider.state === "enabled" ? "#85afff" : "#3a4457" }}
+                style={{ background: provider.state === "ready" || provider.state === "enabled" ? "#0066cc" : "#3a4457" }}
               />
               {provider.name}
             </span>
@@ -94,12 +94,12 @@ export function SearchView() {
           ) : result && result.query ? (
             <EmptyState
               title="Sin resultados"
-              description={`No encontre nada para "${result.query}". Prueba con otra grafia o revisa la musica en linea en Ajustes.`}
+              description={`No encontre nada para "${result.query}". Prueba con otra grafia o revisa la música en linea en Ajustes.`}
             />
           ) : (
             <EmptyState
-              title="Busca en tu musica"
-              description="Escribe el titulo o el artista. La busqueda consulta tu biblioteca y el catalogo de YouTube Music si la musica en linea esta activa."
+              title="Busca en tu música"
+              description="Escribe el titulo o el artista. La busqueda consulta tu biblioteca y el catalogo de YouTube Music si la música en linea esta activa."
             />
           )}
         </div>

@@ -10,7 +10,7 @@ export function Toast() {
 
   const Icon = toast.kind === "ok" ? CheckCircle2 : toast.kind === "error" ? XCircle : Info;
   const accent =
-    toast.kind === "ok" ? "text-accent" : toast.kind === "error" ? "text-danger" : "text-violet";
+    toast.kind === "ok" ? "text-accent" : toast.kind === "error" ? "text-danger" : "text-ink";
 
   return (
     <div
@@ -20,8 +20,8 @@ export function Toast() {
     >
       <div
         className={cn(
-          "flex items-start gap-3 rounded-[10px] border border-line bg-surface/95 px-4 py-3",
-          "shadow-[0_18px_40px_rgba(0,0,0,0.5)] backdrop-blur-sm",
+          "flex items-start gap-3 rounded-[18px] border border-line bg-bg px-4 py-3",
+          "shadow-[var(--shadow-overlay)]",
         )}
       >
         <Icon className={cn("mt-0.5 h-4 w-4 shrink-0", accent)} aria-hidden="true" />

@@ -36,7 +36,7 @@ export function TrackRow({
       className={cn(
         "group grid grid-cols-[28px_minmax(0,1fr)_auto] items-center gap-3 rounded-[7px] px-2 py-[6px]",
         "transition-colors hover:bg-surface/50",
-        active && "bg-surface/40",
+        active && "bg-surface",
       )}
     >
       <button

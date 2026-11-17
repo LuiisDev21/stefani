@@ -9,7 +9,7 @@ import { expect, test, type Page } from "@playwright/test";
 async function waitForApp(page: Page) {
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Inicio" })).toBeVisible();
-  await expect(page.getByText("Canciones de demostracion")).toBeVisible();
+  await expect(page.getByText("Canciones de demostración")).toBeVisible();
 }
 
 test.describe("STEFANI desktop shell", () => {
@@ -53,7 +53,7 @@ test.describe("STEFANI desktop shell", () => {
     await waitForApp(page);
     await page.getByRole("button", { name: /Reproducir Paper Boats/ }).click();
 
-    const panel = page.locator("aside").filter({ hasText: "Letra y pronunciacion" });
+    const panel = page.locator("aside").filter({ hasText: "Letra y pronunciación" });
     await expect(panel.getByText("palabra por palabra")).toBeVisible();
     await expect(panel.getByText("/wiː ˈfoʊldɪd wɜːrdz ˈɪntuː ə boʊt/")).toBeVisible();
     await expect(panel.getByText("uii fóuldid uérds íntu a bóut")).toBeVisible();
@@ -78,7 +78,7 @@ test.describe("STEFANI desktop shell", () => {
   test("asks for AI setup instead of failing when no key is stored", async ({ page }) => {
     await waitForApp(page);
     await page.getByRole("button", { name: /Reproducir Midnight Signals/ }).click();
-    const panel = page.locator("aside").filter({ hasText: "Letra y pronunciacion" });
+    const panel = page.locator("aside").filter({ hasText: "Letra y pronunciación" });
     await panel.getByRole("button", { name: "Anotar con IA" }).click();
 
     await expect(page.getByRole("status").filter({ hasText: /Configura|clave/i })).toBeVisible();

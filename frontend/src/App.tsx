@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { TooltipProvider } from "@radix-ui/react-tooltip";
-import { Sidebar } from "./components/layout/Sidebar";
+import { TopNav } from "./components/layout/TopNav";
 import { PlayerBar } from "./components/layout/PlayerBar";
 import { StudyPanel } from "./components/layout/StudyPanel";
 import { Toast } from "./components/ui/Toast";
@@ -16,7 +16,7 @@ import { ImmersiveView } from "./features/immersive/ImmersiveView";
 import { useApp } from "./stores/appStore";
 import { useKeyboardShortcuts } from "./lib/useKeyboardShortcuts";
 
-/** Application shell: navigation rail, active view, study panel, transport. */
+/** Application shell: global navigation, active view, study panel, transport. */
 export default function App() {
   const ready = useApp((state) => state.ready);
   const fatalError = useApp((state) => state.fatalError);
@@ -35,13 +35,20 @@ export default function App() {
 
   if (!ready) {
     return (
-      <div className="flex h-full items-center justify-center">
-        <div className="w-[280px] space-y-3" aria-busy="true" aria-label="Iniciando STEFANI">
-          <p className="text-[13px] font-semibold text-muted">Stefani</p>
-          <div className="h-[2px] w-full overflow-hidden rounded bg-line">
-            <div className="h-full w-1/3 animate-pulse bg-accent" />
+      <div className="flex h-full flex-col bg-bg" aria-busy="true" aria-label="Iniciando STEFANI">
+        <div className="h-11 bg-black" />
+        <div className="mx-auto w-full max-w-[900px] px-8 pt-16">
+          <div className="h-9 w-64 animate-pulse rounded-[8px] bg-surface" />
+          <div className="mt-4 h-5 w-80 animate-pulse rounded-[6px] bg-line-soft" />
+          <div className="mt-12 grid grid-cols-3 gap-6">
+            {[0, 1, 2].map((key) => (
+              <div key={key} className="space-y-3">
+                <div className="aspect-square animate-pulse rounded-[18px] bg-surface" />
+                <div className="h-4 w-3/4 animate-pulse rounded bg-line-soft" />
+                <div className="h-3 w-1/2 animate-pulse rounded bg-line-soft" />
+              </div>
+            ))}
           </div>
-          <p className="text-[11.5px] text-faint">Preparando la biblioteca…</p>
         </div>
       </div>
     );
@@ -49,13 +56,13 @@ export default function App() {
 
   if (fatalError) {
     return (
-      <div className="flex h-full items-center justify-center px-8">
+      <div className="flex h-full items-center justify-center bg-bg px-8">
         <div className="max-w-[560px]">
           <p className="text-[12px] font-semibold text-danger">Error al iniciar</p>
-          <h1 className="mt-2 text-[20px] font-medium text-ink">STEFANI no pudo cargar sus datos</h1>
-          <p className="mt-2 text-[12.5px] leading-relaxed text-muted">{fatalError}</p>
-          <p className="mt-3 text-[11.5px] leading-relaxed text-faint">
-            Revisa los registros en la carpeta de configuracion de la app. Abrir la aplicacion no modifica la base de
+          <h1 className="mt-2 text-[34px] leading-[1.1] text-ink">STEFANI no pudo cargar sus datos</h1>
+          <p className="mt-3 text-[15px] leading-[1.47] text-muted">{fatalError}</p>
+          <p className="mt-3 text-[13px] leading-[1.5] text-faint">
+            Revisa los registros en la carpeta de configuración de la app. Abrir la aplicación no modifica la base de
             datos, asi que puedes corregir el problema e intentarlo otra vez.
           </p>
         </div>
@@ -65,9 +72,9 @@ export default function App() {
 
   return (
     <TooltipProvider delayDuration={350}>
-      <div className="flex h-full flex-col">
+      <div className="flex h-full flex-col bg-bg">
+        <TopNav />
         <div className="flex min-h-0 flex-1">
-          <Sidebar />
           <main className="scroll-area min-w-0 flex-1" id="main-content">
             {view === "home" && <HomeView />}
             {view === "search" && <SearchView />}
@@ -77,7 +84,7 @@ export default function App() {
             {view === "learning" && <LearningView />}
             {view === "settings" && <SettingsView />}
           </main>
-          <div className="hidden lg:flex">
+          <div className="hidden border-l border-line lg:flex">
             <StudyPanel />
           </div>
         </div>

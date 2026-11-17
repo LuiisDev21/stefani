@@ -16,8 +16,8 @@ export function FavoritesView() {
         {favorites.length === 0 ? (
           <EmptyState
             icon={<Heart className="h-5 w-5" />}
-            title="Todavia no marcaste favoritos"
-            description="El corazon de cada fila guarda la cancion en favoritos, sin moverla de tu biblioteca."
+            title="Todavía no marcaste favoritos"
+            description="El corazon de cada fila guarda la canción en favoritos, sin moverla de tu biblioteca."
           />
         ) : (
           <TrackList tracks={favorites} onAdd={openPicker} />

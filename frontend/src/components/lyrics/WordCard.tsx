@@ -23,7 +23,7 @@ export function WordCard({ entry, word, loading, error, alreadySaved, onSave, on
     <div
       className={cn(
         "mx-3 mb-3 rounded-[10px] border border-line bg-surface/95 p-3",
-        "shadow-[0_14px_30px_rgba(0,0,0,0.45)]",
+        "shadow-[var(--shadow-overlay)]",
       )}
       role="region"
       aria-label={`Consulta de ${word}`}
@@ -64,7 +64,7 @@ export function WordCard({ entry, word, loading, error, alreadySaved, onSave, on
         <p className="mt-2 text-[12px] leading-relaxed text-danger">{error}</p>
       ) : entry ? (
         <div className="mt-2 space-y-1.5">
-          {entry.ipa ? <p className="text-[12.5px] text-violet/90">{entry.ipa}</p> : null}
+          {entry.ipa ? <p className="text-[13px] text-muted">{entry.ipa}</p> : null}
           <p className="text-[13px] text-ink">{entry.translation || entry.meaning}</p>
           {entry.meaning && entry.meaning !== entry.translation ? (
             <p className="text-[12px] leading-relaxed text-muted">{entry.meaning}</p>

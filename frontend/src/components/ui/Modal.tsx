@@ -21,11 +21,11 @@ export function Modal({ open, onOpenChange, title, description, children, footer
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-40 bg-[#05070c]/70 backdrop-blur-[2px]" />
+        <Dialog.Overlay className="fixed inset-0 z-40 bg-black/35" />
         <Dialog.Content
           className={cn(
             "fixed left-1/2 top-1/2 z-50 w-[calc(100vw-32px)] -translate-x-1/2 -translate-y-1/2",
-            "rounded-[14px] border border-line bg-elevated p-5 shadow-[0_24px_60px_rgba(0,0,0,0.55)]",
+            "rounded-[18px] border border-line bg-bg p-6 shadow-[var(--shadow-overlay)]",
             width,
           )}
         >

@@ -96,8 +96,8 @@ export function LyricsView({
     return (
       <EmptyState
         icon={<Music4 className="h-5 w-5" aria-hidden="true" />}
-        title="Todavia no hay letra"
-        description={lyrics?.notice || "Elige una cancion para cargar su letra, o importa un archivo .lrc."}
+        title="Todavía no hay letra"
+        description={lyrics?.notice || "Elige una canción para cargar su letra, o importa un archivo .lrc."}
         actions={
           <Button size="sm" variant="subtle" onClick={onImport}>
             Importar .lrc
@@ -115,7 +115,7 @@ export function LyricsView({
             size="sm"
             variant="subtle"
             icon={<ArrowDown className="h-3.5 w-3.5" />}
-            className="pointer-events-auto shadow-[0_8px_20px_rgba(0,0,0,0.45)]"
+            className="pointer-events-auto shadow-[var(--shadow-overlay)]"
             onClick={() => setManual(false)}
           >
             Seguir la letra

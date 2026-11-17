@@ -2,107 +2,118 @@
 
 ## Lectura de diseno
 
-> Se lee como: aplicacion de escritorio de escucha y estudio para adultos que
-> aprenden ingles, en un lenguaje visual nocturno y editorial, con diales
-> **ENERGY 2 / RHYTHM 2 / MOTION 2**.
+> Se lee como: una aplicacion de escritorio para escuchar y estudiar canciones,
+> construida con el lenguaje de `apple.design.md`: lienzo claro, tipografia con
+> tracking negativo, un unico azul de accion y nada de chrome decorativo. Diales
+> **ENERGY 2 / RHYTHM 2 / MOTION 1**.
 
-- **ENERGY 2**: la interfaz no grita. Un solo acento saturado y un solo borde
-  luminoso (el foco) por pantalla.
-- **RHYTHM 2**: las vistas cambian de composicion (banda destacada + listas en
-  Inicio, lista unica en Biblioteca, maestro-detalle en Listas), pero comparten
-  la misma retícula de 7 px de padding lateral y la misma linea de senal.
-- **MOTION 2**: transiciones de color y opacidad, autoscroll suave de la letra y
-  relleno progresivo de la palabra activa. Nada se mueve de forma continua.
+- **ENERGY 2**: la pantalla es blanca. El unico color saturado es Action Blue y
+  aparece solo donde hay una accion real (pill, enlace, foco, switch). La
+  portada y la letra activa son el foco; el resto recede.
+- **RHYTHM 2**: Inicio abre con un tile en Parchment; Biblioteca y Listas son
+  listas; Aprendizaje es una rejilla; Ajustes es una columna de lectura. Las
+  secciones se separan por superficie y hairline, nunca por cajas repetidas.
+- **MOTION 1**: transiciones de color, opacidad y `scale(0.97)` al pulsar. El
+  autoscroll de la letra es funcional. No hay pulsos ni bucles.
+
+La referencia completa esta en `apple.design.md` en la raiz del repositorio. Las
+decisiones de adaptacion (por que el cuerpo de la app no va a 17 px en todas
+partes, por que el modo inmersivo invierte la superficie) estan en
+[DECISIONS.md](DECISIONS.md).
 
 ## Paleta
 
-| Token | Valor | Uso | Razon |
-|---|---|---|---|
-| `bg` | `#0B0E16` | fondo de la app | nocturno, deja que la portada sea lo mas brillante |
-| `elevated` | `#121725` | paneles y barras | separa planos sin sombras grandes |
-| `surface` | `#1B2232` | hover, item activo | un solo paso de elevacion visible |
-| `ink` | `#F4F6FA` | texto principal | 17.8:1 sobre `bg` |
-| `muted` | `#A7B3C4` | texto secundario | 9.1:1 sobre `bg` |
-| `faint` | `#8B98AC` | metadatos y etiquetas | 6.6:1 sobre `bg`, sigue AA |
-| `accent` | `#85AFFF` | accion primaria, foco, progreso | unico acento saturado; 8.8:1 con texto `bg` |
-| `violet` | `#B0A0FF` | IPA | distingue la transcripcion de la traduccion; 8.6:1 |
-| `line` | `#273044` | bordes de 1 px | profundidad por borde, no por sombra |
+| Token | Valor | Uso |
+|---|---|---|
+| `bg` | `#FFFFFF` | lienzo dominante |
+| `elevated` | `#F5F5F7` | Parchment: tiles, barras frosted, estados vacios |
+| `surface` | `#EDEDF0` | hover y pista del control |
+| `ink` | `#1D1D1F` | titulares y cuerpo |
+| `muted` | `#5F5F64` | texto secundario |
+| `faint` | `#737378` | metadatos y microcopy |
+| `accent` | `#0066CC` | Action Blue: toda accion interactiva |
+| `accent-focus` | `#0071E3` | anillo de foco |
+| `line` | `#E0E0E0` | hairline de 1 px |
+| `line-soft` | `#F0F0F0` | separadores internos |
+| `danger` | `#D70015` | error y accion destructiva |
+| `dark` | `#1D1D1F` | texto sobre blanco en el modo inmersivo invertido |
+| `dark-tile` | `#272729` | tiles oscuros del modo inmersivo |
+| `on-accent` | `#FFFFFF` | texto sobre azul |
 
-Contraste calculado con la formula WCAG 2.1 (luminancia relativa). Valores
-comprobados sobre `#0B0E16`; todo el texto cumple AA y el principal llega a AAA.
+Contraste WCAG 2.1 calculado sobre `#FFFFFF`: `ink` 16.8:1, `muted` 6.35:1,
+`faint` 4.72:1, `accent` 5.57:1 y blanco sobre azul 5.57:1. Todo el texto cumple
+AA; el principal llega a AAA. Sobre Parchment: `ink` 15.5:1 y `muted` 5.8:1.
 
-El tema es **solo oscuro**, decision de producto documentada en
-[DECISIONS.md](DECISIONS.md#adr-008-tema-oscuro-unico): es una superficie de
-escucha y lectura, la portada es el elemento mas luminoso y el uso tipico es
-nocturno. No se ofrece un toggle a medias.
+**Sin segundo acento.** El violeta anterior desaparecio: el IPA se lee en
+`muted` y la lectura en espanol en `ink/75`. El estado de reproduccion (palabra
+que se ilumina) usa tinta, no color.
+
+**Sin gradientes decorativos.** El unico gradiente del producto es el relleno
+duro de dos paradas que pinta la palabra activa, porque es la unica forma de
+mostrar progreso dentro de un solo nodo de texto. La portada sin imagen es un
+sleeve tipografico, no un degradado generado.
 
 ## Tipografia
 
-Inter variable, incluida localmente (`frontend/public/inter-variable.woff2`,
-licencia OFL). Razon: x-height alto y figuras tabulares, lo que mantiene legibles
-las filas densas de letra a 14 px y evita que el reloj "baile" al cambiar.
+SF Pro Display/Text cuando el sistema la tiene; si no, Inter (incluida en el
+binario, OFL). Tracking negativo en todos los tamanos de titular.
 
-| Rol | Tamano / peso | Notas |
+| Nivel | Tamano / peso | Uso |
 |---|---|---|
-| Titulo de vista | 21 px / 500, tracking -0.015em | un `h1` por vista |
-| Titulo de seccion | 12.5 px / 600 | sin mayusculas espaciadas |
-| Cuerpo | 14 px / 400 | line-height 1.45 |
-| Letra inactiva | 15-19 px / 500 | escala con el estado activo |
-| Letra activa | 19 px (34 px en inmersivo) | unico foco de lectura |
-| Metadatos | 11-12.5 px / 400 | `muted` o `faint` |
-| Reloj y duraciones | 10.5-11 px, `tnum` | figuras tabulares |
+| Vista | 34 px / 600 / -0.374 px | `TopBar`, unico H1 por pantalla |
+| Seccion | 21 px / 600 / -0.231 px | `SectionTitle`, titulo de cancion |
+| Hero | 40 px / 600 / -0.28 px | solo el tile de Inicio |
+| Cuerpo | 14-15 px / 400 / 1.47 | UI y listas |
+| Lectura | 16-21 px / 400-600 | letra y panel de estudio |
+| Secundario | 14 px / 400 | descripciones |
+| Metadatos | 12-13 px / 400 | duraciones, contadores, atajos |
 
-No se usan mayusculas con tracking amplio en etiquetas de seccion: la jerarquia
-la dan peso y color, no el espaciado (regla antislop R-06).
+La escalera es 300 / 400 / 600 / 700: **no se usa 500**. El cuerpo de la app va
+a 14-15 px porque es una superficie densa de listas, igual que Apple Music; el
+panel de letra y el hero si usan los pasos editoriales de 16-22 px.
 
 ## Espaciado y radios
 
-- Escala base 4 px; padding lateral de vista 28 px; separacion entre secciones
-  28 px con la linea de senal.
-- Radios: 4 px chips, 7-8 px controles y filas, 14-16 px paneles. El unico
-  elemento circular es el boton de reproducir.
+- Base 8 px; gutters de 8/12/16/24; padding lateral de vista 32 px.
+- Radios: `pill` (9999) para toda accion, `18 px` para tiles y tarjetas,
+  `8 px` para miniaturas y utilidades, `0` para el tile full-bleed del hero.
+- **Una sola sombra** (`3px 5px 30px rgba(0,0,0,0.18)`) y solo bajo artwork que
+  descansa sobre una superficie. Las barras usan blur funcional
+  (`saturate(180%) blur(20px)` al 82 % de Parchment), no sombra.
 
 ## Motivo de identidad
 
-**La linea de senal**: tres barras verticales en el logotipo, la linea de 1 px que
-separa secciones y la barra de progreso. La misma forma aparece en el boton de
-reproducir y en el relleno de la palabra activa, de modo que "donde estas en la
-cancion" se lee con un unico lenguaje visual.
+La letra como objeto. El verso activo crece a 21 px/600, la palabra en curso se
+rellena de tinta y debajo aparecen IPA y lectura en espanol. La barra negra de
+navegacion y el lienzo blanco son el marco; la letra es lo que se expone.
 
 ## Componentes
 
-| Componente | Regla |
-|---|---|
-| `Button` | `primary` solo para la accion principal de la vista; `subtle` para acciones secundarias; `ghost` para terciarias |
-| `IconButton` | nombre accesible obligatorio + tooltip; tamano minimo 28x28, 36x36 en transporte |
-| `Slider` | riel de 2 px, pulgar visible en hover y foco; teclado con flechas, Shift para paso grande |
-| `Cover` | portada real si el proveedor la da; si no, degradado determinista derivado del titulo con iniciales: es un marcador honesto, no una portada falsa |
-| `Toast` | `role="status"`, se descarta solo a los 5.2 s, nunca roba foco |
-| `EmptyState` | dice que falta y cual es el siguiente paso; siempre con accion cuando existe |
-| `Modal` | Radix Dialog: foco atrapado, `Escape` cierra, overlay con blur de 2 px |
-
-Glass (backdrop-blur) aparece en exactamente dos lugares: la barra del reproductor
-y el pie del modo inmersivo. Sombra elevada, solo en esos mismos dos elementos y
-en dialogos.
+- **Nav global**: 44 px, negro puro, 12 px, sin iconos, marca a la izquierda y
+  accion de importar a la derecha. Es el unico negro de la pantalla.
+- **TopBar**: H1 de 34 px + linea de 14 px + acciones pill a la derecha.
+- **Pills**: primaria azul, secundaria con hairline, fantasma azul. `scale(0.97)`
+  al pulsar.
+- **Tiles**: Parchment, radio 18, sin borde ni sombra.
+- **Listas**: filas de 44-56 px, hairline entre filas, hover `surface`, sin
+  tarjetas por fila.
+- **Panel de estudio**: 400 px, blanco, borde izquierdo hairline, letra a 16 px.
+- **Reproductor**: barra frosted de 72 px, sin sombra, con la portada de 48 px
+  como unico objeto elevado.
+- **Modo inmersivo**: negro puro, letra blanca, controles blancos. Invierte la
+  superficie, no la identidad.
 
 ## Movimiento
 
-- Transiciones de 120-200 ms en color, opacidad y transform.
-- La letra se desplaza con `scroll-behavior: smooth`; el resaltado de la palabra
-  activa se pinta con un gradiente recortado sobre texto (solo pintura, sin
-  recalcular layout).
-- `prefers-reduced-motion: reduce` desactiva animaciones y transiciones.
-- El autoscroll se detiene 6 s cuando el usuario hace scroll manual y ofrece
-  "Seguir la letra".
+Solo transiciones de 150-200 ms en color, opacidad y `transform`. El pulso
+desaparecio del arranque: la carga usa un skeleton con la geometria del
+contenido. No hay animaciones en bucle.
 
 ## Accesibilidad
 
-- Foco visible siempre: contorno de 2 px `accent` con 2 px de separacion.
-- Navegacion completa por teclado: `Tab` recorre navegacion, filas, palabras de
-  la letra activa y controles; `Espacio` reproduce, flechas buscan +/-5 s, `M`
-  silencia, `I` abre el modo inmersivo, `Escape` lo cierra.
-- Las palabras de la letra son `role="button"` con nombre accesible ("Consultar
-  slowly") y activables con Enter/Espacio.
-- Los estados no dependen solo del color: el verso activo cambia de tamano y
-  opacidad; los avisos llevan icono y texto.
-- En modo estudio el texto de la letra activa llega a 34 px en inmersivo.
+- Foco visible: anillo de 2 px en `accent-focus` con offset de 2 px.
+- Todo control de icono tiene nombre accesible y tooltip; los chips son
+  `aria-pressed`; los switches, `role="switch"` con `aria-checked`.
+- Objetivos tactiles de 32-44 px; el transporte principal, 40 px.
+- En el modo inmersivo el texto blanco sobre negro alcanza 21:1 y el secundario
+  6.2:1. `prefers-reduced-motion` desactiva transiciones y autoscroll.
