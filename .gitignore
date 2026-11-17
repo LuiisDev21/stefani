@@ -43,3 +43,6 @@ data/
 
 # Test artefacts
 e2e-artifacts/
+
+# local design notes, not part of the project
+apple.design.md
