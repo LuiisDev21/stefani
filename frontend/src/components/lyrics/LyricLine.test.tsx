@@ -24,6 +24,7 @@ const wordLine: Line = {
     translation: "Tómatelo con calma",
     notes: [{ type: "stress", text: "El acento cae en la primera silaba." }],
     model: "test",
+    source: "ai",
   },
 };
 

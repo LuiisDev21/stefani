@@ -166,6 +166,7 @@ func run() error {
 
 	yt := music.NewYTMusic(12 * time.Second)
 	streamer := music.DetectYtDlp()
+	localPhon := phonetics.NewLocal()
 	musicSvc := music.NewService(db, yt, logger, state.youtubeMusic)
 	lyricSvc := lyrics.NewService(db, lyrics.NewLRCLIB(10*time.Second), logger)
 	aiClient := ai.New(45 * time.Second)
@@ -181,6 +182,7 @@ func run() error {
 		Phonetics:      phonSvc,
 		AI:             aiClient,
 		Streamer:       streamer,
+		LocalPhon:      localPhon,
 		Log:            logger,
 		Opener:         wailsOpener{},
 		Picker:         wailsPicker{},

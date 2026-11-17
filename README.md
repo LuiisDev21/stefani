@@ -24,8 +24,11 @@ las limitaciones conocidas, en la seccion final de este documento.
   aplicacion, letra con tiempos por palabra e IPA precalculado.
 - **Letras sincronizadas**: LRC, LRC mejorado (tiempos por palabra) y texto sin
   sincronizar, con autoscroll que se rinde ante el scroll manual.
-- **Lectura fonetica**: IPA estadounidense, aproximacion en espanol y notas de
-  pronunciacion por verso.
+- **Lectura fonetica sin configurar nada**: IPA estadounidense y aproximacion
+  en espanol para cualquier letra, generadas en local con el diccionario CMU.
+  No hace falta clave de IA para ver la pronunciacion.
+- **Notas y traduccion con IA**: cuando configuras un proveedor, la anotacion
+  anade traduccion contextual y explicaciones de los sonidos dificiles.
 - **Traduccion y vocabulario**: traduccion contextual al espanol y consulta de
   palabras con el proveedor de IA configurado.
 - **Repeticion de versos (A-B)** y control de velocidad 0.75x / 1x / 1.25x.
@@ -50,6 +53,8 @@ las limitaciones conocidas, en la seccion final de este documento.
 - Windows: WebView2 (viene con Windows 11) y un compilador C para cgo
 - Linux: `libgtk-3-dev` y `libwebkit2gtk-4.1-dev`
 - macOS: Xcode Command Line Tools
+- Nada extra para la pronunciacion: el diccionario CMU va incluido en el
+  binario.
 - Opcional, para musica en linea: `yt-dlp` en el PATH
   (`winget install yt-dlp`). No se empaqueta con la aplicacion: sin el, la app
   funciona igual con audio local y demo.

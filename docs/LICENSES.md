@@ -70,3 +70,13 @@ provisional, no como identidad final.
 instalador ni lo descarga: solo lo invoca si el usuario lo tiene instalado. Por
 eso no se agrega a la lista de dependencias distribuidas, pero se documenta aqui
 porque el usuario debe instalarlo para la musica en linea.
+
+## CMU Pronouncing Dictionary
+
+`internal/phonetics/data/cmudict.dict` se distribuye dentro del binario.
+
+Copyright (C) 1993-2015 Carnegie Mellon University. All rights reserved.
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the copyright notice and this
+permission notice are retained. El archivo embebido conserva su cabecera
+original.

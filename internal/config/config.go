@@ -47,15 +47,21 @@ type Window struct {
 
 // Config is the whole persisted settings document.
 type Config struct {
+	Schema   int      `json:"schema"`
 	LLM      LLM      `json:"llm"`
 	Features Features `json:"features"`
 	Window   Window   `json:"window"`
 	Accent   string   `json:"accent"`
 }
 
+// CurrentSchema is the settings layout version. Bump it when a default must be
+// migrated for documents written by an older build.
+const CurrentSchema = 2
+
 // Default returns a usable configuration.
 func Default() Config {
 	return Config{
+		Schema: CurrentSchema,
 		LLM: LLM{
 			BaseURL:        DefaultBaseURL,
 			Model:          DefaultModel,
@@ -99,6 +105,21 @@ func (s *Store) Load() (Config, error) {
 	}
 	if err := json.Unmarshal(data, &cfg); err != nil {
 		return Default(), fmt.Errorf("config file is not valid JSON: %w", err)
+	}
+	// Default() already carries the current schema, so a missing key would look
+	// migrated. Read it separately: 0 means "written by an older build".
+	var header struct {
+		Schema int `json:"schema"`
+	}
+	if err := json.Unmarshal(data, &header); err == nil {
+		cfg.Schema = header.Schema
+	}
+	// Documents written before online playback became the main source have no
+	// schema and carry the old default (off). Turn it on once; after that the
+	// user's choice is respected.
+	if cfg.Schema < CurrentSchema {
+		cfg.Features.YouTubeMusic = true
+		cfg.Schema = CurrentSchema
 	}
 	cfg.normalize()
 	return cfg, nil

@@ -69,6 +69,8 @@ export interface Annotation {
   translation: string;
   notes: Note[];
   model: string;
+  /** "ai" for a generated annotation, "local" for the bundled dictionary. */
+  source: "ai" | "local";
 }
 
 export interface Line {

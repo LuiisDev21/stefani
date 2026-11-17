@@ -1,5 +1,5 @@
 import { FileText, PenLine, RefreshCw, Repeat1, X } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "../../lib/cn";
 import { clamp } from "../../lib/format";
 import { activeLineIndex, loopFromLines } from "../../lib/timeline";
@@ -37,6 +37,23 @@ export function StudyPanel() {
   const notify = useApp((state) => state.notify);
 
   const current = usePlayer((state) => state.current);
+  const hasLocalPronunciation = useMemo(
+    () => Boolean(lyrics?.lines.some((line) => line.annotation?.source === "local")),
+    [lyrics],
+  );
+  // A track can start playing from anywhere (search, queue, immersive view):
+  // the panel is the single owner of loading its lyric, once per track.
+  const requested = useRef<string | null>(null);
+  useEffect(() => {
+    if (!current?.id) return;
+    if (lyrics?.trackId === current.id) {
+      requested.current = current.id;
+      return;
+    }
+    if (requested.current === current.id) return;
+    requested.current = current.id;
+    void loadLyrics(current.id);
+  }, [current?.id, lyrics?.trackId, loadLyrics]);
   const loop = usePlayer((state) => state.loop);
   const setLoop = usePlayer((state) => state.setLoop);
   const seekMs = usePlayer((state) => state.seekMs);
@@ -92,17 +109,26 @@ export function StudyPanel() {
     : "";
 
   return (
-    <aside className="flex h-full w-[382px] shrink-0 flex-col border-l border-line/70 bg-elevated/35">
+    <aside
+      className="flex h-full w-[382px] shrink-0 flex-col border-l border-line/70 bg-elevated/35"
+      data-lyrics-state={lyrics ? (lyrics.available ? "ready" : "empty") : "none"}
+      data-lyrics-lines={lyrics?.lines.length ?? 0}
+      data-lyrics-notice={lyrics?.notice ?? ""}
+    >
       <div className="px-4 pt-3.5">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
             <p className="text-[12.5px] font-semibold text-ink/90">Letra y pronunciacion</p>
             <p className="mt-1 truncate text-[11.5px] text-muted">
               {lyrics?.available
-                ? `${lyrics.provider} · ${syncLabel}${lyrics.hasWords ? "" : " (sin tiempos por palabra)"}`
-                : current
-                  ? "Sin letra cargada"
-                  : "Elige una cancion"}
+                ? `${lyrics.provider} · ${syncLabel}${lyrics.hasWords ? "" : " (sin tiempos por palabra)"}${
+                    hasLocalPronunciation ? " · IPA local" : ""
+                  }`
+                : loading && current
+                  ? "Buscando letra…"
+                  : current
+                    ? "Sin letra cargada"
+                    : "Elige una cancion"}
             </p>
           </div>
           <div className="flex items-center gap-0.5">

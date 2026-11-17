@@ -54,6 +54,7 @@ type Deps struct {
 	Phonetics *phonetics.Service
 	AI        *ai.Client
 	Streamer  *music.YtDlp
+	LocalPhon *phonetics.LocalEngine
 	Log       *slog.Logger
 	Picker    FilePicker
 	Emitter   Emitter
@@ -65,18 +66,19 @@ type Deps struct {
 
 // App is the bound service.
 type App struct {
-	db       *storage.DB
-	configs  *config.Store
-	secrets  secret.Store
-	music    *music.Service
-	lyrics   *lyrics.Service
-	phon     *phonetics.Service
-	ai       *ai.Client
-	streamer *music.YtDlp
-	log      *slog.Logger
-	picker   FilePicker
-	emitter  Emitter
-	opener   Opener
+	db        *storage.DB
+	configs   *config.Store
+	secrets   secret.Store
+	music     *music.Service
+	lyrics    *lyrics.Service
+	phon      *phonetics.Service
+	ai        *ai.Client
+	streamer  *music.YtDlp
+	localPhon *phonetics.LocalEngine
+	log       *slog.Logger
+	picker    FilePicker
+	emitter   Emitter
+	opener    Opener
 
 	onConfigChange func(config.Config)
 
@@ -91,19 +93,20 @@ func New(d Deps) *App {
 		log = slog.Default()
 	}
 	return &App{
-		db:       d.DB,
-		configs:  d.Configs,
-		secrets:  d.Secrets,
-		music:    d.Music,
-		lyrics:   d.Lyrics,
-		phon:     d.Phonetics,
-		ai:       d.AI,
-		streamer: d.Streamer,
-		log:      log,
-		picker:   d.Picker,
-		emitter:  d.Emitter,
-		opener:   d.Opener,
-		cfg:      d.Config,
+		db:        d.DB,
+		configs:   d.Configs,
+		secrets:   d.Secrets,
+		music:     d.Music,
+		lyrics:    d.Lyrics,
+		phon:      d.Phonetics,
+		ai:        d.AI,
+		streamer:  d.Streamer,
+		localPhon: d.LocalPhon,
+		log:       log,
+		picker:    d.Picker,
+		emitter:   d.Emitter,
+		opener:    d.Opener,
+		cfg:       d.Config,
 
 		onConfigChange: d.OnConfigChange,
 	}

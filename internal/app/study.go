@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"runtime/debug"
 	"strings"
 	"time"
 
@@ -39,12 +40,24 @@ func (a *App) annotationsMap(ctx context.Context, trackID string) map[string]dom
 }
 
 // Lyrics returns the lyric document for a track, fetching it when needed.
-func (a *App) Lyrics(trackID string, refresh bool) (LyricsDTO, error) {
+//
+// A panic inside a provider must never reach the bridge as an opaque error: it
+// is logged with its stack and reported as a readable state instead.
+func (a *App) Lyrics(trackID string, refresh bool) (dto LyricsDTO, err error) {
+	defer func() {
+		if recovered := recover(); recovered != nil {
+			a.log.Error("lyrics panic", "panic", recovered, "stack", string(debug.Stack()))
+			dto = LyricsDTO{TrackID: trackID, Notice: "No pude cargar la letra de esta cancion."}
+			err = nil
+		}
+	}()
+
 	ctx, cancel := a.opCtx()
 	defer cancel()
 
 	track, err := a.db.Track(ctx, trackID)
 	if err != nil {
+		a.log.Warn("lyrics: track not found", "track", trackID, "error", err)
 		return LyricsDTO{}, fmt.Errorf("no encontre esa cancion")
 	}
 	doc, err := a.lyrics.ForTrack(ctx, track, refresh)
@@ -65,13 +78,13 @@ func (a *App) Lyrics(trackID string, refresh bool) (LyricsDTO, error) {
 		Source:    doc.Source,
 		License:   doc.License,
 		HasWords:  doc.HasWordTimings(),
-		Lines:     toLineDTOs(doc.Lines, a.annotationsMap(ctx, trackID)),
+		Lines:     a.toLineDTOs(doc.Lines, a.annotationsMap(ctx, trackID)),
 	}, nil
 }
 
 func noLyricsNotice(track domain.Track) string {
 	if track.Provider == domain.ProviderYTMusic {
-		return "YouTube Music no entrega letras a esta app. Importa un archivo .lrc para estudiar esta cancion."
+		return "No encontre letra para esta cancion en LRCLIB. Puedes importar un archivo .lrc para estudiarla."
 	}
 	return "No hay letra disponible para esta cancion. Puedes importar un archivo .lrc."
 }

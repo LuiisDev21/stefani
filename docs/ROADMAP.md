@@ -48,3 +48,7 @@ reutilizar contenido sin licencia queda descartada por diseno.
 - Persistencia de resultados remotos con id estable y deduplicacion por
   proveedor.
 - Estado real del reproductor en linea en Ajustes y apagado forzado para CI.
+
+- Letra cargada automaticamente al reproducir desde cualquier vista.
+- Pronunciacion local (IPA + lectura ES) sin clave de IA.
+- Fallback de busqueda de letras por titulo y metadatos de YouTube saneados.

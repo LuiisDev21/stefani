@@ -302,13 +302,30 @@ func runsText(node any) string {
 	return b.String()
 }
 
+// resultKinds are the labels YouTube puts in the second column of a search
+// row. They describe the result, they are not the artist.
+var resultKinds = map[string]bool{
+	"song": true, "video": true, "episode": true, "single": true,
+	"album": true, "playlist": true, "artist": true, "podcast": true,
+	"profile": true,
+}
+
 func cleanSubtitle(s string) string {
 	s = strings.TrimSpace(s)
 	// Separators between artist, album and duration arrive as bullets.
 	if idx := strings.Index(s, " • "); idx > 0 {
 		s = s[:idx]
 	}
-	return strings.TrimSpace(s)
+	s = strings.TrimSpace(s)
+	lower := strings.ToLower(s)
+	if resultKinds[lower] {
+		return ""
+	}
+	// "267K plays" / "1.2M views" are counters, not an album.
+	if strings.HasSuffix(lower, " plays") || strings.HasSuffix(lower, " views") {
+		return ""
+	}
+	return s
 }
 
 func largestThumbnail(node any) string {

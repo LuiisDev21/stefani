@@ -3,6 +3,7 @@ package lyrics
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -241,4 +242,31 @@ func (l testLogger) Warn(msg string, args ...any) { l.t.Logf("WARN: "+msg, args.
 
 func writeFile(path string, data []byte) error {
 	return os.WriteFile(path, data, 0o644)
+}
+
+func TestLookupWithoutCandidatesIsNoLyrics(t *testing.T) {
+	// The search works but nothing matches: the caller must get ErrNoLyrics,
+	// never a nil document it would dereference.
+	lib, _ := fakeLRCLIB(t, []map[string]any{})
+	got, err := lib.Lookup(context.Background(), domain.Track{
+		Title: "Never Gonna Give You Up", Artist: "Rick Astley", DurationMs: 0,
+	})
+	if !errors.Is(err, ErrNoLyrics) {
+		t.Fatalf("error = %v, want ErrNoLyrics", err)
+	}
+	if got != nil {
+		t.Fatalf("document = %+v, want nil", got)
+	}
+}
+
+func TestLookupIgnoresCandidatesWithoutLyrics(t *testing.T) {
+	lib, _ := fakeLRCLIB(t, []map[string]any{
+		{"id": 1.0, "trackName": "Never Gonna Give You Up", "artistName": "Rick Astley", "duration": 213.0},
+		{"id": 2.0, "trackName": "Never Gonna Give You Up", "artistName": "Rick Astley", "duration": 213.0, "instrumental": true},
+	})
+	if _, err := lib.Lookup(context.Background(), domain.Track{
+		Title: "Never Gonna Give You Up", Artist: "Rick Astley",
+	}); !errors.Is(err, ErrNoLyrics) {
+		t.Fatalf("error = %v, want ErrNoLyrics", err)
+	}
 }

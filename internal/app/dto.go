@@ -83,6 +83,9 @@ type AnnotationDTO struct {
 	Translation   string    `json:"translation"`
 	Notes         []NoteDTO `json:"notes"`
 	Model         string    `json:"model"`
+	// Source tells the UI where the transcription came from: "ai" for a
+	// generated annotation, "local" for the bundled CMU dictionary.
+	Source string `json:"source"`
 }
 
 // LineDTO is one lyric line with optional study data.
@@ -315,7 +318,10 @@ func toPlaylistDTO(p domain.Playlist) PlaylistDTO {
 	}
 }
 
-func toLineDTOs(lines []domain.Line, annotations map[string]domain.Annotation) []LineDTO {
+// toLineDTOs attaches study data to each line. When a line has no generated
+// annotation, the local dictionary fills IPA and the Spanish reading, so a
+// freshly fetched lyric is usable before any AI provider is configured.
+func (a *App) toLineDTOs(lines []domain.Line, annotations map[string]domain.Annotation) []LineDTO {
 	out := make([]LineDTO, 0, len(lines))
 	for _, line := range lines {
 		dto := LineDTO{
@@ -329,19 +335,30 @@ func toLineDTOs(lines []domain.Line, annotations map[string]domain.Annotation) [
 		for _, w := range line.Words {
 			dto.Words = append(dto.Words, WordTimingDTO{Text: w.Text, StartMs: w.StartMs, EndMs: w.EndMs})
 		}
-		if a, ok := annotations[line.ID]; ok {
-			notes := make([]NoteDTO, 0, len(a.Notes))
-			for _, n := range a.Notes {
+		if a2, ok := annotations[line.ID]; ok {
+			notes := make([]NoteDTO, 0, len(a2.Notes))
+			for _, n := range a2.Notes {
 				notes = append(notes, NoteDTO{Type: n.Type, Text: n.Text})
 			}
 			dto.Annotation = &AnnotationDTO{
-				LineID:        a.LineID,
-				Accent:        a.Accent,
-				IPA:           a.IPA,
-				SpanishApprox: a.SpanishApprox,
-				Translation:   a.Translation,
+				LineID:        a2.LineID,
+				Accent:        a2.Accent,
+				IPA:           a2.IPA,
+				SpanishApprox: a2.SpanishApprox,
+				Translation:   a2.Translation,
 				Notes:         notes,
-				Model:         a.Model,
+				Model:         a2.Model,
+				Source:        "ai",
+			}
+		} else if a.localPhon != nil {
+			if ipa, spanish, ok := a.localPhon.Line(line.Text, 0.55); ok {
+				dto.Annotation = &AnnotationDTO{
+					LineID:        line.ID,
+					Accent:        "en-US",
+					IPA:           ipa,
+					SpanishApprox: spanish,
+					Source:        "local",
+				}
 			}
 		}
 		out = append(out, dto)

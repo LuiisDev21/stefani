@@ -79,6 +79,7 @@ func newTestEnvFull(t *testing.T, cfg config.Config, streamer *music.YtDlp, cata
 		Phonetics: phonetics.NewService(db, ai.New(time.Second), phoneticsCfg, logger),
 		AI:        ai.New(time.Second),
 		Streamer:  streamer,
+		LocalPhon: phonetics.NewLocal(),
 		Log:       logger,
 	})
 	return testEnv{app: svc, db: db, secrets: secrets, configs: cfgStore}
@@ -483,5 +484,82 @@ func TestSearchDegradesWhenTheProviderFails(t *testing.T) {
 	}
 	if len(data.Items) != 1 || data.Items[0].Provider != "demo" {
 		t.Fatalf("local results should survive: %+v", data.Items)
+	}
+}
+
+func TestLyricsFillLocalPronunciationWithoutAI(t *testing.T) {
+	env := newTestEnv(t)
+	ctx := context.Background()
+	id, err := env.db.SaveTrack(ctx, domain.Track{
+		Provider: domain.ProviderLocal, ProviderID: "local-1", Title: "Slow study", Artist: "Test",
+	})
+	if err != nil {
+		t.Fatalf("save track: %v", err)
+	}
+	if err := env.db.SaveLyrics(ctx, domain.Lyrics{
+		TrackID: id, Provider: "lrclib", Language: "en", Sync: domain.SyncLine,
+		Source: "test#1", Lines: []domain.Line{
+			{Index: 0, Text: "Take it slowly", StartMs: 0, EndMs: 2000},
+			{Index: 1, Text: "zzzqx qqqzz wwwwk", StartMs: 2000, EndMs: 4000},
+		},
+	}); err != nil {
+		t.Fatalf("save lyrics: %v", err)
+	}
+
+	dto, err := env.app.Lyrics(id, false)
+	if err != nil {
+		t.Fatalf("lyrics: %v", err)
+	}
+	if !dto.Available || len(dto.Lines) != 2 {
+		t.Fatalf("unexpected document: %+v", dto)
+	}
+	first := dto.Lines[0].Annotation
+	if first == nil {
+		t.Fatal("a known line must get a local pronunciation without any AI key")
+	}
+	if first.Source != "local" || first.IPA != "/teɪk ɪt ˈsloʊli/" || first.SpanishApprox != "téik it slóuli" {
+		t.Fatalf("unexpected local annotation: %+v", first)
+	}
+	if first.Translation != "" {
+		t.Fatalf("local pronunciation must not invent a translation: %+v", first)
+	}
+	if dto.Lines[1].Annotation != nil {
+		t.Fatalf("an unknown line must not get fake pronunciation: %+v", dto.Lines[1].Annotation)
+	}
+}
+
+func TestGeneratedAnnotationsWinOverLocal(t *testing.T) {
+	env := newTestEnv(t)
+	ctx := context.Background()
+	id, err := env.db.SaveTrack(ctx, domain.Track{
+		Provider: domain.ProviderLocal, ProviderID: "local-2", Title: "Already annotated",
+	})
+	if err != nil {
+		t.Fatalf("save track: %v", err)
+	}
+	if err := env.db.SaveLyrics(ctx, domain.Lyrics{
+		TrackID: id, Provider: "lrclib", Language: "en", Sync: domain.SyncLine,
+		Lines: []domain.Line{{Index: 0, Text: "Take it slowly", StartMs: 0, EndMs: 2000}},
+	}); err != nil {
+		t.Fatalf("save lyrics: %v", err)
+	}
+	saved, err := env.db.Lyrics(ctx, id)
+	if err != nil || len(saved.Lines) != 1 {
+		t.Fatalf("reload lyrics: %v", err)
+	}
+	if err := env.db.SaveAnnotation(ctx, domain.Annotation{
+		LineID: saved.Lines[0].ID, Accent: "en-US", IPA: "/custom/", SpanishApprox: "custom",
+		Translation: "Traducido", Model: "test-model",
+	}); err != nil {
+		t.Fatalf("save annotation: %v", err)
+	}
+
+	dto, err := env.app.Lyrics(id, false)
+	if err != nil {
+		t.Fatalf("lyrics: %v", err)
+	}
+	ann := dto.Lines[0].Annotation
+	if ann == nil || ann.Source != "ai" || ann.IPA != "/custom/" || ann.Translation != "Traducido" {
+		t.Fatalf("generated annotation should win: %+v", ann)
 	}
 }

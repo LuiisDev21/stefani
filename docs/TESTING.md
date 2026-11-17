@@ -4,7 +4,7 @@
 
 | Capa | Comando | Resultado |
 |---|---|---|
-| Go (dominio, storage, proveedores, letras, IA, demo, medios, app) | `go test ./internal/... -count=1` | **79 pruebas, 8 paquetes, todas pasan** |
+| Go (dominio, storage, proveedores, letras, IA, demo, medios, app) | `go test ./internal/... -count=1` | **93 pruebas, 8 paquetes, todas pasan** |
 | Go estatico | `go vet ./...` | sin hallazgos |
 | Frontend unitario | `pnpm test` (Vitest + Testing Library) | **29 pruebas, 3 archivos, todas pasan** |
 | Tipos | `pnpm exec tsc --noEmit` | sin errores, `strict: true` |
@@ -33,6 +33,17 @@
 - **music (yt-dlp)**: deteccion ausente, URL valida y cache (una sola invocacion),
   identificadores invalidos sin ejecutar el binario, host no permitido, rechazo
   de `http`, error con detalle saneado (sin URLs) y expiracion de la cache.
+- **music (metadatos)**: la segunda columna de YouTube ("Song", "Episode",
+  "267K plays") no se toma como artista; los bullets separan artista y album.
+- **lyrics**: una busqueda sin candidatos devuelve "sin letra" y nunca un
+  documento nil (el fallo que dejaba el panel vacio por un panic); el fallback
+  busca primero por titulo, asi que un artista ausente o incorrecto no oculta la
+  letra.
+- **phonetics local**: IPA y lectura ES de frases conocidas, palabras
+  desconocidas visibles, umbral de cobertura, monosilabas, palabras funcionales
+  sin tilde y contracciones con apostrofo.
+- **app**: una letra sin anotaciones recibe IPA local sin clave, una linea
+  desconocida no se inventa y una anotacion de IA siempre tiene prioridad.
 - **music**: parseo de metadatos de InnerTube, refresco de credenciales una sola
   vez, `parseClock`, importacion de archivos no soportados, catalogo sin
   `Playable`.

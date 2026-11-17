@@ -107,3 +107,21 @@ porque el reloj es el propio `<audio>` y no un iframe.
 
 Riesgos asumidos: va contra los terminos de YouTube, puede romperse cuando
 cambie el servicio y el binario no se distribuye con la aplicacion.
+
+## Pronunciacion local (CMUdict)
+
+`phonetics.LocalEngine` transcribe ingles a IPA y a una lectura en espanol sin
+red y sin IA. Es la fuente por defecto de la columna de pronunciacion.
+
+| Aspecto | Comportamiento |
+|---|---|
+| Diccionario | `cmudict.dict` embebido (135k entradas, ARPAbet con acento) |
+| Conversion | ARPAbet -> IPA americano; marca de acento con heuristica de onset (hasta 3 consonantes) |
+| Lectura ES | tabla IPA -> grafia espanola, tilde en la vocal tonica, palabras funcionales sin tilde |
+| Cobertura | si menos del 55 % de las palabras de un verso estan en el diccionario, no se inventa nada |
+| Prioridad | una anotacion generada por IA siempre gana; la local solo rellena huecos |
+| Traduccion | **no** la genera: eso sigue siendo trabajo del proveedor de IA |
+
+Limitaciones honestas: el diccionario da la pronunciacion de cada palabra, no la
+prosodia de la frase ni las reducciones del canto; y el acento britanico no esta
+cubierto (el diccionario es americano).

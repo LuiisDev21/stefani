@@ -123,3 +123,21 @@ Google dentro de la app y rompe el reloj unico), backend propio tipo Liner
 puede cambiar sin aviso. Se mitiga con cache, validacion, mensajes claros y
 fallback a local/demo. yt-dlp no se empaqueta. El riesgo de terminos de servicio
 queda documentado y asumido.
+
+## ADR-014: pronunciacion local con CMUdict en lugar de depender de la IA
+
+**Contexto**: la demo traia IPA precalculado, pero cualquier otra cancion
+mostraba el panel vacio hasta que el usuario configurara un proveedor de IA y
+pulsara "Anotar". Eso convertia la funcion principal del producto en rehén de
+una credencial externa.
+
+**Decision**: embeber `cmudict.dict` (135k palabras, ARPAbet con acento) y
+convertirlo a IPA y a lectura espanola en el proceso. La IA queda para
+traduccion, notas de contexto y vocabulario.
+
+**Alternativas descartadas**: g2p por reglas (precision ~70 %, inaceptable para
+ensenar), eSpeak NG (GPL y proceso externo), exigir clave para ver fonetica.
+
+**Consecuencia**: el binario crece ~3,5 MB y el diccionario se parsea en el
+primer uso (~150 ms). La pronunciacion funciona offline desde el primer arranque
+y la IA pasa a ser una mejora, no un requisito.

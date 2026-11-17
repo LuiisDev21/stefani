@@ -103,12 +103,27 @@ func (l *LRCLIB) Lookup(ctx context.Context, track domain.Track) (*RemoteLyrics,
 		return nil, err
 	}
 
-	query := strings.TrimSpace(track.Title + " " + track.Artist)
-	results, err := l.Search(ctx, query)
-	if err != nil {
-		return nil, err
+	// A wrong or missing artist (YouTube channels, "Song" placeholders) must not
+	// hide a lyric that exists: try title first, then title plus artist.
+	queries := []string{strings.TrimSpace(track.Title)}
+	if artist := strings.TrimSpace(track.Artist); artist != "" {
+		queries = append(queries, strings.TrimSpace(track.Title+" "+artist))
 	}
-	return pickBest(results, track), nil
+	for _, query := range queries {
+		if query == "" {
+			continue
+		}
+		results, err := l.Search(ctx, query)
+		if err != nil {
+			return nil, err
+		}
+		if best := pickBest(results, track); best != nil {
+			return best, nil
+		}
+	}
+	// No candidate had usable lyrics: that is "not found", never a nil document
+	// that the caller would dereference.
+	return nil, ErrNoLyrics
 }
 
 func pickBest(results []RemoteLyrics, track domain.Track) *RemoteLyrics {
