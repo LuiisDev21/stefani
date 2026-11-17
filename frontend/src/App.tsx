@@ -1,121 +1,91 @@
-import { useState, useEffect, useRef } from 'react'
-import {Events, WML} from "@wailsio/runtime";
-import {GreetService} from "../bindings/github.com/LuiisDev21/stefani";
+import { useEffect } from "react";
+import { TooltipProvider } from "@radix-ui/react-tooltip";
+import { Sidebar } from "./components/layout/Sidebar";
+import { PlayerBar } from "./components/layout/PlayerBar";
+import { StudyPanel } from "./components/layout/StudyPanel";
+import { Toast } from "./components/ui/Toast";
+import { PlaylistPicker } from "./components/track/PlaylistPicker";
+import { HomeView } from "./features/home/HomeView";
+import { SearchView } from "./features/search/SearchView";
+import { LibraryView } from "./features/library/LibraryView";
+import { FavoritesView } from "./features/favorites/FavoritesView";
+import { PlaylistsView } from "./features/playlists/PlaylistsView";
+import { LearningView } from "./features/learning/LearningView";
+import { SettingsView } from "./features/settings/SettingsView";
+import { ImmersiveView } from "./features/immersive/ImmersiveView";
+import { useApp } from "./stores/appStore";
+import { useKeyboardShortcuts } from "./lib/useKeyboardShortcuts";
 
-// Show the actual Wails version this project was generated against.
-const wailsVersion = "v3.1.0";
-
-function App() {
-  const [name, setName] = useState<string>('');
-  const [time, setTime] = useState<string>('Listening for Time event...');
-
-  const titleNameRef = useRef<HTMLSpanElement | null>(null);
-  const toastRef = useRef<HTMLDivElement | null>(null);
-  const resultRef = useRef<HTMLSpanElement | null>(null);
-  const toastTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-
-  // Crossfade the framework word in the heading ("Wails + React") to the name
-  // the user entered ("Wails + <name>"): the old word fades out while the new one
-  // fades in over the same spot.
-  const swapTitleName = (name: string) => {
-    const titleNameElement = titleNameRef.current;
-    if (!titleNameElement) {
-      return;
-    }
-    const current = titleNameElement.querySelector('.title-name-text:not(.is-outgoing)');
-    if (!current || current.textContent === name) {
-      return;
-    }
-    const incoming = document.createElement('span');
-    incoming.className = 'title-name-text is-entering';
-    incoming.textContent = name;
-    current.classList.add('is-outgoing');
-    titleNameElement.appendChild(incoming);
-    // Force a reflow so the transitions run from the starting state.
-    void incoming.offsetWidth;
-    incoming.classList.remove('is-entering');
-    current.classList.add('is-leaving');
-    current.addEventListener('transitionend', () => current.remove(), {once: true});
-  };
-
-  // Pop the toast with the message Go returned, then auto-dismiss it.
-  const showToast = (message: string) => {
-    if (resultRef.current) {
-      resultRef.current.innerText = message;
-    }
-    if (toastRef.current) {
-      toastRef.current.classList.add('is-visible');
-    }
-    clearTimeout(toastTimer.current);
-    toastTimer.current = setTimeout(() => {
-      if (toastRef.current) {
-        toastRef.current.classList.remove('is-visible');
-      }
-    }, 4000);
-  };
-
-  const doGreet = () => {
-    let n = name || 'anonymous';
-    swapTitleName(n);
-    GreetService.Greet(n).then(showToast).catch(console.error);
-  };
+/** Application shell: navigation rail, active view, study panel, transport. */
+export default function App() {
+  const ready = useApp((state) => state.ready);
+  const fatalError = useApp((state) => state.fatalError);
+  const view = useApp((state) => state.view);
+  const immersive = useApp((state) => state.immersive);
+  const pickerTrack = useApp((state) => state.pickerTrack);
+  const playlists = useApp((state) => state.playlists);
+  const closePicker = useApp((state) => state.closePicker);
+  const init = useApp((state) => state.init);
 
   useEffect(() => {
-    Events.On('time', (timeValue: any) => {
-      // On a narrow screen the full RFC1123 stamp is too wide for the footer, so
-      // show just the clock time there (matching the CSS breakpoint).
-      const full = timeValue.data;
-      const compact = (full.match(/\d{1,2}:\d{2}:\d{2}/) || [full])[0];
-      setTime(window.matchMedia('(max-width: 640px)').matches ? compact : full);
-    });
-    // Reload WML so it picks up the wml tags
-    WML.Reload();
-  }, []);
+    void init();
+  }, [init]);
+
+  useKeyboardShortcuts();
+
+  if (!ready) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <div className="w-[280px] space-y-3" aria-busy="true" aria-label="Iniciando STEFANI">
+          <p className="text-[13px] font-semibold text-muted">Stefani</p>
+          <div className="h-[2px] w-full overflow-hidden rounded bg-line">
+            <div className="h-full w-1/3 animate-pulse bg-accent" />
+          </div>
+          <p className="text-[11.5px] text-faint">Preparando la biblioteca…</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (fatalError) {
+    return (
+      <div className="flex h-full items-center justify-center px-8">
+        <div className="max-w-[560px]">
+          <p className="text-[12px] font-semibold text-danger">Error al iniciar</p>
+          <h1 className="mt-2 text-[20px] font-medium text-ink">STEFANI no pudo cargar sus datos</h1>
+          <p className="mt-2 text-[12.5px] leading-relaxed text-muted">{fatalError}</p>
+          <p className="mt-3 text-[11.5px] leading-relaxed text-faint">
+            Revisa los registros en la carpeta de configuracion de la app. Abrir la aplicacion no modifica la base de
+            datos, asi que puedes corregir el problema e intentarlo otra vez.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <>
-      <main className="container">
-        <header className="brand">
-          <a className="brand-mark" data-wml-openURL="https://v3.wails.io" aria-label="Wails website">
-            <img src="/wails.png" className="brand-logo" alt="Wails logo"/>
-          </a>
-          <a className="brand-badge" data-wml-openURL="https://reactjs.org" aria-label="React">
-            <img src="/react.svg" alt="React logo"/>
-          </a>
-        </header>
-
-        <h1 className="title"><span className="title-accent">Wails +</span> <span className="title-name" ref={titleNameRef}><span className="title-name-text">React</span></span></h1>
-        <p className="subtitle">Build beautiful cross-platform apps with Go and React.</p>
-
-        <div className="greet">
-          <div className="input-box">
-            <svg className="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            <input aria-label="input" className="input" value={name} onChange={(e) => setName(e.target.value)} type="text" placeholder="Your name" autoComplete="off"/>
-            <button aria-label="greet-btn" className="btn" onClick={doGreet}>Greet
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-            </button>
+    <TooltipProvider delayDuration={350}>
+      <div className="flex h-full flex-col">
+        <div className="flex min-h-0 flex-1">
+          <Sidebar />
+          <main className="scroll-area min-w-0 flex-1" id="main-content">
+            {view === "home" && <HomeView />}
+            {view === "search" && <SearchView />}
+            {view === "library" && <LibraryView />}
+            {view === "favorites" && <FavoritesView />}
+            {view === "playlists" && <PlaylistsView />}
+            {view === "learning" && <LearningView />}
+            {view === "settings" && <SettingsView />}
+          </main>
+          <div className="hidden lg:flex">
+            <StudyPanel />
           </div>
         </div>
-      </main>
-
-      <hr className="footer-divider"/>
-      <footer className="footer">
-        <span className="footer-version"><span>{wailsVersion}</span></span>
-        <span className="footer-time">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          <span>{time}</span>
-        </span>
-        <a className="footer-docs" data-wml-openURL="https://v3.wails.io" aria-label="Wails documentation">Docs
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
-        </a>
-      </footer>
-
-      <div className="toast" ref={toastRef} role="status" aria-live="polite">
-        <span className="toast-label">From Go</span>
-        <span aria-label="result" className="toast-msg" ref={resultRef}></span>
+        <PlayerBar />
+        <Toast />
+        <PlaylistPicker track={pickerTrack} playlists={playlists} onClose={closePicker} />
+        {immersive ? <ImmersiveView /> : null}
       </div>
-    </>
-  )
+    </TooltipProvider>
+  );
 }
-
-export default App

@@ -1,14 +1,22 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/wails.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <link rel="stylesheet" href="/style.css" />
-    <title>Wails + React + TS</title>
+    <meta name="color-scheme" content="dark" />
+    <meta name="description" content="STEFANI: reproductor musical con letras sincronizadas, IPA y traduccion para aprender ingles." />
+    <title>STEFANI</title>
+    <style>
+      /* Painted before the bundle loads so the window never flashes white. */
+      html,
+      body {
+        margin: 0;
+        background: #0b0e16;
+        color: #f4f6fa;
+      }
+    </style>
   </head>
   <body>
-    <div class="bg" aria-hidden="true"></div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
