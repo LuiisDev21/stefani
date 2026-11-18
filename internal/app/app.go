@@ -23,6 +23,7 @@ import (
 	"github.com/LuiisDev21/stefani/internal/phonetics"
 	"github.com/LuiisDev21/stefani/internal/secret"
 	"github.com/LuiisDev21/stefani/internal/storage"
+	"github.com/LuiisDev21/stefani/internal/ytaccount"
 )
 
 // Emitter publishes events to the frontend.
@@ -59,6 +60,11 @@ type Deps struct {
 	Picker    FilePicker
 	Emitter   Emitter
 	Opener    Opener
+	Account   *ytaccount.Client
+	// OpenAccountLogin shows the WebView login window; CloseAccountLogin hides
+	// it so the profile lock is released before its cookies are read.
+	OpenAccountLogin  func() error
+	CloseAccountLogin func() error
 	// OnConfigChange runs after settings are saved, so services holding their
 	// own snapshot can refresh.
 	OnConfigChange func(config.Config)
@@ -79,6 +85,9 @@ type App struct {
 	picker    FilePicker
 	emitter   Emitter
 	opener    Opener
+	account   *ytaccount.Client
+	openLogin func() error
+	closeLogin func() error
 
 	onConfigChange func(config.Config)
 
@@ -106,6 +115,9 @@ func New(d Deps) *App {
 		picker:    d.Picker,
 		emitter:   d.Emitter,
 		opener:    d.Opener,
+		account:   d.Account,
+		openLogin: d.OpenAccountLogin,
+		closeLogin: d.CloseAccountLogin,
 		cfg:       d.Config,
 
 		onConfigChange: d.OnConfigChange,
@@ -607,7 +619,11 @@ func (a *App) ImportPlaylist(rawURL string) (ImportDTO, error) {
 	}
 	ctx, cancel := a.opCtx()
 	defer cancel()
+	return a.importPlaylist(ctx, playlistID, "")
+}
 
+// importPlaylist stores the metadata of one playlist and its tracks.
+func (a *App) importPlaylist(ctx context.Context, playlistID, name string) (ImportDTO, error) {
 	tracks, err := a.music.ImportPlaylist(ctx, playlistID)
 	if err != nil {
 		return ImportDTO{}, err
@@ -625,7 +641,9 @@ func (a *App) ImportPlaylist(rawURL string) (ImportDTO, error) {
 		track.ID = id
 		saved = append(saved, track)
 	}
-	name := "Importada de YouTube Music"
+	if name == "" {
+		name = "Importada de YouTube Music"
+	}
 	playlist, err := a.db.CreatePlaylist(ctx, domain.Playlist{
 		Name:       name,
 		Origin:     "ytmusic",

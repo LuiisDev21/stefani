@@ -188,3 +188,18 @@ export interface SettingsInput {
   accent: string;
   apiKey: string;
 }
+
+export interface Account {
+  connected: boolean;
+  name: string;
+  email: string;
+  playlists: number;
+  locked: boolean;
+}
+
+export interface AccountPlaylist {
+  id: string;
+  title: string;
+  subtitle: string;
+  cover: string;
+}

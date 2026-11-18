@@ -2,6 +2,7 @@ import { CheckCircle2, KeyRound, PlugZap, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import { useApp } from "../../stores/appStore";
+import { plural } from "../../lib/format";
 import type { Settings } from "../../lib/types";
 import { Button } from "../../components/ui/Button";
 import { SectionTitle } from "../../components/ui/SectionTitle";
@@ -38,6 +39,10 @@ export function SettingsView() {
   const saveSettings = useApp((state) => state.saveSettings);
   const testLLM = useApp((state) => state.testLLM);
   const clearKey = useApp((state) => state.clearKey);
+  const account = useApp((state) => state.account);
+  const connectAccount = useApp((state) => state.connectAccount);
+  const finishAccount = useApp((state) => state.finishAccount);
+  const loadAccount = useApp((state) => state.loadAccount);
 
   const [form, setForm] = useState<Settings | null>(settings);
   const [apiKey, setApiKey] = useState("");
@@ -134,6 +139,39 @@ export function SettingsView() {
       />
 
       <div className="mx-auto max-w-[820px] px-8 pb-24">
+        <section>
+          <SectionTitle title="Cuenta" />
+          <div className="mt-4 flex items-center justify-between gap-4 rounded-[10px] border border-line bg-elevated px-4 py-3">
+            <div className="min-w-0">
+              <p className="truncate text-[13px] text-ink">
+                {account?.connected ? account.name : "YouTube Music"}
+              </p>
+              <p className="truncate text-[11.5px] text-muted">
+                {account?.connected
+                  ? account.playlists > 0
+                    ? plural(account.playlists, "playlist", "playlists")
+                    : "Sin playlists"
+                  : account?.locked
+                    ? "Termina el inicio de sesión en la ventana"
+                    : "Sin conectar"}
+              </p>
+            </div>
+            {account?.connected ? (
+              <Button size="sm" variant="subtle" onClick={() => void loadAccount()}>
+                Actualizar
+              </Button>
+            ) : account?.locked ? (
+              <Button size="sm" variant="primary" onClick={() => void finishAccount()}>
+                Listo
+              </Button>
+            ) : (
+              <Button size="sm" variant="primary" onClick={() => void connectAccount()}>
+                Conectar
+              </Button>
+            )}
+          </div>
+        </section>
+
         <section>
           <SectionTitle title="Proveedor de IA" />
           <div className="mt-4">

@@ -7,6 +7,117 @@
 import { Create as $Create } from "@wailsio/runtime";
 
 /**
+ * AccountDTO is the Google session state for the settings screen.
+ */
+export class AccountDTO {
+    /**
+     * Creates a new AccountDTO instance.
+     * @param {Partial<AccountDTO>} [$$source = {}] - The source object to create the AccountDTO.
+     */
+    constructor($$source = {}) {
+        if (!("connected" in $$source)) {
+            /**
+             * @member
+             * @type {boolean}
+             */
+            this["connected"] = false;
+        }
+        if (!("name" in $$source)) {
+            /**
+             * @member
+             * @type {string}
+             */
+            this["name"] = "";
+        }
+        if (!("email" in $$source)) {
+            /**
+             * @member
+             * @type {string}
+             */
+            this["email"] = "";
+        }
+        if (!("playlists" in $$source)) {
+            /**
+             * @member
+             * @type {number}
+             */
+            this["playlists"] = 0;
+        }
+        if (!("locked" in $$source)) {
+            /**
+             * @member
+             * @type {boolean}
+             */
+            this["locked"] = false;
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new AccountDTO instance from a string or object.
+     * @param {any} [$$source = {}]
+     * @returns {AccountDTO}
+     */
+    static createFrom($$source = {}) {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new AccountDTO(/** @type {Partial<AccountDTO>} */($$parsedSource));
+    }
+}
+
+/**
+ * AccountPlaylistDTO is one playlist of the signed-in library.
+ */
+export class AccountPlaylistDTO {
+    /**
+     * Creates a new AccountPlaylistDTO instance.
+     * @param {Partial<AccountPlaylistDTO>} [$$source = {}] - The source object to create the AccountPlaylistDTO.
+     */
+    constructor($$source = {}) {
+        if (!("id" in $$source)) {
+            /**
+             * @member
+             * @type {string}
+             */
+            this["id"] = "";
+        }
+        if (!("title" in $$source)) {
+            /**
+             * @member
+             * @type {string}
+             */
+            this["title"] = "";
+        }
+        if (!("subtitle" in $$source)) {
+            /**
+             * @member
+             * @type {string}
+             */
+            this["subtitle"] = "";
+        }
+        if (!("cover" in $$source)) {
+            /**
+             * @member
+             * @type {string}
+             */
+            this["cover"] = "";
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new AccountPlaylistDTO instance from a string or object.
+     * @param {any} [$$source = {}]
+     * @returns {AccountPlaylistDTO}
+     */
+    static createFrom($$source = {}) {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new AccountPlaylistDTO(/** @type {Partial<AccountPlaylistDTO>} */($$parsedSource));
+    }
+}
+
+/**
  * AnnotateOutcome reports an annotation run.
  */
 export class AnnotateOutcome {
@@ -127,6 +238,15 @@ export class AnnotationDTO {
              */
             this["model"] = "";
         }
+        if (!("source" in $$source)) {
+            /**
+             * Source tells the UI where the transcription came from: "ai" for a
+             * generated annotation, "local" for the bundled CMU dictionary.
+             * @member
+             * @type {string}
+             */
+            this["source"] = "";
+        }
 
         Object.assign(this, $$source);
     }
@@ -162,13 +282,6 @@ export class BootstrapDTO {
              */
             this["app"] = (new InfoDTO());
         }
-        if (!("demoTracks" in $$source)) {
-            /**
-             * @member
-             * @type {TrackDTO[]}
-             */
-            this["demoTracks"] = [];
-        }
         if (!("recentlyPlayed" in $$source)) {
             /**
              * @member
@@ -196,20 +309,6 @@ export class BootstrapDTO {
              * @type {PlaylistDTO[]}
              */
             this["playlists"] = [];
-        }
-        if (!("progress" in $$source)) {
-            /**
-             * @member
-             * @type {ProgressDTO[]}
-             */
-            this["progress"] = [];
-        }
-        if (!("vocabulary" in $$source)) {
-            /**
-             * @member
-             * @type {WordDTO[]}
-             */
-            this["vocabulary"] = [];
         }
         if (!("settings" in $$source)) {
             /**
@@ -246,46 +345,34 @@ export class BootstrapDTO {
         const $$createField1_0 = $$createType5;
         const $$createField2_0 = $$createType5;
         const $$createField3_0 = $$createType5;
-        const $$createField4_0 = $$createType5;
-        const $$createField5_0 = $$createType7;
-        const $$createField6_0 = $$createType9;
+        const $$createField4_0 = $$createType7;
+        const $$createField5_0 = $$createType8;
+        const $$createField6_0 = $$createType10;
         const $$createField7_0 = $$createType11;
-        const $$createField8_0 = $$createType12;
-        const $$createField9_0 = $$createType14;
-        const $$createField10_0 = $$createType15;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("app" in $$parsedSource) {
             $$parsedSource["app"] = $$createField0_0($$parsedSource["app"]);
         }
-        if ("demoTracks" in $$parsedSource) {
-            $$parsedSource["demoTracks"] = $$createField1_0($$parsedSource["demoTracks"]);
-        }
         if ("recentlyPlayed" in $$parsedSource) {
-            $$parsedSource["recentlyPlayed"] = $$createField2_0($$parsedSource["recentlyPlayed"]);
+            $$parsedSource["recentlyPlayed"] = $$createField1_0($$parsedSource["recentlyPlayed"]);
         }
         if ("library" in $$parsedSource) {
-            $$parsedSource["library"] = $$createField3_0($$parsedSource["library"]);
+            $$parsedSource["library"] = $$createField2_0($$parsedSource["library"]);
         }
         if ("favorites" in $$parsedSource) {
-            $$parsedSource["favorites"] = $$createField4_0($$parsedSource["favorites"]);
+            $$parsedSource["favorites"] = $$createField3_0($$parsedSource["favorites"]);
         }
         if ("playlists" in $$parsedSource) {
-            $$parsedSource["playlists"] = $$createField5_0($$parsedSource["playlists"]);
-        }
-        if ("progress" in $$parsedSource) {
-            $$parsedSource["progress"] = $$createField6_0($$parsedSource["progress"]);
-        }
-        if ("vocabulary" in $$parsedSource) {
-            $$parsedSource["vocabulary"] = $$createField7_0($$parsedSource["vocabulary"]);
+            $$parsedSource["playlists"] = $$createField4_0($$parsedSource["playlists"]);
         }
         if ("settings" in $$parsedSource) {
-            $$parsedSource["settings"] = $$createField8_0($$parsedSource["settings"]);
+            $$parsedSource["settings"] = $$createField5_0($$parsedSource["settings"]);
         }
         if ("providers" in $$parsedSource) {
-            $$parsedSource["providers"] = $$createField9_0($$parsedSource["providers"]);
+            $$parsedSource["providers"] = $$createField6_0($$parsedSource["providers"]);
         }
         if ("counts" in $$parsedSource) {
-            $$parsedSource["counts"] = $$createField10_0($$parsedSource["counts"]);
+            $$parsedSource["counts"] = $$createField7_0($$parsedSource["counts"]);
         }
         return new BootstrapDTO(/** @type {Partial<BootstrapDTO>} */($$parsedSource));
     }
@@ -437,7 +524,7 @@ export class ImportDTO {
     static createFrom($$source = {}) {
         const $$createField0_0 = $$createType5;
         const $$createField1_0 = $$createType0;
-        const $$createField3_0 = $$createType16;
+        const $$createField3_0 = $$createType12;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("imported" in $$parsedSource) {
             $$parsedSource["imported"] = $$createField0_0($$parsedSource["imported"]);
@@ -520,7 +607,7 @@ export class InfoDTO {
      * @returns {InfoDTO}
      */
     static createFrom($$source = {}) {
-        const $$createField6_0 = $$createType17;
+        const $$createField6_0 = $$createType13;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("online" in $$parsedSource) {
             $$parsedSource["online"] = $$createField6_0($$parsedSource["online"]);
@@ -538,6 +625,15 @@ export class LLMSettingsDTO {
      * @param {Partial<LLMSettingsDTO>} [$$source = {}] - The source object to create the LLMSettingsDTO.
      */
     constructor($$source = {}) {
+        if (!("provider" in $$source)) {
+            /**
+             * Provider is the preset id; it decides whether the client sends the
+             * OpenCode session header.
+             * @member
+             * @type {string}
+             */
+            this["provider"] = "";
+        }
         if (!("baseUrl" in $$source)) {
             /**
              * @member
@@ -663,8 +759,8 @@ export class LineDTO {
      * @returns {LineDTO}
      */
     static createFrom($$source = {}) {
-        const $$createField5_0 = $$createType19;
-        const $$createField6_0 = $$createType21;
+        const $$createField5_0 = $$createType15;
+        const $$createField6_0 = $$createType17;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("words" in $$parsedSource) {
             $$parsedSource["words"] = $$createField5_0($$parsedSource["words"]);
@@ -758,7 +854,7 @@ export class LyricsDTO {
      * @returns {LyricsDTO}
      */
     static createFrom($$source = {}) {
-        const $$createField7_0 = $$createType23;
+        const $$createField7_0 = $$createType19;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("lines" in $$parsedSource) {
             $$parsedSource["lines"] = $$createField7_0($$parsedSource["lines"]);
@@ -940,86 +1036,6 @@ export class PlaylistDTO {
 }
 
 /**
- * ProgressDTO is per-track study progress.
- */
-export class ProgressDTO {
-    /**
-     * Creates a new ProgressDTO instance.
-     * @param {Partial<ProgressDTO>} [$$source = {}] - The source object to create the ProgressDTO.
-     */
-    constructor($$source = {}) {
-        if (!("trackId" in $$source)) {
-            /**
-             * @member
-             * @type {string}
-             */
-            this["trackId"] = "";
-        }
-        if (!("title" in $$source)) {
-            /**
-             * @member
-             * @type {string}
-             */
-            this["title"] = "";
-        }
-        if (!("artist" in $$source)) {
-            /**
-             * @member
-             * @type {string}
-             */
-            this["artist"] = "";
-        }
-        if (!("linesPracticed" in $$source)) {
-            /**
-             * @member
-             * @type {number}
-             */
-            this["linesPracticed"] = 0;
-        }
-        if (!("studySeconds" in $$source)) {
-            /**
-             * @member
-             * @type {number}
-             */
-            this["studySeconds"] = 0;
-        }
-        if (!("lastStudiedAt" in $$source)) {
-            /**
-             * @member
-             * @type {number}
-             */
-            this["lastStudiedAt"] = 0;
-        }
-        if (!("status" in $$source)) {
-            /**
-             * @member
-             * @type {string}
-             */
-            this["status"] = "";
-        }
-        if (!("wordsSaved" in $$source)) {
-            /**
-             * @member
-             * @type {number}
-             */
-            this["wordsSaved"] = 0;
-        }
-
-        Object.assign(this, $$source);
-    }
-
-    /**
-     * Creates a new ProgressDTO instance from a string or object.
-     * @param {any} [$$source = {}]
-     * @returns {ProgressDTO}
-     */
-    static createFrom($$source = {}) {
-        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
-        return new ProgressDTO(/** @type {Partial<ProgressDTO>} */($$parsedSource));
-    }
-}
-
-/**
  * ProviderStateDTO reports a provider's availability.
  */
 export class ProviderStateDTO {
@@ -1112,7 +1128,7 @@ export class SearchDTO {
      */
     static createFrom($$source = {}) {
         const $$createField1_0 = $$createType5;
-        const $$createField2_0 = $$createType14;
+        const $$createField2_0 = $$createType10;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("items" in $$parsedSource) {
             $$parsedSource["items"] = $$createField1_0($$parsedSource["items"]);
@@ -1192,8 +1208,8 @@ export class SettingsDTO {
      * @returns {SettingsDTO}
      */
     static createFrom($$source = {}) {
-        const $$createField0_0 = $$createType24;
-        const $$createField1_0 = $$createType25;
+        const $$createField0_0 = $$createType20;
+        const $$createField1_0 = $$createType21;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("llm" in $$parsedSource) {
             $$parsedSource["llm"] = $$createField0_0($$parsedSource["llm"]);
@@ -1252,8 +1268,8 @@ export class SettingsInput {
      * @returns {SettingsInput}
      */
     static createFrom($$source = {}) {
-        const $$createField0_0 = $$createType24;
-        const $$createField1_0 = $$createType25;
+        const $$createField0_0 = $$createType20;
+        const $$createField1_0 = $$createType21;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("llm" in $$parsedSource) {
             $$parsedSource["llm"] = $$createField0_0($$parsedSource["llm"]);
@@ -1302,20 +1318,6 @@ export class StoredCountsDTO {
              */
             this["playlists"] = 0;
         }
-        if (!("vocabulary" in $$source)) {
-            /**
-             * @member
-             * @type {number}
-             */
-            this["vocabulary"] = 0;
-        }
-        if (!("annotated" in $$source)) {
-            /**
-             * @member
-             * @type {number}
-             */
-            this["annotated"] = 0;
-        }
 
         Object.assign(this, $$source);
     }
@@ -1328,51 +1330,6 @@ export class StoredCountsDTO {
     static createFrom($$source = {}) {
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         return new StoredCountsDTO(/** @type {Partial<StoredCountsDTO>} */($$parsedSource));
-    }
-}
-
-/**
- * StudyInput records practice time.
- */
-export class StudyInput {
-    /**
-     * Creates a new StudyInput instance.
-     * @param {Partial<StudyInput>} [$$source = {}] - The source object to create the StudyInput.
-     */
-    constructor($$source = {}) {
-        if (!("trackId" in $$source)) {
-            /**
-             * @member
-             * @type {string}
-             */
-            this["trackId"] = "";
-        }
-        if (!("seconds" in $$source)) {
-            /**
-             * @member
-             * @type {number}
-             */
-            this["seconds"] = 0;
-        }
-        if (!("lines" in $$source)) {
-            /**
-             * @member
-             * @type {number}
-             */
-            this["lines"] = 0;
-        }
-
-        Object.assign(this, $$source);
-    }
-
-    /**
-     * Creates a new StudyInput instance from a string or object.
-     * @param {any} [$$source = {}]
-     * @returns {StudyInput}
-     */
-    static createFrom($$source = {}) {
-        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
-        return new StudyInput(/** @type {Partial<StudyInput>} */($$parsedSource));
     }
 }
 
@@ -1406,6 +1363,24 @@ export class TestOutcome {
              */
             this["latencyMs"] = 0;
         }
+        if (!("models" in $$source)) {
+            /**
+             * Models is the list the provider publishes on /models, sorted. Empty when
+             * the endpoint does not offer one.
+             * @member
+             * @type {string[]}
+             */
+            this["models"] = [];
+        }
+        if (!("modelsNotice" in $$source)) {
+            /**
+             * ModelsNotice explains why the list is empty, without turning a healthy
+             * connection into an error.
+             * @member
+             * @type {string}
+             */
+            this["modelsNotice"] = "";
+        }
 
         Object.assign(this, $$source);
     }
@@ -1416,7 +1391,11 @@ export class TestOutcome {
      * @returns {TestOutcome}
      */
     static createFrom($$source = {}) {
+        const $$createField3_0 = $$createType0;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        if ("models" in $$parsedSource) {
+            $$parsedSource["models"] = $$createField3_0($$parsedSource["models"]);
+        }
         return new TestOutcome(/** @type {Partial<TestOutcome>} */($$parsedSource));
     }
 }
@@ -1596,239 +1575,6 @@ export class WindowStateInput {
 }
 
 /**
- * WordDTO is a vocabulary entry.
- */
-export class WordDTO {
-    /**
-     * Creates a new WordDTO instance.
-     * @param {Partial<WordDTO>} [$$source = {}] - The source object to create the WordDTO.
-     */
-    constructor($$source = {}) {
-        if (!("id" in $$source)) {
-            /**
-             * @member
-             * @type {string}
-             */
-            this["id"] = "";
-        }
-        if (!("word" in $$source)) {
-            /**
-             * @member
-             * @type {string}
-             */
-            this["word"] = "";
-        }
-        if (!("lemma" in $$source)) {
-            /**
-             * @member
-             * @type {string}
-             */
-            this["lemma"] = "";
-        }
-        if (!("partOfSpeech" in $$source)) {
-            /**
-             * @member
-             * @type {string}
-             */
-            this["partOfSpeech"] = "";
-        }
-        if (!("meaning" in $$source)) {
-            /**
-             * @member
-             * @type {string}
-             */
-            this["meaning"] = "";
-        }
-        if (!("ipa" in $$source)) {
-            /**
-             * @member
-             * @type {string}
-             */
-            this["ipa"] = "";
-        }
-        if (!("translation" in $$source)) {
-            /**
-             * @member
-             * @type {string}
-             */
-            this["translation"] = "";
-        }
-        if (!("example" in $$source)) {
-            /**
-             * @member
-             * @type {string}
-             */
-            this["example"] = "";
-        }
-        if (!("source" in $$source)) {
-            /**
-             * @member
-             * @type {string}
-             */
-            this["source"] = "";
-        }
-        if (!("trackId" in $$source)) {
-            /**
-             * @member
-             * @type {string}
-             */
-            this["trackId"] = "";
-        }
-        if (!("createdAt" in $$source)) {
-            /**
-             * @member
-             * @type {number}
-             */
-            this["createdAt"] = 0;
-        }
-
-        Object.assign(this, $$source);
-    }
-
-    /**
-     * Creates a new WordDTO instance from a string or object.
-     * @param {any} [$$source = {}]
-     * @returns {WordDTO}
-     */
-    static createFrom($$source = {}) {
-        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
-        return new WordDTO(/** @type {Partial<WordDTO>} */($$parsedSource));
-    }
-}
-
-/**
- * WordInput is a vocabulary entry coming from the UI.
- */
-export class WordInput {
-    /**
-     * Creates a new WordInput instance.
-     * @param {Partial<WordInput>} [$$source = {}] - The source object to create the WordInput.
-     */
-    constructor($$source = {}) {
-        if (!("word" in $$source)) {
-            /**
-             * @member
-             * @type {string}
-             */
-            this["word"] = "";
-        }
-        if (!("lemma" in $$source)) {
-            /**
-             * @member
-             * @type {string}
-             */
-            this["lemma"] = "";
-        }
-        if (!("partOfSpeech" in $$source)) {
-            /**
-             * @member
-             * @type {string}
-             */
-            this["partOfSpeech"] = "";
-        }
-        if (!("meaning" in $$source)) {
-            /**
-             * @member
-             * @type {string}
-             */
-            this["meaning"] = "";
-        }
-        if (!("ipa" in $$source)) {
-            /**
-             * @member
-             * @type {string}
-             */
-            this["ipa"] = "";
-        }
-        if (!("translation" in $$source)) {
-            /**
-             * @member
-             * @type {string}
-             */
-            this["translation"] = "";
-        }
-        if (!("example" in $$source)) {
-            /**
-             * @member
-             * @type {string}
-             */
-            this["example"] = "";
-        }
-        if (!("trackId" in $$source)) {
-            /**
-             * @member
-             * @type {string}
-             */
-            this["trackId"] = "";
-        }
-
-        Object.assign(this, $$source);
-    }
-
-    /**
-     * Creates a new WordInput instance from a string or object.
-     * @param {any} [$$source = {}]
-     * @returns {WordInput}
-     */
-    static createFrom($$source = {}) {
-        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
-        return new WordInput(/** @type {Partial<WordInput>} */($$parsedSource));
-    }
-}
-
-/**
- * WordRequest asks for a dictionary lookup.
- */
-export class WordRequest {
-    /**
-     * Creates a new WordRequest instance.
-     * @param {Partial<WordRequest>} [$$source = {}] - The source object to create the WordRequest.
-     */
-    constructor($$source = {}) {
-        if (!("trackId" in $$source)) {
-            /**
-             * @member
-             * @type {string}
-             */
-            this["trackId"] = "";
-        }
-        if (!("lineId" in $$source)) {
-            /**
-             * @member
-             * @type {string}
-             */
-            this["lineId"] = "";
-        }
-        if (!("word" in $$source)) {
-            /**
-             * @member
-             * @type {string}
-             */
-            this["word"] = "";
-        }
-        if (!("context" in $$source)) {
-            /**
-             * @member
-             * @type {string}
-             */
-            this["context"] = "";
-        }
-
-        Object.assign(this, $$source);
-    }
-
-    /**
-     * Creates a new WordRequest instance from a string or object.
-     * @param {any} [$$source = {}]
-     * @returns {WordRequest}
-     */
-    static createFrom($$source = {}) {
-        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
-        return new WordRequest(/** @type {Partial<WordRequest>} */($$parsedSource));
-    }
-}
-
-/**
  * WordTimingDTO is one word with its span.
  */
 export class WordTimingDTO {
@@ -1882,21 +1628,17 @@ const $$createType4 = TrackDTO.createFrom;
 const $$createType5 = $Create.Array($$createType4);
 const $$createType6 = PlaylistDTO.createFrom;
 const $$createType7 = $Create.Array($$createType6);
-const $$createType8 = ProgressDTO.createFrom;
-const $$createType9 = $Create.Array($$createType8);
-const $$createType10 = WordDTO.createFrom;
-const $$createType11 = $Create.Array($$createType10);
-const $$createType12 = SettingsDTO.createFrom;
-const $$createType13 = ProviderStateDTO.createFrom;
-const $$createType14 = $Create.Array($$createType13);
-const $$createType15 = StoredCountsDTO.createFrom;
-const $$createType16 = $Create.Nullable($$createType6);
-const $$createType17 = OnlineDTO.createFrom;
-const $$createType18 = WordTimingDTO.createFrom;
+const $$createType8 = SettingsDTO.createFrom;
+const $$createType9 = ProviderStateDTO.createFrom;
+const $$createType10 = $Create.Array($$createType9);
+const $$createType11 = StoredCountsDTO.createFrom;
+const $$createType12 = $Create.Nullable($$createType6);
+const $$createType13 = OnlineDTO.createFrom;
+const $$createType14 = WordTimingDTO.createFrom;
+const $$createType15 = $Create.Array($$createType14);
+const $$createType16 = AnnotationDTO.createFrom;
+const $$createType17 = $Create.Nullable($$createType16);
+const $$createType18 = LineDTO.createFrom;
 const $$createType19 = $Create.Array($$createType18);
-const $$createType20 = AnnotationDTO.createFrom;
-const $$createType21 = $Create.Nullable($$createType20);
-const $$createType22 = LineDTO.createFrom;
-const $$createType23 = $Create.Array($$createType22);
-const $$createType24 = LLMSettingsDTO.createFrom;
-const $$createType25 = FeaturesDTO.createFrom;
+const $$createType20 = LLMSettingsDTO.createFrom;
+const $$createType21 = FeaturesDTO.createFrom;

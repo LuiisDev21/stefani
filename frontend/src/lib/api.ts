@@ -8,6 +8,8 @@
  */
 import * as App from "../../bindings/github.com/LuiisDev21/stefani/internal/app/app.js";
 import type {
+  Account,
+  AccountPlaylist,
   AnnotateOutcome,
   Bootstrap,
   HistoryEntry,
@@ -26,6 +28,13 @@ const as = <T,>(value: unknown): Promise<T> => value as Promise<T>;
 
 export const api = {
   info: () => as<Info>(App.Info()),
+
+  accountStatus: () => as<Account>(App.AccountStatus()),
+  connectAccount: () => as<void>(App.ConnectAccount()),
+  finishAccount: () => as<Account>(App.FinishAccount()),
+  accountPlaylists: () => as<AccountPlaylist[]>(App.AccountPlaylists()),
+  importAccountPlaylist: (id: string, name: string) =>
+    as<ImportResult>(App.ImportAccountPlaylist(id, name)),
   bootstrap: () => as<Bootstrap>(App.Bootstrap()),
 
   search: (query: string, limit = 25) => as<SearchResult>(App.Search(query, limit)),

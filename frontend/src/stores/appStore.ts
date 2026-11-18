@@ -2,6 +2,8 @@ import { Events } from "@wailsio/runtime";
 import { create } from "zustand";
 import { api, errorMessage } from "../lib/api";
 import type {
+  Account,
+  AccountPlaylist,
   Bootstrap,
   Info,
   Lyrics,
@@ -79,6 +81,12 @@ interface AppState {
   importAudio: () => Promise<void>;
   importLyrics: () => Promise<void>;
   importPlaylist: (url: string) => Promise<void>;
+  account: Account | null;
+  accountPlaylists: AccountPlaylist[];
+  loadAccount: () => Promise<void>;
+  connectAccount: () => Promise<void>;
+  finishAccount: () => Promise<void>;
+  importAccountPlaylist: (id: string, name: string) => Promise<void>;
   openPlaylist: (playlist: Playlist) => Promise<void>;
   createPlaylist: (name: string) => Promise<Playlist | null>;
   deletePlaylist: (id: string) => Promise<void>;
@@ -125,6 +133,8 @@ export const useApp = create<AppState>((set, get) => ({
   library: [],
   favorites: [],
   playlists: [],
+  account: null,
+  accountPlaylists: [],
   providers: [],
   settings: null,
   counts: null,
@@ -153,6 +163,7 @@ export const useApp = create<AppState>((set, get) => ({
       const data = await api.bootstrap();
       set(applyBootstrap(data));
       listenForProgress();
+      void get().loadAccount();
     } catch (error) {
       set({ ready: true, fatalError: errorMessage(error) });
     }
@@ -269,6 +280,56 @@ export const useApp = create<AppState>((set, get) => ({
       const lyrics = await api.importLyricsFile(track.id);
       set({ lyrics });
       get().notify(lyrics.available ? "ok" : "info", lyrics.available ? "Letra importada" : lyrics.notice);
+    } catch (error) {
+      get().notify("error", errorMessage(error));
+    }
+  },
+
+  loadAccount: async () => {
+    try {
+      const account = await api.accountStatus();
+      set({ account });
+      if (account.connected) {
+        set({ accountPlaylists: await api.accountPlaylists() });
+      } else {
+        set({ accountPlaylists: [] });
+      }
+    } catch {
+      set({ account: null, accountPlaylists: [] });
+    }
+  },
+
+  connectAccount: async () => {
+    try {
+      await api.connectAccount();
+      set({ account: { connected: false, name: "", email: "", playlists: 0, locked: true } });
+    } catch (error) {
+      get().notify("error", errorMessage(error));
+    }
+  },
+
+  finishAccount: async () => {
+    try {
+      const account = await api.finishAccount();
+      set({ account });
+      if (account.connected) {
+        set({ accountPlaylists: await api.accountPlaylists() });
+        get().notify("ok", "Cuenta conectada");
+      } else {
+        set({ accountPlaylists: [] });
+        get().notify("info", "No se detectó la sesión. Inténtalo de nuevo.");
+      }
+    } catch (error) {
+      get().notify("error", errorMessage(error));
+    }
+  },
+
+  importAccountPlaylist: async (id, name) => {
+    try {
+      const result = await api.importAccountPlaylist(id, name);
+      await get().refreshPlaylists();
+      get().notify("ok", result.notice || "Lista importada");
+      if (result.playlist) await get().openPlaylist(result.playlist);
     } catch (error) {
       get().notify("error", errorMessage(error));
     }

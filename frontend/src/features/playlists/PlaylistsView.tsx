@@ -27,6 +27,10 @@ export function PlaylistsView() {
   const deletePlaylist = useApp((state) => state.deletePlaylist);
   const rename = useApp((state) => state.refreshPlaylists);
   const importPlaylist = useApp((state) => state.importPlaylist);
+  const account = useApp((state) => state.account);
+  const accountPlaylists = useApp((state) => state.accountPlaylists);
+  const importAccountPlaylist = useApp((state) => state.importAccountPlaylist);
+  const loadAccount = useApp((state) => state.loadAccount);
   const removeFromPlaylist = useApp((state) => state.removeFromPlaylist);
   const movePlaylistItem = useApp((state) => state.movePlaylistItem);
   const openTrack = useApp((state) => state.openTrack);
@@ -196,7 +200,7 @@ export function PlaylistsView() {
     <div className="min-h-0">
       <TopBar
         title="Listas"
-        subtitle={playlists.length > 0 ? plural(playlists.length, "lista", "listas") : "Organiza lo que estudias"}
+        subtitle={playlists.length > 0 ? plural(playlists.length, "lista", "listas") : undefined}
         actions={
           <>
             <Button size="sm" variant="subtle" icon={<UploadCloud className="h-3.5 w-3.5" />} onClick={() => setImporting(true)}>
@@ -210,6 +214,41 @@ export function PlaylistsView() {
       />
 
       <div className="px-7 pb-10">
+        {account?.connected && accountPlaylists.length > 0 ? (
+          <section className="mb-8">
+            <div className="flex items-center justify-between">
+              <h2 className="px-2 text-[12px] font-semibold text-ash">De tu cuenta</h2>
+              <button
+                type="button"
+                onClick={() => void loadAccount()}
+                className="px-2 text-[11.5px] text-muted transition-colors hover:text-ink"
+              >
+                Actualizar
+              </button>
+            </div>
+            <ul className="mt-2 space-y-1">
+              {accountPlaylists.map((item) => (
+                <li key={item.id}>
+                  <div className="flex items-center gap-3 rounded-[9px] px-2 py-2">
+                    <Cover title={item.title} src={item.cover} size={38} />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[13.5px] text-ink">{item.title}</span>
+                      <span className="block truncate text-[11.5px] text-muted">{item.subtitle}</span>
+                    </span>
+                    <Button
+                      size="sm"
+                      variant="subtle"
+                      onClick={() => void importAccountPlaylist(item.id, item.title)}
+                    >
+                      Importar
+                    </Button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
+
         {playlists.length === 0 ? (
           <EmptyState
             icon={<ListMusic className="h-5 w-5" />}

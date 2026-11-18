@@ -20,6 +20,28 @@ import * as media$0 from "../media/models.js";
 import * as $models from "./models.js";
 
 /**
+ * AccountPlaylists lists the playlists saved in the signed-in library.
+ * @returns {$CancellablePromise<$models.AccountPlaylistDTO[]>}
+ */
+export function AccountPlaylists() {
+    return $Call.ByID(2835084772).then(/** @type {($result: any) => any} */(($result) => {
+        return $$createType1($result);
+    }));
+}
+
+/**
+ * AccountStatus reports the Google session that lives in the app's WebView
+ * profile. Locked means the login window is still open, so the cookies cannot
+ * be read yet.
+ * @returns {$CancellablePromise<$models.AccountDTO>}
+ */
+export function AccountStatus() {
+    return $Call.ByID(514642179).then(/** @type {($result: any) => any} */(($result) => {
+        return $$createType2($result);
+    }));
+}
+
+/**
  * AddToPlaylist appends a track to a playlist.
  * @param {string} playlistID
  * @param {string} trackID
@@ -37,18 +59,7 @@ export function AddToPlaylist(playlistID, trackID) {
  */
 export function AnnotateTrack(trackID) {
     return $Call.ByID(1020749337, trackID).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType0($result);
-    }));
-}
-
-/**
- * Annotations returns stored study data for a track.
- * @param {string} trackID
- * @returns {$CancellablePromise<$models.AnnotationDTO[]>}
- */
-export function Annotations(trackID) {
-    return $Call.ByID(494317764, trackID).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType2($result);
+        return $$createType3($result);
     }));
 }
 
@@ -58,7 +69,7 @@ export function Annotations(trackID) {
  */
 export function Bootstrap() {
     return $Call.ByID(3259567964).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType3($result);
+        return $$createType4($result);
     }));
 }
 
@@ -68,8 +79,17 @@ export function Bootstrap() {
  */
 export function ClearLLMKey() {
     return $Call.ByID(1843416029).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType4($result);
+        return $$createType5($result);
     }));
+}
+
+/**
+ * ConnectAccount opens the Google login inside the app. It returns as soon as
+ * the window is up; FinishAccount is what imports the session.
+ * @returns {$CancellablePromise<void>}
+ */
+export function ConnectAccount() {
+    return $Call.ByID(1643351491);
 }
 
 /**
@@ -79,7 +99,7 @@ export function ClearLLMKey() {
  */
 export function CreatePlaylist(name) {
     return $Call.ByID(3797441004, name).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType5($result);
+        return $$createType6($result);
     }));
 }
 
@@ -93,21 +113,23 @@ export function DeletePlaylist(id) {
 }
 
 /**
- * DeleteWord removes a saved word.
- * @param {string} id
- * @returns {$CancellablePromise<void>}
- */
-export function DeleteWord(id) {
-    return $Call.ByID(2525895225, id);
-}
-
-/**
  * Favorites lists favourite tracks.
  * @returns {$CancellablePromise<$models.TrackDTO[]>}
  */
 export function Favorites() {
     return $Call.ByID(977377251).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType7($result);
+        return $$createType8($result);
+    }));
+}
+
+/**
+ * FinishAccount closes the login window, waits for WebView2 to release the
+ * profile database and reads the resulting session.
+ * @returns {$CancellablePromise<$models.AccountDTO>}
+ */
+export function FinishAccount() {
+    return $Call.ByID(4084047480).then(/** @type {($result: any) => any} */(($result) => {
+        return $$createType2($result);
     }));
 }
 
@@ -118,7 +140,19 @@ export function Favorites() {
  */
 export function History(limit) {
     return $Call.ByID(3845597558, limit).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType9($result);
+        return $$createType10($result);
+    }));
+}
+
+/**
+ * ImportAccountPlaylist imports one of the account's playlists as a local list.
+ * @param {string} id
+ * @param {string} name
+ * @returns {$CancellablePromise<$models.ImportDTO>}
+ */
+export function ImportAccountPlaylist(id, name) {
+    return $Call.ByID(455781904, id, name).then(/** @type {($result: any) => any} */(($result) => {
+        return $$createType11($result);
     }));
 }
 
@@ -129,7 +163,7 @@ export function History(limit) {
  */
 export function ImportDroppedFiles(paths) {
     return $Call.ByID(865611062, paths).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType10($result);
+        return $$createType11($result);
     }));
 }
 
@@ -139,7 +173,7 @@ export function ImportDroppedFiles(paths) {
  */
 export function ImportLocalTracks() {
     return $Call.ByID(2270584902).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType10($result);
+        return $$createType11($result);
     }));
 }
 
@@ -150,7 +184,7 @@ export function ImportLocalTracks() {
  */
 export function ImportLyricsFile(trackID) {
     return $Call.ByID(978064089, trackID).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType11($result);
+        return $$createType12($result);
     }));
 }
 
@@ -161,7 +195,7 @@ export function ImportLyricsFile(trackID) {
  */
 export function ImportPlaylist(rawURL) {
     return $Call.ByID(745975253, rawURL).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType10($result);
+        return $$createType11($result);
     }));
 }
 
@@ -171,7 +205,7 @@ export function ImportPlaylist(rawURL) {
  */
 export function Info() {
     return $Call.ByID(776457598).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType12($result);
+        return $$createType13($result);
     }));
 }
 
@@ -181,30 +215,22 @@ export function Info() {
  */
 export function Library() {
     return $Call.ByID(3102670385).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType7($result);
-    }));
-}
-
-/**
- * LookupWord asks the AI provider for dictionary data about a word.
- * @param {$models.WordRequest} req
- * @returns {$CancellablePromise<$models.WordDTO>}
- */
-export function LookupWord(req) {
-    return $Call.ByID(1580174240, req).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType13($result);
+        return $$createType8($result);
     }));
 }
 
 /**
  * Lyrics returns the lyric document for a track, fetching it when needed.
+ * 
+ * A panic inside a provider must never reach the bridge as an opaque error: it
+ * is logged with its stack and reported as a readable state instead.
  * @param {string} trackID
  * @param {boolean} refresh
  * @returns {$CancellablePromise<$models.LyricsDTO>}
  */
 export function Lyrics(trackID, refresh) {
     return $Call.ByID(1703921402, trackID, refresh).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType11($result);
+        return $$createType12($result);
     }));
 }
 
@@ -235,7 +261,7 @@ export function OpenExternal(rawURL) {
  */
 export function Playlist(id) {
     return $Call.ByID(456499736, id).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType5($result);
+        return $$createType6($result);
     }));
 }
 
@@ -246,7 +272,7 @@ export function Playlist(id) {
  */
 export function PlaylistTracks(id) {
     return $Call.ByID(3375718916, id).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType7($result);
+        return $$createType8($result);
     }));
 }
 
@@ -258,25 +284,6 @@ export function Playlists() {
     return $Call.ByID(1080995441).then(/** @type {($result: any) => any} */(($result) => {
         return $$createType14($result);
     }));
-}
-
-/**
- * Progress lists study progress with track metadata.
- * @returns {$CancellablePromise<$models.ProgressDTO[]>}
- */
-export function Progress() {
-    return $Call.ByID(2439397873).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType16($result);
-    }));
-}
-
-/**
- * RecordStudy adds practice time and practiced lines.
- * @param {$models.StudyInput} $in
- * @returns {$CancellablePromise<void>}
- */
-export function RecordStudy($in) {
-    return $Call.ByID(4085343620, $in);
 }
 
 /**
@@ -300,15 +307,6 @@ export function ReportPlayback(trackID, listenedMs) {
 }
 
 /**
- * ResetAnnotations drops generated study data for a track.
- * @param {string} trackID
- * @returns {$CancellablePromise<void>}
- */
-export function ResetAnnotations(trackID) {
-    return $Call.ByID(2709363533, trackID);
-}
-
-/**
  * ResolveAudioSource maps a media URL id to bytes: a local file for demo and
  * local tracks, or a proxied online stream when the feature is enabled.
  * @param {string} trackID
@@ -316,7 +314,7 @@ export function ResetAnnotations(trackID) {
  */
 export function ResolveAudioSource(trackID) {
     return $Call.ByID(3020879485, trackID).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType17($result);
+        return $$createType15($result);
     }));
 }
 
@@ -327,7 +325,7 @@ export function ResolveAudioSource(trackID) {
  */
 export function SaveSettings($in) {
     return $Call.ByID(3238136870, $in).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType4($result);
+        return $$createType5($result);
     }));
 }
 
@@ -341,17 +339,6 @@ export function SaveWindowState($in) {
 }
 
 /**
- * SaveWord stores a vocabulary entry.
- * @param {$models.WordInput} $in
- * @returns {$CancellablePromise<$models.WordDTO>}
- */
-export function SaveWord($in) {
-    return $Call.ByID(2230074183, $in).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType13($result);
-    }));
-}
-
-/**
  * Search queries the configured providers.
  * @param {string} query
  * @param {number} limit
@@ -359,7 +346,7 @@ export function SaveWord($in) {
  */
 export function Search(query, limit) {
     return $Call.ByID(2296388846, query, limit).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType18($result);
+        return $$createType16($result);
     }));
 }
 
@@ -371,7 +358,7 @@ export function Search(query, limit) {
  */
 export function SetFavorite(trackID, favorite) {
     return $Call.ByID(3359295882, trackID, favorite).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType6($result);
+        return $$createType7($result);
     }));
 }
 
@@ -383,7 +370,7 @@ export function SetFavorite(trackID, favorite) {
  */
 export function SetInLibrary(trackID, save) {
     return $Call.ByID(3503078356, trackID, save).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType6($result);
+        return $$createType7($result);
     }));
 }
 
@@ -403,7 +390,7 @@ export function SetTrackDuration(trackID, durationMs) {
  */
 export function Settings() {
     return $Call.ByID(2660117835).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType4($result);
+        return $$createType5($result);
     }));
 }
 
@@ -413,7 +400,7 @@ export function Settings() {
  */
 export function TestLLM() {
     return $Call.ByID(2950311297).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType19($result);
+        return $$createType17($result);
     }));
 }
 
@@ -424,7 +411,7 @@ export function TestLLM() {
  */
 export function Track(id) {
     return $Call.ByID(3509125837, id).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType6($result);
+        return $$createType7($result);
     }));
 }
 
@@ -440,45 +427,32 @@ export function UpdatePlaylist(id, name, description) {
 }
 
 /**
- * Vocabulary lists saved words.
- * @returns {$CancellablePromise<$models.WordDTO[]>}
- */
-export function Vocabulary() {
-    return $Call.ByID(814024750).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType20($result);
-    }));
-}
-
-/**
  * WindowState reports the stored geometry so the window can restore itself.
  * @returns {$CancellablePromise<$models.WindowStateInput>}
  */
 export function WindowState() {
     return $Call.ByID(1162240999).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType21($result);
+        return $$createType18($result);
     }));
 }
 
 // Private type creation functions
-const $$createType0 = $models.AnnotateOutcome.createFrom;
-const $$createType1 = $models.AnnotationDTO.createFrom;
-const $$createType2 = $Create.Array($$createType1);
-const $$createType3 = $models.BootstrapDTO.createFrom;
-const $$createType4 = $models.SettingsDTO.createFrom;
-const $$createType5 = $models.PlaylistDTO.createFrom;
-const $$createType6 = $models.TrackDTO.createFrom;
-const $$createType7 = $Create.Array($$createType6);
-const $$createType8 = $models.HistoryDTO.createFrom;
-const $$createType9 = $Create.Array($$createType8);
-const $$createType10 = $models.ImportDTO.createFrom;
-const $$createType11 = $models.LyricsDTO.createFrom;
-const $$createType12 = $models.InfoDTO.createFrom;
-const $$createType13 = $models.WordDTO.createFrom;
-const $$createType14 = $Create.Array($$createType5);
-const $$createType15 = $models.ProgressDTO.createFrom;
-const $$createType16 = $Create.Array($$createType15);
-const $$createType17 = media$0.Source.createFrom;
-const $$createType18 = $models.SearchDTO.createFrom;
-const $$createType19 = $models.TestOutcome.createFrom;
-const $$createType20 = $Create.Array($$createType13);
-const $$createType21 = $models.WindowStateInput.createFrom;
+const $$createType0 = $models.AccountPlaylistDTO.createFrom;
+const $$createType1 = $Create.Array($$createType0);
+const $$createType2 = $models.AccountDTO.createFrom;
+const $$createType3 = $models.AnnotateOutcome.createFrom;
+const $$createType4 = $models.BootstrapDTO.createFrom;
+const $$createType5 = $models.SettingsDTO.createFrom;
+const $$createType6 = $models.PlaylistDTO.createFrom;
+const $$createType7 = $models.TrackDTO.createFrom;
+const $$createType8 = $Create.Array($$createType7);
+const $$createType9 = $models.HistoryDTO.createFrom;
+const $$createType10 = $Create.Array($$createType9);
+const $$createType11 = $models.ImportDTO.createFrom;
+const $$createType12 = $models.LyricsDTO.createFrom;
+const $$createType13 = $models.InfoDTO.createFrom;
+const $$createType14 = $Create.Array($$createType6);
+const $$createType15 = media$0.Source.createFrom;
+const $$createType16 = $models.SearchDTO.createFrom;
+const $$createType17 = $models.TestOutcome.createFrom;
+const $$createType18 = $models.WindowStateInput.createFrom;

@@ -94,6 +94,15 @@ asi que un `pnpm build` se ve al recargar sin recompilar Go.
 `-Lan` lo expone en la red local (`STEFANI_WEB_HOST=0.0.0.0`) para abrirlo desde
 el movil o una tablet. No hay autenticacion: usalo solo en una red de confianza.
 
+## Cuenta de YouTube Music
+
+En Windows puedes conectar tu cuenta desde **Ajustes → Cuenta**: se abre el
+inicio de sesión de Google dentro de la app y, al cerrar esa ventana, STEFANI
+lee las playlists de tu biblioteca. La sesión vive en el perfil de WebView2 de la
+app; no se copia a la base de datos, al `config.json` ni a los registros. La
+reproducción sigue usando `yt-dlp`, así que si la sesión caduca solo se pierde la
+biblioteca de la cuenta, no el reproductor.
+
 ## Pruebas
 
 ```bash

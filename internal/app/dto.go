@@ -221,6 +221,23 @@ type ImportDTO struct {
 	Playlist *PlaylistDTO `json:"playlist"`
 }
 
+// AccountDTO is the Google session state for the settings screen.
+type AccountDTO struct {
+	Connected bool   `json:"connected"`
+	Name      string `json:"name"`
+	Email     string `json:"email"`
+	Playlists int    `json:"playlists"`
+	Locked    bool   `json:"locked"`
+}
+
+// AccountPlaylistDTO is one playlist of the signed-in library.
+type AccountPlaylistDTO struct {
+	ID       string `json:"id"`
+	Title    string `json:"title"`
+	Subtitle string `json:"subtitle"`
+	Cover    string `json:"cover"`
+}
+
 // AnnotateOutcome reports an annotation run.
 type AnnotateOutcome struct {
 	Generated  int      `json:"generated"`

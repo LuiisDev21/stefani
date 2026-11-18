@@ -8,6 +8,8 @@ export {
 };
 
 export {
+    AccountDTO,
+    AccountPlaylistDTO,
     AnnotateOutcome,
     AnnotationDTO,
     BootstrapDTO,
@@ -21,18 +23,13 @@ export {
     NoteDTO,
     OnlineDTO,
     PlaylistDTO,
-    ProgressDTO,
     ProviderStateDTO,
     SearchDTO,
     SettingsDTO,
     SettingsInput,
     StoredCountsDTO,
-    StudyInput,
     TestOutcome,
     TrackDTO,
     WindowStateInput,
-    WordDTO,
-    WordInput,
-    WordRequest,
     WordTimingDTO
 } from "./models.js";

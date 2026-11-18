@@ -28,6 +28,7 @@ import (
 	"github.com/LuiisDev21/stefani/internal/phonetics"
 	"github.com/LuiisDev21/stefani/internal/secret"
 	"github.com/LuiisDev21/stefani/internal/storage"
+	"github.com/LuiisDev21/stefani/internal/ytaccount"
 )
 
 //go:embed all:frontend/dist
@@ -196,21 +197,62 @@ func run() error {
 	aiClient := ai.New(45 * time.Second)
 	phonSvc := phonetics.NewService(db, aiClient, state.llm, logger)
 
+	// The Google session lives in this profile; the login window and the cookie
+	// reader must agree on the path.
+	profileRoot := filepath.Join(paths.ConfigDir, "webview")
+	accountClient := ytaccount.New(filepath.Join(profileRoot, "EBWebView"))
+
+	var loginWindow *application.WebviewWindow
+	openLogin := func() error {
+		if loginWindow != nil {
+			loginWindow.Focus()
+			return nil
+		}
+		w := application.Get().Window.NewWithOptions(application.WebviewWindowOptions{
+			Name:             "account-login",
+			Title:            "Conectar con YouTube Music",
+			URL:              "https://accounts.google.com/ServiceLogin?service=youtube&continue=https%3A%2F%2Fmusic.youtube.com%2F",
+			Width:            560,
+			Height:           780,
+			MinWidth:         420,
+			MinHeight:        560,
+			BackgroundColour: application.NewRGB(11, 14, 22),
+		})
+		loginWindow = w
+		w.OnWindowEvent(events.Common.WindowClosing, func(*application.WindowEvent) {
+			loginWindow = nil
+		})
+		w.Focus()
+		return nil
+	}
+	closeLogin := func() error {
+		if loginWindow == nil {
+			return nil
+		}
+		w := loginWindow
+		loginWindow = nil
+		w.Close()
+		return nil
+	}
+
 	appSvc := app.New(app.Deps{
-		DB:             db,
-		Configs:        cfgStore,
-		Config:         cfg,
-		Secrets:        secrets,
-		Music:          musicSvc,
-		Lyrics:         lyricSvc,
-		Phonetics:      phonSvc,
-		AI:             aiClient,
-		Streamer:       streamer,
-		LocalPhon:      localPhon,
-		Log:            logger,
-		Opener:         wailsOpener{},
-		Picker:         wailsPicker{},
-		OnConfigChange: state.set,
+		DB:                db,
+		Configs:           cfgStore,
+		Config:            cfg,
+		Secrets:           secrets,
+		Music:             musicSvc,
+		Lyrics:            lyricSvc,
+		Phonetics:         phonSvc,
+		AI:                aiClient,
+		Streamer:          streamer,
+		LocalPhon:         localPhon,
+		Log:               logger,
+		Opener:            wailsOpener{},
+		Picker:            wailsPicker{},
+		Account:           accountClient,
+		OpenAccountLogin:  openLogin,
+		CloseAccountLogin: closeLogin,
+		OnConfigChange:    state.set,
 	})
 
 	mediaHandler := media.StreamHandler(func(r *http.Request, trackID string) (media.Source, error) {
@@ -241,6 +283,9 @@ func run() error {
 			ApplicationShouldTerminateAfterLastWindowClosed: true,
 		},
 		Windows: application.WindowsOptions{
+			// The Google session must survive restarts and stay inside the app's
+			// own directory, so the cookie reader knows exactly where to look.
+			WebviewUserDataPath: profileRoot,
 			// Opt-in only: a debugging port must never be open in normal use.
 			AdditionalBrowserArgs: webviewDebugArgs(),
 		},
