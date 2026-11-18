@@ -1,4 +1,4 @@
-import { LoaderCircle, Menu, Search, Settings2 } from "lucide-react";
+import { LoaderCircle, Menu, Search, Settings } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "../../lib/cn";
 import { useApp } from "../../stores/appStore";
@@ -121,7 +121,7 @@ export function TopNav({ onToggleNav }: TopNavProps) {
             view === "settings" ? "bg-card text-ink" : "text-muted hover:bg-surface hover:text-ink",
           )}
         >
-          <Settings2 className="h-4 w-4" />
+          <Settings className="h-4 w-4" />
         </button>
       </div>
     </header>
