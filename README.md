@@ -94,6 +94,13 @@ asi que un `pnpm build` se ve al recargar sin recompilar Go.
 `-Lan` lo expone en la red local (`STEFANI_WEB_HOST=0.0.0.0`) para abrirlo desde
 el movil o una tablet. No hay autenticacion: usalo solo en una red de confianza.
 
+## YouTube Music en línea
+
+La reproducción en línea necesita `yt-dlp` y `ffmpeg`. La app lo busca en el
+`PATH` y, si no está, en las carpetas habituales de Windows (Scripts de Python,
+WinGet, Scoop, Chocolatey y junto al ejecutable), así que también funciona al
+abrirla desde el Explorador.
+
 ## Cuenta de YouTube Music
 
 En Windows puedes conectar tu cuenta desde **Ajustes → Cuenta**: se abre el

@@ -6,7 +6,9 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -99,6 +101,41 @@ func NewYtDlpWithRunner(path string, run Runner, now func() time.Time, ttl time.
 	}
 }
 
+// findYtDlp returns the binary to run: PATH first, then the usual Windows
+// install locations. Without this, launching the app from Explorer misses a
+// yt-dlp installed in a folder that is not on the user's PATH.
+func findYtDlp() string {
+	if path, err := exec.LookPath("yt-dlp"); err == nil {
+		return path
+	}
+	var candidates []string
+	if exe, err := os.Executable(); err == nil {
+		dir := filepath.Dir(exe)
+		candidates = append(candidates, filepath.Join(dir, "yt-dlp.exe"), filepath.Join(dir, "yt-dlp"))
+	}
+	if local := os.Getenv("LOCALAPPDATA"); local != "" {
+		matches, _ := filepath.Glob(filepath.Join(local, "Programs", "Python", "Python3*", "Scripts", "yt-dlp.exe"))
+		candidates = append(candidates, matches...)
+		candidates = append(candidates, filepath.Join(local, "Microsoft", "WinGet", "Links", "yt-dlp.exe"))
+	}
+	if roaming := os.Getenv("APPDATA"); roaming != "" {
+		matches, _ := filepath.Glob(filepath.Join(roaming, "Python", "Python3*", "Scripts", "yt-dlp.exe"))
+		candidates = append(candidates, matches...)
+	}
+	if profile := os.Getenv("USERPROFILE"); profile != "" {
+		candidates = append(candidates, filepath.Join(profile, "scoop", "shims", "yt-dlp.exe"))
+	}
+	if programData := os.Getenv("ProgramData"); programData != "" {
+		candidates = append(candidates, filepath.Join(programData, "chocolatey", "bin", "yt-dlp.exe"))
+	}
+	for _, candidate := range candidates {
+		if info, err := os.Stat(candidate); err == nil && !info.IsDir() {
+			return candidate
+		}
+	}
+	return ""
+}
+
 // DetectYtDlp looks for the binary and records its version. A missing binary is
 // a normal state, not an error: the caller reports it to the UI.
 func DetectYtDlp() *YtDlp {
@@ -108,8 +145,8 @@ func DetectYtDlp() *YtDlp {
 		ttl:   defaultStreamTTL,
 		cache: make(map[string]cachedStream),
 	}
-	path, err := exec.LookPath("yt-dlp")
-	if err != nil {
+	path := findYtDlp()
+	if path == "" {
 		return y
 	}
 	y.path = path
