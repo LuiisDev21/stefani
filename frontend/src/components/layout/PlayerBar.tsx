@@ -46,6 +46,7 @@ export function PlayerBar() {
   const setRepeat = usePlayer((state) => state.setRepeat);
 
   const toggleFavorite = useApp((state) => state.toggleFavorite);
+  const openArtist = useApp((state) => state.openArtist);
   const setImmersive = useApp((state) => state.setImmersive);
 
   const timeMs = usePlaybackTime();
@@ -72,8 +73,19 @@ export function PlayerBar() {
               <Cover title={current.title} src={current.artworkUrl} size={48} />
               <div className="min-w-0">
                 <p className="truncate text-[13.5px] font-semibold tracking-[-0.2px] text-ink">{current.title}</p>
-                <p className="truncate text-[12px] text-muted">
-                  {current.artist || "Artista desconocido"}
+                <p className="min-w-0 truncate text-[12px] text-muted">
+                  {current.artist ? (
+                    <button
+                      type="button"
+                      onClick={() => void openArtist(current.artist)}
+                      className="max-w-full truncate align-bottom transition-colors hover:text-ink hover:underline"
+                      title={`Abrir ${current.artist}`}
+                    >
+                      {current.artist}
+                    </button>
+                  ) : (
+                    "Artista desconocido"
+                  )}
                   {!current.playable ? " · sin reproducción" : ""}
                 </p>
               </div>

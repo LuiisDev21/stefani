@@ -102,6 +102,7 @@ interface AppState {
   loadHomeFeed: () => Promise<void>;
   playShelfItem: (item: ShelfItem) => Promise<void>;
   openCollection: (id: string) => Promise<void>;
+  openArtist: (name: string) => Promise<void>;
   installAppUpdate: () => Promise<void>;
   importAccountPlaylist: (id: string, name: string) => Promise<void>;
   openPlaylist: (playlist: Playlist) => Promise<void>;
@@ -382,6 +383,17 @@ export const useApp = create<AppState>((set, get) => ({
       set({ collection: await api.openCollection(id), collectionLoading: false });
     } catch (error) {
       set({ collectionLoading: false, view: "home" });
+      get().notify("error", errorMessage(error));
+    }
+  },
+
+  openArtist: async (name) => {
+    if (!name) return;
+    set({ collectionLoading: true, view: "collection", collection: null });
+    try {
+      set({ collection: await api.openArtist(name), collectionLoading: false });
+    } catch (error) {
+      set({ collectionLoading: false });
       get().notify("error", errorMessage(error));
     }
   },

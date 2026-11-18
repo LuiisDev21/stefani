@@ -131,3 +131,72 @@ func firstRun(text any) (map[string]any, bool) {
 	run, ok := runs[0].(map[string]any)
 	return run, ok
 }
+
+// FindArtist resolves an artist name to its page id, so any song can lead to
+// the artist even when it was imported without one.
+func (c *Client) FindArtist(ctx context.Context, name string) (string, error) {
+	name = strings.TrimSpace(name)
+	if name == "" {
+		return "", errors.New("empty artist name")
+	}
+	res, err := c.call(ctx, "search", map[string]any{"query": name})
+	if err != nil {
+		return "", err
+	}
+	type candidate struct {
+		name string
+		id   string
+	}
+	var found []candidate
+	// Search mixes cards, shelves and rows; any node pointing at an artist page
+	// counts, whatever renderer wraps it.
+	var walk func(n any)
+	walk = func(n any) {
+		switch value := n.(type) {
+		case map[string]any:
+			if id, ok := dig(value, "navigationEndpoint", "browseEndpoint", "browseId").(string); ok &&
+				strings.HasPrefix(id, "UC") {
+				pageType, _ := dig(value, "navigationEndpoint", "browseEndpoint",
+					"browseEndpointContextSupportedConfigs", "browseEndpointContextMusicConfig", "pageType").(string)
+				if strings.Contains(pageType, "ARTIST") {
+					label := strings.TrimSpace(runsText(value["title"]))
+					if label == "" {
+						label = strings.TrimSpace(flexText(value, 0))
+					}
+					found = append(found, candidate{name: label, id: id})
+				}
+			}
+			for _, child := range value {
+				walk(child)
+			}
+		case []any:
+			for _, child := range value {
+				walk(child)
+			}
+		}
+	}
+	walk(res)
+	if len(found) == 0 {
+		return "", errors.New("no encontramos ese artista en YouTube Music")
+	}
+	lower := strings.ToLower(name)
+	seen := map[string]bool{}
+	var best string
+	for _, item := range found {
+		if seen[item.id] {
+			continue
+		}
+		seen[item.id] = true
+		// An exact name match wins over whatever appeared first.
+		if strings.ToLower(item.name) == lower {
+			return item.id, nil
+		}
+		if best == "" {
+			best = item.id
+		}
+	}
+	if best == "" {
+		return "", errors.New("no encontramos ese artista en YouTube Music")
+	}
+	return best, nil
+}

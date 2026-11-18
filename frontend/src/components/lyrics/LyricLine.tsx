@@ -106,12 +106,7 @@ export const LyricLine = memo(function LyricLine({
             active ? "opacity-100" : "opacity-60",
           )}
         >
-          {showIPA ? (
-            <p className={immersive ? "text-[13px] text-white/50" : "text-[14px] text-muted"} lang="en-Latn-fonipa">
-              {annotation.ipa}
-            </p>
-          ) : null}
-          {showIPA ? (
+          {showIPA && annotation.spanishApprox ? (
             <p className={immersive ? "text-[14px] text-white/80" : "text-[14px] text-ink/75"}>
               {annotation.spanishApprox}
             </p>

@@ -205,6 +205,14 @@ export function MovePlaylistItem(playlistID: string, $from: number, to: number):
 }
 
 /**
+ * OpenArtist finds an artist by name and opens its page, which is how a song in
+ * the player leads to the rest of the catalogue.
+ */
+export function OpenArtist(name: string): $CancellablePromise<$models.CollectionDTO> {
+    return $Call.ByID(642724017, name);
+}
+
+/**
  * OpenCollection reads an album, a playlist or an artist and stores its tracks
  * so every row can be streamed straight away.
  */

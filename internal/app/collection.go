@@ -149,3 +149,19 @@ func (a *App) PlayCollection(collectionID string) ([]TrackDTO, error) {
 	}
 	return col.Tracks, nil
 }
+
+// OpenArtist finds an artist by name and opens its page, which is how a song in
+// the player leads to the rest of the catalogue.
+func (a *App) OpenArtist(name string) (CollectionDTO, error) {
+	name = strings.TrimSpace(name)
+	if name == "" || a.account == nil {
+		return CollectionDTO{}, errors.New("no hay artista que abrir")
+	}
+	ctx, cancel := a.opCtx()
+	defer cancel()
+	id, err := a.account.FindArtist(ctx, name)
+	if err != nil {
+		return CollectionDTO{}, err
+	}
+	return a.OpenCollection(id)
+}
