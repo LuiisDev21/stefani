@@ -11,7 +11,7 @@ export function LibraryView() {
   const counts = useApp((state) => state.counts);
   const importAudio = useApp((state) => state.importAudio);
   const openPicker = useApp((state) => state.openPicker);
-  const go = useApp((state) => state.go);
+  const focusSearch = useApp((state) => state.focusSearch);
 
   return (
     <div className="min-h-0">
@@ -27,7 +27,7 @@ export function LibraryView() {
             <Button size="sm" variant="subtle" icon={<Upload className="h-3.5 w-3.5" />} onClick={() => void importAudio()}>
               Importar audio
             </Button>
-            <Button size="sm" variant="ghost" onClick={() => go("search")}>
+            <Button size="sm" variant="ghost" onClick={() => focusSearch()}>
               Buscar mas música
             </Button>
           </>
@@ -42,7 +42,7 @@ export function LibraryView() {
             description="Guarda una canción con el corazon, o importa archivos de audio desde tu equipo. Los archivos se referencian en su ubicacion original, no se copian."
             actions={
               <>
-                <Button size="sm" variant="primary" onClick={() => go("search")}>
+                <Button size="sm" variant="primary" onClick={() => focusSearch()}>
                   Buscar canciones
                 </Button>
                 <Button size="sm" variant="subtle" onClick={() => void importAudio()}>

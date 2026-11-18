@@ -33,7 +33,6 @@ test.describe("STEFANI desktop shell", () => {
     await waitForApp(page);
 
     for (const [label, heading] of [
-      ["Buscar", "Buscar"],
       ["Biblioteca", "Biblioteca"],
       ["Listas", "Listas"],
       ["Favoritos", "Favoritos"],
@@ -95,11 +94,18 @@ test.describe("STEFANI desktop shell", () => {
     await expect(page.getByRole("alert")).toContainText("https");
   });
 
-  test("filters the library through search", async ({ page }) => {
+  test("searches from the bar and opens the results under it", async ({ page }) => {
     await waitForApp(page);
-    await page.getByRole("button", { name: "Buscar", exact: true }).click();
-    await page.getByLabel("Buscar canciones").fill("paper");
-    await expect(page.getByRole("button", { name: /Reproducir Paper Boats/ })).toBeVisible();
-    await expect(page.getByRole("button", { name: /Reproducir Slow Morning/ })).toHaveCount(0);
+    await page.getByLabel("Buscar canciones").fill("paper boats");
+
+    const results = page.getByRole("listbox", { name: "Resultados de búsqueda" });
+    await expect(results).toBeVisible();
+    await expect(results.getByRole("option", { name: /Paper Boats/ }).first()).toBeVisible();
+    await expect(results.getByRole("option", { name: /Slow Morning/ })).toHaveCount(0);
+
+    // Picking one plays it and folds the list away.
+    await results.getByRole("option", { name: /Paper Boats/ }).first().click();
+    await expect(results).toBeHidden();
+    await expect(page.getByLabel("Buscar canciones")).toHaveValue("");
   });
 });

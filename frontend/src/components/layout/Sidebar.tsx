@@ -1,11 +1,10 @@
-import { Heart, House, Library, ListMusic, Search, Upload } from "lucide-react";
+import { Heart, House, Library, ListMusic, Upload } from "lucide-react";
 import { cn } from "../../lib/cn";
 import { useApp, type View } from "../../stores/appStore";
 import { Button } from "../ui/Button";
 
 const items: Array<{ view: View; label: string; icon: typeof House }> = [
   { view: "home", label: "Inicio", icon: House },
-  { view: "search", label: "Buscar", icon: Search },
   { view: "library", label: "Biblioteca", icon: Library },
   { view: "playlists", label: "Listas", icon: ListMusic },
   { view: "favorites", label: "Favoritos", icon: Heart },

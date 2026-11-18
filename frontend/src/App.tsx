@@ -8,7 +8,6 @@ import { StudyPanel } from "./components/layout/StudyPanel";
 import { Toast } from "./components/ui/Toast";
 import { PlaylistPicker } from "./components/track/PlaylistPicker";
 import { HomeView } from "./features/home/HomeView";
-import { SearchView } from "./features/search/SearchView";
 import { LibraryView } from "./features/library/LibraryView";
 import { FavoritesView } from "./features/favorites/FavoritesView";
 import { PlaylistsView } from "./features/playlists/PlaylistsView";
@@ -80,7 +79,6 @@ export default function App() {
           <Sidebar open={navOpen} onNavigate={() => setNavOpen(false)} />
           <main className="scroll-area min-w-0 flex-1" id="main-content">
             {view === "home" && <HomeView />}
-            {view === "search" && <SearchView />}
             {view === "library" && <LibraryView />}
             {view === "favorites" && <FavoritesView />}
             {view === "playlists" && <PlaylistsView />}

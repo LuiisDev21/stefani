@@ -26,6 +26,7 @@ export function HomeView() {
   const go = useApp((state) => state.go);
   const importAudio = useApp((state) => state.importAudio);
   const openPicker = useApp((state) => state.openPicker);
+  const focusSearch = useApp((state) => state.focusSearch);
 
   const current = usePlayer((state) => state.current);
   const playing = usePlayer((state) => state.playing);
@@ -41,7 +42,7 @@ export function HomeView() {
       <TopBar
         title="Inicio"
         actions={
-          <Button size="sm" variant="subtle" icon={<Search className="h-3.5 w-3.5" />} onClick={() => go("search")}>
+          <Button size="sm" variant="subtle" icon={<Search className="h-3.5 w-3.5" />} onClick={() => focusSearch()}>
             Buscar música
           </Button>
         }
@@ -157,7 +158,7 @@ export function HomeView() {
               icon={<Search className="h-4 w-4" />}
               label="Buscar"
               detail="Biblioteca y catálogo"
-              onClick={() => go("search")}
+              onClick={() => focusSearch()}
             />
           </div>
         </section>

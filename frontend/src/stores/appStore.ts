@@ -17,7 +17,7 @@ import { usePlayer } from "./playerStore";
 
 export type View =
   | "home"
-  | "search"
+
   | "library"
   | "playlists"
   | "favorites"
@@ -71,6 +71,9 @@ interface AppState {
   toggleFavorite: (track: Track) => Promise<void>;
 
   search: (query: string) => Promise<void>;
+  /** Bumped by any "search" affordance so the top bar can take the focus. */
+  searchFocus: number;
+  focusSearch: () => void;
   clearSearch: () => void;
 
   importAudio: () => Promise<void>;
@@ -136,6 +139,7 @@ export const useApp = create<AppState>((set, get) => ({
   searchQuery: "",
   searching: false,
   searchResult: null,
+  searchFocus: 0,
 
   annotating: false,
   annotateProgress: null,
@@ -243,6 +247,7 @@ export const useApp = create<AppState>((set, get) => ({
   },
 
   clearSearch: () => set({ searchQuery: "", searchResult: null }),
+  focusSearch: () => set((state) => ({ searchFocus: state.searchFocus + 1 })),
 
   importAudio: async () => {
     try {
