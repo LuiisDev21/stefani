@@ -127,14 +127,49 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
       - uses: actions/download-artifact@v4
         with:
           path: artifacts
           merge-multiple: true
 
+      - name: Compose release notes
+        shell: bash
+        env:
+          VERSION: v0.1.${{ github.run_number }}
+        run: |
+          set -euo pipefail
+          current="$VERSION"
+          previous=$(git tag --sort=-v:refname | grep -vx "$current" | head -n1 || true)
+          {
+            echo "## STEFANI ${current}"
+            echo
+            if [ -n "${previous}" ]; then
+              echo "Cambios desde ${previous}:"
+              echo
+              git log --no-merges --pretty='- %s (%h)' "${previous}..HEAD"
+              echo
+              echo "[Changelog completo](https://github.com/${GITHUB_REPOSITORY}/compare/${previous}...${current})"
+            else
+              echo "Primera release publicada con binarios para Windows, Linux y macOS."
+              echo
+              git log --no-merges --pretty='- %s (%h)' -n 40 HEAD
+            fi
+            echo
+            echo "### Descargas"
+            echo
+            echo "- **Windows**: stefani-windows-amd64.zip (portable y instalador NSIS)"
+            echo "- **Linux**: stefani-linux-amd64.tar.gz"
+            echo "- **macOS (Apple silicon)**: stefani-macos-arm64.zip"
+          } > release-notes.md
+          cat release-notes.md
+
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: v0.1.${{ github.run_number }}
           name: STEFANI v0.1.${{ github.run_number }}
-          generate_release_notes: true
+          body_path: release-notes.md
           files: artifacts/*
