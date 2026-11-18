@@ -77,12 +77,23 @@ func (c *Client) Collection(ctx context.Context, rawID string) (Collection, erro
 	}
 
 	if kind == "artist" {
+		// The discography brings every release; the rows on the artist page
+		// only carry the first handful of each kind.
+		full := c.discography(ctx, id)
+		covered := map[string]bool{}
+		for _, shelf := range full {
+			covered[shelf.Title] = true
+			out.Shelves = append(out.Shelves, shelf)
+		}
 		var shelves []map[string]any
 		collectShelves(res, &shelves)
 		for _, raw := range shelves {
 			title := shelfTitle(raw)
+			if title == "" || covered[title] {
+				continue
+			}
 			items := shelfItems(raw)
-			if title == "" || len(items) < 2 {
+			if len(items) < 2 {
 				continue
 			}
 			out.Shelves = append(out.Shelves, Shelf{Title: title, Items: items})

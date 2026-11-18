@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { cn } from "../../lib/cn";
 
 interface CoverProps {
@@ -7,6 +8,8 @@ interface CoverProps {
   size?: number;
   className?: string;
   rounded?: string;
+  /** Draws the hairline frame. Artists use a bare circular portrait instead. */
+  bordered?: boolean;
   /** Kept for call sites: the system has no drop shadows, so it no longer draws one. */
   shadow?: boolean;
 }
@@ -17,16 +20,41 @@ interface CoverProps {
  * the display face on the card surface, with the artist underneath. At row
  * sizes the same idea reduces to the initials, so the list keeps its rhythm.
  */
-export function Cover({ title, artist, src, size = 40, className, rounded = "rounded-[8px]" }: CoverProps) {
+export function Cover({
+  title,
+  artist,
+  src,
+  size = 40,
+  className,
+  rounded = "rounded-[8px]",
+  bordered = true,
+}: CoverProps) {
   const large = size >= 120;
+  // Some YouTube thumbnails 404; fall back to the typographic sleeve instead
+  // of leaving a broken image icon.
+  const [broken, setBroken] = useState(false);
+  useEffect(() => setBroken(false), [src]);
+  const image = Boolean(src) && !broken;
+
   return (
     <div
       aria-hidden="true"
-      className={cn("shrink-0 overflow-hidden border border-line bg-card", rounded, className)}
+      className={cn(
+        "shrink-0 overflow-hidden bg-card",
+        bordered && "border border-line",
+        rounded,
+        className,
+      )}
       style={{ width: size, height: size }}
     >
-      {src ? (
-        <img src={src} alt="" loading="lazy" className="h-full w-full object-cover" />
+      {image ? (
+        <img
+          src={src}
+          alt=""
+          loading="lazy"
+          onError={() => setBroken(true)}
+          className="h-full w-full object-cover"
+        />
       ) : large ? (
         <div className="flex h-full w-full flex-col justify-between p-5">
           <span className="text-[10px] tracking-[0.02em] text-ash">STEFANI</span>

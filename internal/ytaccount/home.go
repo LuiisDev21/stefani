@@ -85,32 +85,8 @@ func shelfItems(shelf map[string]any) []ShelfItem {
 	items := make([]ShelfItem, 0, len(contents))
 	for _, raw := range contents {
 		if row, ok := dig(raw, "musicTwoRowItemRenderer").(map[string]any); ok {
-			item := ShelfItem{
-				Title:    strings.TrimSpace(runsText(row["title"])),
-				Subtitle: strings.TrimSpace(runsJoin(row["subtitle"])),
-				Cover:    thumbnail(row),
-			}
-			item.VideoID, _ = dig(row, "navigationEndpoint", "watchEndpoint", "videoId").(string)
-			if id, ok := dig(row, "navigationEndpoint", "watchEndpoint", "playlistId").(string); ok {
-				// RD* is the auto-radio of a song, not a list the user can open.
-				if trimmed := strings.TrimPrefix(id, "VL"); !strings.HasPrefix(trimmed, "RD") {
-					item.ListID = trimmed
-				}
-			}
-			// Albums come as a browse endpoint; PlaylistTracks reads those too.
-			if id, ok := dig(row, "navigationEndpoint", "browseEndpoint", "browseId").(string); ok {
-				if strings.HasPrefix(id, "MPRE") || strings.HasPrefix(id, "VL") {
-					item.ListID = strings.TrimPrefix(id, "VL")
-				}
-			}
-			// Cards without artwork look broken, and the "listen together"
-			// stations are live streams the player cannot seek.
-			item.ArtistID = artistFromRuns(row["subtitle"])
-			// A card that leads nowhere (radio mixes) cannot be opened or played.
-			if item.VideoID == "" && item.ListID == "" {
-				continue
-			}
-			if item.Title == "" || item.Cover == "" || isLive(row) {
+			item, ok := twoRowItem(row)
+			if !ok {
 				continue
 			}
 			items = append(items, item)
@@ -134,6 +110,109 @@ func shelfItems(shelf map[string]any) []ShelfItem {
 		items = append(items, item)
 	}
 	return items
+}
+
+// twoRowItem turns a card into an item, or drops it when it leads nowhere or
+// would show a hole instead of artwork.
+func twoRowItem(row map[string]any) (ShelfItem, bool) {
+	item := ShelfItem{
+		Title:    strings.TrimSpace(runsText(row["title"])),
+		Subtitle: strings.TrimSpace(runsJoin(row["subtitle"])),
+		Cover:    thumbnail(row),
+	}
+	item.VideoID, _ = dig(row, "navigationEndpoint", "watchEndpoint", "videoId").(string)
+	if id, ok := dig(row, "navigationEndpoint", "watchEndpoint", "playlistId").(string); ok {
+		// RD* is the auto-radio of a song, not a list the user can open.
+		if trimmed := strings.TrimPrefix(id, "VL"); !strings.HasPrefix(trimmed, "RD") {
+			item.ListID = trimmed
+		}
+	}
+	// Albums come as a browse endpoint; PlaylistTracks reads those too.
+	if id, ok := dig(row, "navigationEndpoint", "browseEndpoint", "browseId").(string); ok {
+		if strings.HasPrefix(id, "MPRE") || strings.HasPrefix(id, "VL") {
+			item.ListID = strings.TrimPrefix(id, "VL")
+		}
+	}
+	item.ArtistID = artistFromRuns(row["subtitle"])
+	if item.VideoID == "" && item.ListID == "" {
+		return ShelfItem{}, false
+	}
+	if item.Title == "" || item.Cover == "" || isLive(row) {
+		return ShelfItem{}, false
+	}
+	return item, true
+}
+
+// discography reads the artist's full release list. The artist page only
+// carries a handful of cards per row; MPAD<channel> brings every album and
+// single, which is where the missing records live.
+func (c *Client) discography(ctx context.Context, artistID string) []Shelf {
+	res, err := c.call(ctx, "browse", map[string]any{"browseId": "MPAD" + artistID})
+	if err != nil {
+		return nil
+	}
+	var grids []map[string]any
+	var walk func(n any)
+	walk = func(n any) {
+		switch value := n.(type) {
+		case map[string]any:
+			if grid, ok := value["gridRenderer"].(map[string]any); ok {
+				grids = append(grids, grid)
+			}
+			for _, child := range value {
+				walk(child)
+			}
+		case []any:
+			for _, child := range value {
+				walk(child)
+			}
+		}
+	}
+	walk(res)
+
+	groups := map[string][]ShelfItem{}
+	var order []string
+	for _, grid := range grids {
+		rows, _ := grid["items"].([]any)
+		for _, raw := range rows {
+			row, ok := dig(raw, "musicTwoRowItemRenderer").(map[string]any)
+			if !ok {
+				continue
+			}
+			item, ok := twoRowItem(row)
+			if !ok {
+				continue
+			}
+			name := releaseGroup(item.Subtitle)
+			if _, seen := groups[name]; !seen {
+				order = append(order, name)
+			}
+			groups[name] = append(groups[name], item)
+		}
+	}
+	var out []Shelf
+	for _, name := range order {
+		if len(groups[name]) == 0 {
+			continue
+		}
+		out = append(out, Shelf{Title: name, Items: groups[name]})
+	}
+	return out
+}
+
+// releaseGroup folds the subtitle of a release card into a row name.
+func releaseGroup(subtitle string) string {
+	kind := strings.TrimSpace(strings.SplitN(subtitle, " • ", 2)[0])
+	switch {
+	case strings.HasPrefix(kind, "Álbum"), strings.HasPrefix(kind, "Album"):
+		return "Álbumes"
+	case strings.Contains(kind, "Single"), strings.Contains(kind, "Sencillo"), kind == "EP", strings.HasPrefix(kind, "EP"):
+		return "Singles y EPs"
+	case kind == "":
+		return "Otros lanzamientos"
+	default:
+		return kind
+	}
 }
 
 // isLive reports whether a card is a live station rather than a song or a

@@ -85,14 +85,13 @@ export function CollectionView() {
         {back}
 
         <header className="flex items-end gap-6">
-          <div className="overflow-hidden rounded-[10px] border border-line">
-            <Cover
-              title={collection.title}
-              src={collection.cover}
-              size={168}
-              rounded={collection.kind === "artist" ? "rounded-full" : "rounded-[10px]"}
-            />
-          </div>
+          <Cover
+            title={collection.title}
+            src={collection.cover}
+            size={168}
+            rounded={collection.kind === "artist" ? "rounded-full" : "rounded-[10px]"}
+            bordered={collection.kind !== "artist"}
+          />
           <div className="min-w-0 pb-1">
             <p className="text-[11px] font-medium text-muted">{kindLabel}</p>
             <h2 className="mt-1 truncate text-[34px] leading-[1.1] font-semibold tracking-[-0.03em] text-ink">
