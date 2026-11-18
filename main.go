@@ -23,6 +23,7 @@ import (
 	"github.com/LuiisDev21/stefani/internal/brand"
 	"github.com/LuiisDev21/stefani/internal/config"
 	"github.com/LuiisDev21/stefani/internal/demo"
+	"github.com/LuiisDev21/stefani/internal/executil"
 	"github.com/LuiisDev21/stefani/internal/lyrics"
 	"github.com/LuiisDev21/stefani/internal/media"
 	"github.com/LuiisDev21/stefani/internal/music"
@@ -231,6 +232,7 @@ func run() error {
 			return err
 		}
 		cmd := exec.Command(exe, "--login", loginProfile, url)
+		executil.Hide(cmd)
 		if err := cmd.Start(); err != nil {
 			return err
 		}
