@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Minimize2, Pause, Play, SkipBack, SkipForward } from "lucide-react";
+import { LoaderCircle, Minimize2, Pause, Play, SkipBack, SkipForward } from "lucide-react";
 import { formatTime } from "../../lib/format";
 import { useDuration, usePlaybackTime } from "../../player/clock";
 import { useApp } from "../../stores/appStore";
@@ -7,7 +7,7 @@ import { usePlayer } from "../../stores/playerStore";
 import { api } from "../../lib/api";
 import { Chip } from "../../components/ui/Chip";
 import { AmbientBackdrop } from "./AmbientBackdrop";
-import { WaveProgress } from "../../components/ui/WaveProgress";
+import { SnakeProgress } from "../../components/ui/SnakeProgress";
 import { IconButton } from "../../components/ui/IconButton";
 import { LyricsView } from "../../components/lyrics/LyricsView";
 import { useLocalFlag } from "../../lib/useLocalFlag";
@@ -39,6 +39,7 @@ export function ImmersiveView() {
 
   const current = usePlayer((state) => state.current);
   const playing = usePlayer((state) => state.playing);
+  const trackLoading = usePlayer((state) => state.loading);
   const toggle = usePlayer((state) => state.toggle);
   const next = usePlayer((state) => state.next);
   const previous = usePlayer((state) => state.previous);
@@ -125,11 +126,17 @@ export function ImmersiveView() {
           <button
             type="button"
             onClick={toggle}
-            disabled={!current}
-            aria-label={playing ? "Pausar" : "Reproducir"}
+            disabled={!current || trackLoading}
+            aria-label={trackLoading ? "Cargando" : playing ? "Pausar" : "Reproducir"}
             className="mx-1 flex h-12 w-12 items-center justify-center rounded-full bg-white text-black transition-transform active:scale-[0.96] disabled:opacity-40"
           >
-            {playing ? <Pause className="h-4 w-4 fill-current" /> : <Play className="ml-0.5 h-4 w-4 fill-current" />}
+            {trackLoading ? (
+              <LoaderCircle className="h-4 w-4 animate-spin" />
+            ) : playing ? (
+              <Pause className="h-4 w-4 fill-current" />
+            ) : (
+              <Play className="ml-0.5 h-4 w-4 fill-current" />
+            )}
           </button>
           <IconButton label="Siguiente" onClick={next} disabled={!current}>
             <SkipForward className="h-4 w-4" />
@@ -137,7 +144,7 @@ export function ImmersiveView() {
         </div>
 
         <span className="w-10 text-right text-[11px] text-white/40 tnum">{formatTime(timeMs)}</span>
-        <WaveProgress
+        <SnakeProgress
           valueMs={Math.min(timeMs, totalMs)}
           totalMs={totalMs}
           onSeek={seekMs}

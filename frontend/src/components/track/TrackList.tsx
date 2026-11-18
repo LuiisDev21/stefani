@@ -15,6 +15,7 @@ interface TrackListProps {
 export function TrackList({ tracks, onAdd, onExternal }: TrackListProps) {
   const current = usePlayer((state) => state.current);
   const playing = usePlayer((state) => state.playing);
+  const loading = usePlayer((state) => state.loading);
   const toggleFavorite = useApp((state) => state.toggleFavorite);
   const openTrack = useApp((state) => state.openTrack);
 
@@ -29,6 +30,7 @@ export function TrackList({ tracks, onAdd, onExternal }: TrackListProps) {
           index={index}
           active={current?.id === track.id}
           playing={playing}
+          loading={loading && current?.id === track.id}
           onPlay={() => {
             if (!track.unavailable) void openTrack(track, tracks);
           }}

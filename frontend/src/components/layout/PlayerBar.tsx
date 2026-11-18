@@ -1,6 +1,7 @@
 import {
   Heart,
   Maximize2,
+  LoaderCircle,
   Pause,
   Play,
   Repeat,
@@ -20,7 +21,7 @@ import { useDuration, usePlaybackTime } from "../../player/clock";
 import { Cover } from "../ui/Cover";
 import { IconButton } from "../ui/IconButton";
 import { Slider } from "../ui/Slider";
-import { WaveProgress } from "../ui/WaveProgress";
+import { SnakeProgress } from "../ui/SnakeProgress";
 
 /**
  * Persistent transport: a solid surface closed by one hairline on top. Depth
@@ -29,6 +30,7 @@ import { WaveProgress } from "../ui/WaveProgress";
 export function PlayerBar() {
   const current = usePlayer((state) => state.current);
   const playing = usePlayer((state) => state.playing);
+  const loading = usePlayer((state) => state.loading);
   const volume = usePlayer((state) => state.volume);
   const muted = usePlayer((state) => state.muted);
   const rate = usePlayer((state) => state.rate);
@@ -98,14 +100,20 @@ export function PlayerBar() {
             <button
               type="button"
               onClick={toggle}
-              disabled={!current}
-              aria-label={playing ? "Pausar" : "Reproducir"}
+              disabled={!current || loading}
+              aria-label={loading ? "Cargando" : playing ? "Pausar" : "Reproducir"}
               className={cn(
                 "mx-1 flex h-10 w-10 items-center justify-center rounded-full transition-[background-color,transform]",
                 "bg-accent text-on-accent hover:bg-accent-focus active:scale-[0.95] disabled:opacity-40",
               )}
             >
-              {playing ? <Pause className="h-4 w-4 fill-current" /> : <Play className="ml-0.5 h-4 w-4 fill-current" />}
+              {loading ? (
+                <LoaderCircle className="h-4 w-4 animate-spin" />
+              ) : playing ? (
+                <Pause className="h-4 w-4 fill-current" />
+              ) : (
+                <Play className="ml-0.5 h-4 w-4 fill-current" />
+              )}
             </button>
             <IconButton label="Siguiente" onClick={next} disabled={!current}>
               <SkipForward className="h-4 w-4" />
@@ -128,7 +136,7 @@ export function PlayerBar() {
 
           <div className="flex w-full items-center gap-2">
             <span className="w-9 text-right text-[11px] text-faint tnum">{formatTime(timeMs)}</span>
-            <WaveProgress
+            <SnakeProgress
               valueMs={Math.min(timeMs, totalMs)}
               totalMs={totalMs}
               onSeek={seekMs}

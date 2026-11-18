@@ -1,4 +1,4 @@
-import { ExternalLink, Heart, ListPlus, Pause, Play } from "lucide-react";
+import { ExternalLink, Heart, ListPlus, LoaderCircle, Pause, Play } from "lucide-react";
 import { cn } from "../../lib/cn";
 import { formatTime } from "../../lib/format";
 import type { Track } from "../../lib/types";
@@ -10,6 +10,7 @@ interface TrackRowProps {
   index: number;
   active: boolean;
   playing: boolean;
+  loading?: boolean;
   onPlay: () => void;
   onFavorite: () => void;
   onAdd?: () => void;
@@ -26,6 +27,7 @@ export function TrackRow({
   index,
   active,
   playing,
+  loading,
   onPlay,
   onFavorite,
   onAdd,
@@ -44,8 +46,10 @@ export function TrackRow({
       <button
         type="button"
         onClick={onPlay}
-        disabled={unavailable}
-        aria-label={unavailable ? `${track.title} no esta disponible` : `Reproducir ${track.title}`}
+        disabled={unavailable || loading}
+        aria-label={
+          unavailable ? `${track.title} no esta disponible` : loading ? `Cargando ${track.title}` : `Reproducir ${track.title}`
+        }
         className="relative flex h-7 w-7 items-center justify-center rounded text-[11px] text-faint tnum"
       >
         <span className={cn("group-hover:opacity-0", active && "opacity-0", unavailable && "group-hover:opacity-100")}>
@@ -59,7 +63,9 @@ export function TrackRow({
             unavailable && "hidden",
           )}
         >
-          {active && playing ? (
+          {loading ? (
+            <LoaderCircle className="h-3.5 w-3.5 animate-spin text-ink" />
+          ) : active && playing ? (
             <Pause className="h-3.5 w-3.5 fill-current text-accent" />
           ) : (
             <Play className="h-3.5 w-3.5 fill-current text-ink" />

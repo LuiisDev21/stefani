@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowLeft, ArrowUp, ListMusic, Play, Plus, Trash2, UploadCloud } from "lucide-react";
+import { LoaderCircle, ArrowDown, ArrowLeft, ArrowUp, ListMusic, Play, Plus, Trash2, UploadCloud } from "lucide-react";
 import { useState } from "react";
 import { api } from "../../lib/api";
 import { formatRelativeDate, formatTime, plural } from "../../lib/format";
@@ -38,6 +38,7 @@ export function PlaylistsView() {
 
   const current = usePlayer((state) => state.current);
   const playing = usePlayer((state) => state.playing);
+  const loading = usePlayer((state) => state.loading);
   const toggle = usePlayer((state) => state.toggle);
 
   const [creating, setCreating] = useState(false);
@@ -117,6 +118,7 @@ export function PlaylistsView() {
                   total={tracks.length}
                   active={current?.id === track.id}
                   playing={playing}
+                  loading={loading && current?.id === track.id}
                   onPlay={() => (current?.id === track.id ? toggle() : void openTrack(track, tracks))}
                   onUp={() => void movePlaylistItem(active.id, index, index - 1)}
                   onDown={() => void movePlaylistItem(active.id, index, index + 1)}
@@ -373,13 +375,14 @@ interface PlaylistRowProps {
   total: number;
   active: boolean;
   playing: boolean;
+  loading?: boolean;
   onPlay: () => void;
   onUp: () => void;
   onDown: () => void;
   onRemove: () => void;
 }
 
-function PlaylistRow({ track, index, total, active, playing, onPlay, onUp, onDown, onRemove }: PlaylistRowProps) {
+function PlaylistRow({ track, index, total, active, playing, loading, onPlay, onUp, onDown, onRemove }: PlaylistRowProps) {
   const unavailable = track.unavailable;
   return (
     <li
@@ -392,7 +395,13 @@ function PlaylistRow({ track, index, total, active, playing, onPlay, onUp, onDow
         aria-label={unavailable ? `${track.title} no esta disponible` : `Reproducir ${track.title}`}
         className="flex h-7 w-7 items-center justify-center rounded text-[11px] text-faint tnum hover:text-ink"
       >
-        {active && playing ? <span className="text-accent">II</span> : index + 1}
+        {loading ? (
+          <LoaderCircle className="h-3 w-3 animate-spin" />
+        ) : active && playing ? (
+          <span className="text-accent">II</span>
+        ) : (
+          index + 1
+        )}
       </button>
       <button
         type="button"

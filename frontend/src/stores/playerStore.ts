@@ -19,6 +19,8 @@ interface PlayerState {
   index: number;
   current: Track | null;
   playing: boolean;
+  /** True while the current track is being resolved and buffered. */
+  loading: boolean;
   volume: number;
   muted: boolean;
   rate: number;
@@ -69,13 +71,24 @@ function ensureAudio(): HTMLAudioElement {
     const message = track
       ? `No pude reproducir "${track.title}". Revisa que el archivo siga disponible.`
       : "No pude reproducir el audio.";
-    usePlayer.setState({ playing: false, error: message });
+    usePlayer.setState({ playing: false, loading: false, error: message });
     clock.set({ playing: false });
   });
   el.addEventListener("play", () => {
     usePlayer.setState({ playing: true, error: null });
     clock.set({ playing: true });
     startFrames();
+  });
+  // Upstream audio is resolved on demand, so the first seconds are silence:
+  // the transport shows a spinner instead of looking dead.
+  el.addEventListener("waiting", () => {
+    if (!el.paused) usePlayer.setState({ loading: true });
+  });
+  el.addEventListener("canplay", () => {
+    usePlayer.setState({ loading: false });
+  });
+  el.addEventListener("playing", () => {
+    usePlayer.setState({ loading: false });
   });
   el.addEventListener("pause", () => {
     usePlayer.setState({ playing: false });
@@ -138,18 +151,20 @@ function loadAndPlay(track: Track, autoplay: boolean) {
     usePlayer.setState({
       current: track,
       playing: false,
+      loading: false,
       error: track.note || "Esta pista no se puede reproducir dentro de la app.",
     });
     clock.reset(track.durationMs || 0);
     return;
   }
+  usePlayer.setState({ loading: true, error: null });
   el.src = track.audioUrl;
   el.playbackRate = usePlayer.getState().rate;
   el.volume = usePlayer.getState().muted ? 0 : usePlayer.getState().volume;
   clock.reset(track.durationMs || 0);
   if (autoplay) {
     void el.play().catch((error) => {
-      usePlayer.setState({ error: describePlayError(error) });
+      usePlayer.setState({ loading: false, error: describePlayError(error) });
     });
   }
 }
@@ -167,6 +182,7 @@ export const usePlayer = create<PlayerState>((set, get) => ({
   index: -1,
   current: null,
   playing: false,
+  loading: false,
   volume: 0.8,
   muted: false,
   rate: 1,
@@ -278,7 +294,7 @@ export const usePlayer = create<PlayerState>((set, get) => ({
     ensureAudio().removeAttribute("src");
     stopFrames();
     clock.reset();
-    set({ queue: [], index: -1, current: null, playing: false, error: null });
+    set({ queue: [], index: -1, current: null, playing: false, loading: false, error: null });
   },
 }));
 

@@ -26,9 +26,10 @@ export function StudyPanel() {
   const annotate = useApp((state) => state.annotate);
 
   const current = usePlayer((state) => state.current);
+  const lines = lyrics?.lines ?? [];
   const hasGeneratedAnnotations = useMemo(
-    () => Boolean(lyrics?.lines.some((line) => line.annotation?.source === "ai")),
-    [lyrics],
+    () => lines.some((line) => line.annotation?.source === "ai"),
+    [lines],
   );
   // A track can start playing from anywhere (search, queue, immersive view):
   // the panel is the single owner of loading its lyric, once per track.
@@ -61,7 +62,7 @@ export function StudyPanel() {
     <aside
       className="flex h-full w-[400px] shrink-0 flex-col bg-bg"
       data-lyrics-state={lyrics ? (lyrics.available ? "ready" : "empty") : "none"}
-      data-lyrics-lines={lyrics?.lines.length ?? 0}
+      data-lyrics-lines={lines.length}
       data-lyrics-notice={lyrics?.notice ?? ""}
     >
       <div className="px-6 pt-5">
