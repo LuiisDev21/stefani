@@ -55,7 +55,7 @@ export function HomeView() {
         {hero ? (
           <section
             aria-label={heroIsCurrent ? "Sonando ahora" : "Tu biblioteca"}
-            className="grid gap-7 rounded-[16px] border border-line bg-elevated p-6 lg:grid-cols-[220px_minmax(0,1fr)_200px] lg:items-center lg:p-8"
+            className="grid gap-7 rounded-[16px] border border-line bg-elevated p-6 lg:grid-cols-[220px_minmax(0,1fr)] lg:items-center lg:p-8"
           >
             <Cover
               title={hero.title}
@@ -78,9 +78,6 @@ export function HomeView() {
                 {hero.album ? ` · ${hero.album}` : ""}
                 {hero.durationMs ? ` · ${formatTime(hero.durationMs)}` : ""}
               </p>
-              <p className="mt-4 max-w-[54ch] text-[14px] leading-[1.5] text-muted">
-                La letra se ilumina palabra por palabra mientras suena, con IPA y lectura en español.
-              </p>
               <div className="mt-6 flex flex-wrap items-center gap-2">
                 <Button
                   variant="primary"
@@ -102,26 +99,6 @@ export function HomeView() {
               </div>
             </div>
 
-            <dl className="hidden shrink-0 flex-col gap-5 border-l border-line pl-8 lg:flex">
-              <div>
-                <dt className="text-[12px] text-muted">Pistas</dt>
-                <dd className="mt-1 text-[24px] font-semibold tracking-[-0.03em] text-ink tnum">
-                  {counts?.tracks ?? 0}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-[12px] text-muted">Favoritas</dt>
-                <dd className="mt-1 text-[24px] font-semibold tracking-[-0.03em] text-ink tnum">
-                  {counts?.favorites ?? 0}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-[12px] text-muted">Listas</dt>
-                <dd className="mt-1 text-[24px] font-semibold tracking-[-0.03em] text-ink tnum">
-                  {counts?.playlists ?? 0}
-                </dd>
-              </div>
-            </dl>
           </section>
         ) : (
           <EmptyState
