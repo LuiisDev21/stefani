@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { LoaderCircle, Minimize2, Pause, Play, SkipBack, SkipForward } from "lucide-react";
+import { Languages, LoaderCircle, Minimize2, Pause, Play, SkipBack, SkipForward, Speech } from "lucide-react";
 import { formatTime } from "../../lib/format";
 import { useDuration, usePlaybackTime } from "../../player/clock";
 import { useApp } from "../../stores/appStore";
@@ -78,8 +78,18 @@ export function ImmersiveView() {
         style={{ ["--wails-draggable" as string]: "drag" }}
       >
         <div className="flex items-center gap-1.5" style={{ ["--wails-draggable" as string]: "no-drag" }}>
-          <Chip active={showIPA} onClick={toggleIPA} label="Pronunciación" />
-          <Chip active={showTranslation} onClick={toggleTranslation} label="Traducción" />
+          <Chip
+            active={showIPA}
+            onClick={toggleIPA}
+            label="Pronunciación"
+            icon={<Speech className="h-[13px] w-[13px]" />}
+          />
+          <Chip
+            active={showTranslation}
+            onClick={toggleTranslation}
+            label="Traducción"
+            icon={<Languages className="h-[13px] w-[13px]" />}
+          />
         </div>
       </header>
 

@@ -1,4 +1,4 @@
-import { FileText, Languages, RefreshCw } from "lucide-react";
+import { FileText, Languages, RefreshCw, Speech } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { clamp } from "../../lib/format";
 import { useApp } from "../../stores/appStore";
@@ -105,8 +105,18 @@ export function StudyPanel() {
         </div>
 
         <div className="mt-3 flex flex-wrap items-center gap-1.5">
-          <Chip active={showIPA} onClick={toggleIPA} label="Pronunciación" />
-          <Chip active={showTranslation} onClick={toggleTranslation} label="Traducción" />
+          <Chip
+            active={showIPA}
+            onClick={toggleIPA}
+            label="Pronunciación"
+            icon={<Speech className="h-[13px] w-[13px]" />}
+          />
+          <Chip
+            active={showTranslation}
+            onClick={toggleTranslation}
+            label="Traducción"
+            icon={<Languages className="h-[13px] w-[13px]" />}
+          />
         </div>
 
         {annotating && progress && progress.total > 0 ? (
