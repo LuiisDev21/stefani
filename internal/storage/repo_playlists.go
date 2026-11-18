@@ -63,7 +63,12 @@ func (d *DB) DeletePlaylist(ctx context.Context, id string) error {
 // Playlists lists playlists with their item counts.
 func (d *DB) Playlists(ctx context.Context) ([]domain.Playlist, error) {
 	rows, err := d.sql.QueryContext(ctx, `
-		SELECT p.id, p.name, p.description, p.artwork, p.origin, p.external_id,
+		SELECT p.id, p.name, p.description, COALESCE(NULLIF(p.artwork, ''), (
+		  SELECT t.artwork_url FROM playlist_items pi
+		  JOIN tracks t ON t.id = pi.track_id
+		  WHERE pi.playlist_id = p.id AND t.artwork_url <> ''
+		  ORDER BY pi.position LIMIT 1
+		), ''), p.origin, p.external_id,
 		       p.created_at, p.updated_at, COUNT(i.id)
 		FROM playlists p LEFT JOIN playlist_items i ON i.playlist_id = p.id
 		GROUP BY p.id ORDER BY p.updated_at DESC`)
@@ -91,7 +96,12 @@ func (d *DB) Playlist(ctx context.Context, id string) (domain.Playlist, error) {
 	var p domain.Playlist
 	var created, updated int64
 	err := d.sql.QueryRowContext(ctx, `
-		SELECT p.id, p.name, p.description, p.artwork, p.origin, p.external_id,
+		SELECT p.id, p.name, p.description, COALESCE(NULLIF(p.artwork, ''), (
+		  SELECT t.artwork_url FROM playlist_items pi
+		  JOIN tracks t ON t.id = pi.track_id
+		  WHERE pi.playlist_id = p.id AND t.artwork_url <> ''
+		  ORDER BY pi.position LIMIT 1
+		), ''), p.origin, p.external_id,
 		       p.created_at, p.updated_at, (SELECT COUNT(*) FROM playlist_items i WHERE i.playlist_id = p.id)
 		FROM playlists p WHERE p.id = ?`, id).
 		Scan(&p.ID, &p.Name, &p.Description, &p.Artwork, &p.Origin, &p.ExternalID, &created, &updated, &p.TrackCount)

@@ -276,7 +276,7 @@ export function PlaylistsView() {
                   onClick={() => void openPlaylist(playlist)}
                   className="flex w-full items-center gap-3 rounded-[9px] px-2 py-2 text-left transition-colors hover:bg-surface/50"
                 >
-                  <Cover title={playlist.name} size={38} />
+                  <Cover title={playlist.name} src={playlist.artwork} size={38} />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-[13px] text-ink">{playlist.name}</span>
                     <span className="block truncate text-[11.5px] text-faint tnum">

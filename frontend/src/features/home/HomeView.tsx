@@ -213,7 +213,7 @@ export function HomeView() {
                       onClick={() => go("playlists", playlist)}
                       className="flex w-full items-center gap-3 rounded-[8px] px-2 py-2 text-left transition-colors hover:bg-surface"
                     >
-                      <Cover title={playlist.name} size={36} rounded="rounded-[6px]" />
+                      <Cover title={playlist.name} src={playlist.artwork} size={36} rounded="rounded-[6px]" />
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-[13px] text-ink">{playlist.name}</span>
                         <span className="block truncate text-[12px] text-ash tnum">
