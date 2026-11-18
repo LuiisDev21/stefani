@@ -1,12 +1,9 @@
 package app
 
 import (
-	"log/slog"
 	"strings"
 	"sync"
 	"time"
-
-	"github.com/wailsapp/wails/v3/pkg/application"
 )
 
 // healthState tracks the frontend heartbeat so the host can recover a window
@@ -26,35 +23,27 @@ func (a *App) ClientHeartbeat(report string) {
 	a.health.mu.Unlock()
 }
 
-// WatchRenderer reloads the window when the UI stops reporting or reports an
-// empty tree. It never acts while the window is hidden or minimised, where the
-// browser throttles timers and a pause is expected.
-func (a *App) WatchRenderer(window *application.WebviewWindow, logger *slog.Logger) {
+// RendererStatus reports whether the UI stopped reporting or reported an empty
+// tree. The host calls it from its watch loop; it stays a method so the loop
+// does not reach into the app's internals.
+func (a *App) RendererStatus() (bool, string) {
 	a.health.mu.Lock()
+	defer a.health.mu.Unlock()
 	if a.health.last.IsZero() {
 		a.health.last = time.Now()
+		return false, ""
 	}
+	empty := strings.Contains(a.health.report, `"root":0`) && strings.Contains(a.health.report, `"text":0`)
+	if !empty && time.Since(a.health.last) < 8*time.Second {
+		return false, ""
+	}
+	return true, a.health.report
+}
+
+// ResetRendererHealth forgets the last report right before a reload.
+func (a *App) ResetRendererHealth() {
+	a.health.mu.Lock()
+	a.health.last = time.Now()
+	a.health.report = ""
 	a.health.mu.Unlock()
-
-	ticker := time.NewTicker(5 * time.Second)
-	defer ticker.Stop()
-	for range ticker.C {
-		if !window.IsVisible() || window.IsMinimised() {
-			continue
-		}
-		a.health.mu.Lock()
-		last, report := a.health.last, a.health.report
-		a.health.mu.Unlock()
-
-		empty := strings.Contains(report, `"root":0`) && strings.Contains(report, `"text":0`)
-		if !empty && time.Since(last) < 8*time.Second {
-			continue
-		}
-		logger.Warn("la interfaz dejó de responder; recargando", "detalle", report)
-		window.Reload()
-		a.health.mu.Lock()
-		a.health.last = time.Now()
-		a.health.report = ""
-		a.health.mu.Unlock()
-	}
 }

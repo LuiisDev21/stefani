@@ -360,7 +360,22 @@ func run() error {
 
 	logger.Info("starting", "name", brand.Name, "version", brand.Version, "db", db.Path(),
 		"online", streamer.Detail())
-	go appSvc.WatchRenderer(window, logger)
+	go func() {
+		ticker := time.NewTicker(5 * time.Second)
+		defer ticker.Stop()
+		for range ticker.C {
+			if !window.IsVisible() || window.IsMinimised() {
+				continue
+			}
+			stale, detail := appSvc.RendererStatus()
+			if !stale {
+				continue
+			}
+			logger.Warn("la interfaz dejó de responder; recargando", "detalle", detail)
+			window.Reload()
+			appSvc.ResetRendererHealth()
+		}
+	}()
 
 	return wailsApp.Run()
 }
