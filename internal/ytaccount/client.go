@@ -38,6 +38,7 @@ const (
 type Account struct {
 	Name      string
 	Email     string
+	Avatar    string
 	Playlists int
 }
 
@@ -214,7 +215,7 @@ func (c *Client) SignedIn(ctx context.Context) (Account, error) {
 	if email == "" {
 		email = runsText(dig(header, "channelHandle"))
 	}
-	return Account{Name: name, Email: email}, nil
+	return Account{Name: name, Email: email, Avatar: avatar(header)}, nil
 }
 
 // Playlists reads the playlists saved in the account's library.
@@ -246,6 +247,17 @@ func (c *Client) Playlists(ctx context.Context) ([]Playlist, error) {
 		})
 	}
 	return out, nil
+}
+
+// avatar picks the largest picture from the account header.
+func avatar(header any) string {
+	list, _ := dig(header, "accountPhoto", "thumbnails").([]any)
+	if len(list) == 0 {
+		return ""
+	}
+	last, _ := list[len(list)-1].(map[string]any)
+	url, _ := last["url"].(string)
+	return url
 }
 
 func browseID(row map[string]any) string {

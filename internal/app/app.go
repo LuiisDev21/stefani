@@ -63,7 +63,7 @@ type Deps struct {
 	Account   *ytaccount.Client
 	// OpenAccountLogin shows the WebView login window; CloseAccountLogin hides
 	// it so the profile lock is released before its cookies are read.
-	OpenAccountLogin  func() error
+	OpenAccountLogin  func(url string) error
 	CloseAccountLogin func() error
 	// OnConfigChange runs after settings are saved, so services holding their
 	// own snapshot can refresh.
@@ -72,21 +72,21 @@ type Deps struct {
 
 // App is the bound service.
 type App struct {
-	db        *storage.DB
-	configs   *config.Store
-	secrets   secret.Store
-	music     *music.Service
-	lyrics    *lyrics.Service
-	phon      *phonetics.Service
-	ai        *ai.Client
-	streamer  *music.YtDlp
-	localPhon *phonetics.LocalEngine
-	log       *slog.Logger
-	picker    FilePicker
-	emitter   Emitter
-	opener    Opener
-	account   *ytaccount.Client
-	openLogin func() error
+	db         *storage.DB
+	configs    *config.Store
+	secrets    secret.Store
+	music      *music.Service
+	lyrics     *lyrics.Service
+	phon       *phonetics.Service
+	ai         *ai.Client
+	streamer   *music.YtDlp
+	localPhon  *phonetics.LocalEngine
+	log        *slog.Logger
+	picker     FilePicker
+	emitter    Emitter
+	opener     Opener
+	account    *ytaccount.Client
+	openLogin  func(url string) error
 	closeLogin func() error
 
 	onConfigChange func(config.Config)
@@ -102,23 +102,23 @@ func New(d Deps) *App {
 		log = slog.Default()
 	}
 	return &App{
-		db:        d.DB,
-		configs:   d.Configs,
-		secrets:   d.Secrets,
-		music:     d.Music,
-		lyrics:    d.Lyrics,
-		phon:      d.Phonetics,
-		ai:        d.AI,
-		streamer:  d.Streamer,
-		localPhon: d.LocalPhon,
-		log:       log,
-		picker:    d.Picker,
-		emitter:   d.Emitter,
-		opener:    d.Opener,
-		account:   d.Account,
-		openLogin: d.OpenAccountLogin,
+		db:         d.DB,
+		configs:    d.Configs,
+		secrets:    d.Secrets,
+		music:      d.Music,
+		lyrics:     d.Lyrics,
+		phon:       d.Phonetics,
+		ai:         d.AI,
+		streamer:   d.Streamer,
+		localPhon:  d.LocalPhon,
+		log:        log,
+		picker:     d.Picker,
+		emitter:    d.Emitter,
+		opener:     d.Opener,
+		account:    d.Account,
+		openLogin:  d.OpenAccountLogin,
 		closeLogin: d.CloseAccountLogin,
-		cfg:       d.Config,
+		cfg:        d.Config,
 
 		onConfigChange: d.OnConfigChange,
 	}

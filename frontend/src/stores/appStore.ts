@@ -85,6 +85,7 @@ interface AppState {
   accountPlaylists: AccountPlaylist[];
   loadAccount: () => Promise<void>;
   connectAccount: () => Promise<void>;
+  signOutAccount: () => Promise<void>;
   finishAccount: () => Promise<void>;
   importAccountPlaylist: (id: string, name: string) => Promise<void>;
   openPlaylist: (playlist: Playlist) => Promise<void>;
@@ -302,7 +303,16 @@ export const useApp = create<AppState>((set, get) => ({
   connectAccount: async () => {
     try {
       await api.connectAccount();
-      set({ account: { connected: false, name: "", email: "", playlists: 0, locked: true } });
+      set({ account: { connected: false, name: "", email: "", avatar: "", playlists: 0, locked: true } });
+    } catch (error) {
+      get().notify("error", errorMessage(error));
+    }
+  },
+
+  signOutAccount: async () => {
+    try {
+      await api.signOutAccount();
+      set({ account: { connected: false, name: "", email: "", avatar: "", playlists: 0, locked: true } });
     } catch (error) {
       get().notify("error", errorMessage(error));
     }

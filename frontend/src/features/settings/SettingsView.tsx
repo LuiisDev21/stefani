@@ -1,4 +1,4 @@
-import { CheckCircle2, KeyRound, PlugZap, Trash2 } from "lucide-react";
+import { CheckCircle2, KeyRound, PlugZap, Trash2, UserRound } from "lucide-react";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import { useApp } from "../../stores/appStore";
@@ -43,6 +43,7 @@ export function SettingsView() {
   const connectAccount = useApp((state) => state.connectAccount);
   const finishAccount = useApp((state) => state.finishAccount);
   const loadAccount = useApp((state) => state.loadAccount);
+  const signOutAccount = useApp((state) => state.signOutAccount);
 
   const [form, setForm] = useState<Settings | null>(settings);
   const [apiKey, setApiKey] = useState("");
@@ -57,6 +58,11 @@ export function SettingsView() {
   useEffect(() => {
     setForm(settings);
   }, [settings]);
+
+  // The account refreshes itself whenever this screen opens.
+  useEffect(() => {
+    void loadAccount();
+  }, [loadAccount]);
 
   if (!form) {
     return (
@@ -139,10 +145,25 @@ export function SettingsView() {
       />
 
       <div className="mx-auto max-w-[820px] px-8 pb-24">
-        <section>
+        <section className="mb-10">
           <SectionTitle title="Cuenta" />
-          <div className="mt-4 flex items-center justify-between gap-4 rounded-[10px] border border-line bg-elevated px-4 py-3">
-            <div className="min-w-0">
+          <div className="mt-4 flex items-center gap-3 rounded-[10px] border border-line bg-elevated px-4 py-3">
+            {account?.connected && account.avatar ? (
+              <img
+                src={account.avatar}
+                alt=""
+                className="h-9 w-9 shrink-0 rounded-full border border-line object-cover"
+              />
+            ) : account?.connected ? (
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-line bg-card text-[13px] text-muted">
+                {account.name.slice(0, 1)}
+              </span>
+            ) : (
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-line bg-card text-muted">
+                <UserRound className="h-4 w-4" />
+              </span>
+            )}
+            <div className="min-w-0 flex-1">
               <p className="truncate text-[13px] text-ink">
                 {account?.connected ? account.name : "YouTube Music"}
               </p>
@@ -157,8 +178,8 @@ export function SettingsView() {
               </p>
             </div>
             {account?.connected ? (
-              <Button size="sm" variant="subtle" onClick={() => void loadAccount()}>
-                Actualizar
+              <Button size="sm" variant="ghost" onClick={() => void signOutAccount()}>
+                Cerrar sesión
               </Button>
             ) : account?.locked ? (
               <Button size="sm" variant="primary" onClick={() => void finishAccount()}>

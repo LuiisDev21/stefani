@@ -193,6 +193,7 @@ export interface Account {
   connected: boolean;
   name: string;
   email: string;
+  avatar: string;
   playlists: number;
   locked: boolean;
 }

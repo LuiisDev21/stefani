@@ -203,7 +203,7 @@ func run() error {
 	accountClient := ytaccount.New(filepath.Join(profileRoot, "EBWebView"))
 
 	var loginWindow *application.WebviewWindow
-	openLogin := func() error {
+	openLogin := func(url string) error {
 		if loginWindow != nil {
 			loginWindow.Focus()
 			return nil
@@ -211,7 +211,7 @@ func run() error {
 		w := application.Get().Window.NewWithOptions(application.WebviewWindowOptions{
 			Name:             "account-login",
 			Title:            "Conectar con YouTube Music",
-			URL:              "https://accounts.google.com/ServiceLogin?service=youtube&continue=https%3A%2F%2Fmusic.youtube.com%2F",
+			URL:              url,
 			Width:            560,
 			Height:           780,
 			MinWidth:         420,

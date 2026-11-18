@@ -226,6 +226,7 @@ type AccountDTO struct {
 	Connected bool   `json:"connected"`
 	Name      string `json:"name"`
 	Email     string `json:"email"`
+	Avatar    string `json:"avatar"`
 	Playlists int    `json:"playlists"`
 	Locked    bool   `json:"locked"`
 }

@@ -395,6 +395,15 @@ export function Settings() {
 }
 
 /**
+ * SignOutAccount opens Google's logout page in the login window; FinishAccount
+ * then sees a profile without a session.
+ * @returns {$CancellablePromise<void>}
+ */
+export function SignOutAccount() {
+    return $Call.ByID(3563979396);
+}
+
+/**
  * TestLLM checks connectivity with the configured provider.
  * @returns {$CancellablePromise<$models.TestOutcome>}
  */

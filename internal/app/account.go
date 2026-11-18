@@ -7,6 +7,11 @@ import (
 	"github.com/LuiisDev21/stefani/internal/ytaccount"
 )
 
+const (
+	loginURL  = "https://accounts.google.com/ServiceLogin?service=youtube&continue=https%3A%2F%2Fmusic.youtube.com%2F"
+	logoutURL = "https://accounts.google.com/Logout?continue=https%3A%2F%2Fmusic.youtube.com%2F"
+)
+
 // AccountStatus reports the Google session that lives in the app's WebView
 // profile. Locked means the login window is still open, so the cookies cannot
 // be read yet.
@@ -26,12 +31,13 @@ func (a *App) AccountStatus() AccountDTO {
 	}
 	lists, err := a.account.Playlists(ctx)
 	if err != nil {
-		return AccountDTO{Connected: true, Name: account.Name, Email: account.Email}
+		return AccountDTO{Connected: true, Name: account.Name, Email: account.Email, Avatar: account.Avatar}
 	}
 	return AccountDTO{
 		Connected: true,
 		Name:      account.Name,
 		Email:     account.Email,
+		Avatar:    account.Avatar,
 		Playlists: len(lists),
 	}
 }
@@ -42,7 +48,16 @@ func (a *App) ConnectAccount() error {
 	if a.openLogin == nil {
 		return errors.New("el inicio de sesión no está disponible en este entorno")
 	}
-	return a.openLogin()
+	return a.openLogin(loginURL)
+}
+
+// SignOutAccount opens Google's logout page in the login window; FinishAccount
+// then sees a profile without a session.
+func (a *App) SignOutAccount() error {
+	if a.openLogin == nil {
+		return errors.New("el inicio de sesión no está disponible en este entorno")
+	}
+	return a.openLogin(logoutURL)
 }
 
 // FinishAccount closes the login window, waits for WebView2 to release the

@@ -36,6 +36,13 @@ export class AccountDTO {
              */
             this["email"] = "";
         }
+        if (!("avatar" in $$source)) {
+            /**
+             * @member
+             * @type {string}
+             */
+            this["avatar"] = "";
+        }
         if (!("playlists" in $$source)) {
             /**
              * @member
