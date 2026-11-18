@@ -51,6 +51,7 @@ interface AppState {
   homeFeed: Shelf[];
   collection: Collection | null;
   collectionLoading: boolean;
+  sidePanel: "lyrics" | "queue";
   providers: ProviderState[];
   settings: Settings | null;
   counts: StoredCounts | null;
@@ -103,6 +104,7 @@ interface AppState {
   playShelfItem: (item: ShelfItem) => Promise<void>;
   openCollection: (id: string) => Promise<void>;
   openArtist: (name: string) => Promise<void>;
+  setSidePanel: (panel: "lyrics" | "queue") => void;
   installAppUpdate: () => Promise<void>;
   importAccountPlaylist: (id: string, name: string) => Promise<void>;
   openPlaylist: (playlist: Playlist) => Promise<void>;
@@ -156,6 +158,7 @@ export const useApp = create<AppState>((set, get) => ({
   homeFeed: [],
   collection: null,
   collectionLoading: false,
+  sidePanel: "lyrics",
   account: null,
   accountPlaylists: [],
   providers: [],
@@ -386,6 +389,8 @@ export const useApp = create<AppState>((set, get) => ({
       get().notify("error", errorMessage(error));
     }
   },
+
+  setSidePanel: (panel) => set({ sidePanel: panel }),
 
   openArtist: async (name) => {
     if (!name) return;

@@ -11,6 +11,8 @@ import {
   Volume1,
   Volume2,
   VolumeX,
+  ListMusic,
+  Mic,
 } from "lucide-react";
 import { formatTime } from "../../lib/format";
 import { cn } from "../../lib/cn";
@@ -47,6 +49,8 @@ export function PlayerBar() {
 
   const toggleFavorite = useApp((state) => state.toggleFavorite);
   const openArtist = useApp((state) => state.openArtist);
+  const sidePanel = useApp((state) => state.sidePanel);
+  const setSidePanel = useApp((state) => state.setSidePanel);
   const setImmersive = useApp((state) => state.setImmersive);
 
   const timeMs = usePlaybackTime();
@@ -168,6 +172,22 @@ export function PlayerBar() {
 
         {/* Output controls */}
         <div className="flex items-center justify-end gap-2">
+          <IconButton
+            label="Cola de reproducción"
+            size="sm"
+            active={sidePanel === "queue"}
+            onClick={() => setSidePanel(sidePanel === "queue" ? "lyrics" : "queue")}
+          >
+            <ListMusic className="h-4 w-4" />
+          </IconButton>
+          <IconButton
+            label="Letra de la canción"
+            size="sm"
+            active={sidePanel === "lyrics"}
+            onClick={() => setSidePanel("lyrics")}
+          >
+            <Mic className="h-4 w-4" />
+          </IconButton>
           <button
             type="button"
             onClick={cycleRate}

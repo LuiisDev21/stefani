@@ -4,6 +4,7 @@ import { TopNav } from "./components/layout/TopNav";
 import { Sidebar } from "./components/layout/Sidebar";
 import { PlayerBar } from "./components/layout/PlayerBar";
 import { MediaSessionBridge } from "./player/MediaSessionBridge";
+import { QueuePanel } from "./components/layout/QueuePanel";
 import { StudyPanel } from "./components/layout/StudyPanel";
 import { Toast } from "./components/ui/Toast";
 import { PlaylistPicker } from "./components/track/PlaylistPicker";
@@ -27,6 +28,7 @@ export default function App() {
   const pickerTrack = useApp((state) => state.pickerTrack);
   const playlists = useApp((state) => state.playlists);
   const closePicker = useApp((state) => state.closePicker);
+  const sidePanel = useApp((state) => state.sidePanel);
   const init = useApp((state) => state.init);
   const [navOpen, setNavOpen] = useState(false);
 
@@ -108,7 +110,7 @@ export default function App() {
             {view === "settings" && <SettingsView />}
           </main>
           <div className="hidden border-l border-line lg:flex">
-            <StudyPanel />
+            {sidePanel === "queue" ? <QueuePanel /> : <StudyPanel />}
           </div>
         </div>
         <PlayerBar />
