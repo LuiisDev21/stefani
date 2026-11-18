@@ -2,29 +2,24 @@ package music
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"time"
 )
 
-const releaseAPI = "https://api.github.com/repos/yt-dlp/yt-dlp/releases/latest"
+// releaseDownloadBase points at GitHub's "latest" redirect, which resolves the
+// asset without the API and therefore without its 60-requests-per-hour limit.
+const releaseDownloadBase = "https://github.com/yt-dlp/yt-dlp/releases/latest/download/"
 
-// releaseEndpoint is a variable so tests can point at a fake GitHub.
-var releaseEndpoint = releaseAPI
-
-type release struct {
-	TagName string `json:"tag_name"`
-	Assets  []struct {
-		Name string `json:"name"`
-		URL  string `json:"browser_download_url"`
-	} `json:"assets"`
-}
+// releaseBase is a variable so tests can point at a fake GitHub.
+var releaseBase = releaseDownloadBase
 
 // ErrReleaseUnavailable means GitHub did not answer with a usable release.
 var ErrReleaseUnavailable = errors.New("no se pudo consultar la última versión de yt-dlp")
@@ -52,78 +47,76 @@ func (y *YtDlp) Update(ctx context.Context) (string, error) {
 	if target == "" {
 		return "", errors.New("no hay una carpeta para guardar yt-dlp")
 	}
-
-	info, err := fetchRelease(ctx)
-	if err != nil {
-		return "", err
-	}
 	asset := assetName()
-	var url string
-	for _, item := range info.Assets {
-		if item.Name == asset {
-			url = item.URL
-			break
-		}
+	source := releaseBase + asset
+	version := ""
+	// The tag is in the first redirect; reading it avoids downloading the
+	// binary just to learn which version it is.
+	if tag, location, err := resolve(ctx, source); err == nil {
+		version = tag
+		source = location
 	}
-	if url == "" {
-		return "", fmt.Errorf("%w: no hay binario para %s/%s", ErrReleaseUnavailable, runtime.GOOS, runtime.GOARCH)
-	}
-
-	if err := download(ctx, url, target); err != nil {
+	if _, err := download(ctx, source, target); err != nil {
 		return "", err
 	}
-	return info.TagName, nil
+	return version, nil
 }
 
-func fetchRelease(ctx context.Context) (release, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, releaseEndpoint, nil)
+// resolve follows the "latest" redirect only once to read the tag.
+func resolve(ctx context.Context, raw string) (string, string, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, raw, nil)
 	if err != nil {
-		return release{}, err
+		return "", "", err
 	}
 	req.Header.Set("User-Agent", "stefani")
-	req.Header.Set("Accept", "application/vnd.github+json")
-	res, err := http.DefaultClient.Do(req)
+	client := &http.Client{
+		Timeout: 30 * time.Second,
+		CheckRedirect: func(*http.Request, []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
+	res, err := client.Do(req)
 	if err != nil {
-		return release{}, fmt.Errorf("%w: %v", ErrReleaseUnavailable, err)
+		return "", "", err
 	}
 	defer res.Body.Close()
-	if res.StatusCode != http.StatusOK {
-		return release{}, fmt.Errorf("%w: HTTP %d", ErrReleaseUnavailable, res.StatusCode)
+	location := res.Header.Get("Location")
+	if res.StatusCode < 300 || res.StatusCode > 399 || location == "" {
+		return "", raw, nil
 	}
-	var info release
-	if err := json.NewDecoder(io.LimitReader(res.Body, 2<<20)).Decode(&info); err != nil {
-		return release{}, fmt.Errorf("%w: respuesta ilegible", ErrReleaseUnavailable)
+	if base, err := url.Parse(raw); err == nil {
+		if ref, err := base.Parse(location); err == nil {
+			location = ref.String()
+		}
 	}
-	if info.TagName == "" {
-		return release{}, ErrReleaseUnavailable
-	}
-	return info, nil
+	return versionFromURL(location), location, nil
 }
 
 // download writes to a temporary file next to the target and renames it, so a
-// failed half-download never replaces a working binary.
-func download(ctx context.Context, url, target string) error {
+// failed half-download never replaces a working binary. The version comes from
+// the redirect target (.../releases/download/<tag>/<asset>).
+func download(ctx context.Context, url, target string) (string, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return err
+		return "", err
 	}
 	req.Header.Set("User-Agent", "stefani")
 	client := &http.Client{Timeout: 5 * time.Minute}
 	res, err := client.Do(req)
 	if err != nil {
-		return fmt.Errorf("descargar yt-dlp: %w", err)
+		return "", fmt.Errorf("%w: %v", ErrReleaseUnavailable, err)
 	}
 	defer res.Body.Close()
 	if res.StatusCode != http.StatusOK {
-		return fmt.Errorf("descargar yt-dlp: HTTP %d", res.StatusCode)
+		return "", fmt.Errorf("%w: HTTP %d", ErrReleaseUnavailable, res.StatusCode)
 	}
 
 	if err := os.MkdirAll(filepath.Dir(target), 0o755); err != nil {
-		return err
+		return "", err
 	}
 	tmp, err := os.CreateTemp(filepath.Dir(target), "yt-dlp-*")
 	if err != nil {
-		return err
+		return "", err
 	}
 	tmpName := tmp.Name()
 	defer os.Remove(tmpName)
@@ -133,16 +126,29 @@ func download(ctx context.Context, url, target string) error {
 		err = closeErr
 	}
 	if err != nil {
-		return fmt.Errorf("descargar yt-dlp: %w", err)
+		return "", fmt.Errorf("descargar yt-dlp: %w", err)
 	}
 	if size < 500<<10 {
-		return errors.New("la descarga de yt-dlp quedó incompleta")
+		return "", errors.New("la descarga de yt-dlp quedó incompleta")
 	}
 	if err := os.Chmod(tmpName, 0o755); err != nil {
-		return err
+		return "", err
 	}
 	if err := os.Rename(tmpName, target); err != nil {
-		return fmt.Errorf("reemplazar yt-dlp: %w", err)
+		return "", fmt.Errorf("reemplazar yt-dlp: %w", err)
 	}
-	return nil
+	return versionFromURL(res.Request.URL.Path), nil
+}
+
+// versionFromURL reads the tag out of .../releases/download/<tag>/<asset>.
+func versionFromURL(raw string) string {
+	parsed, err := url.Parse(raw)
+	if err != nil {
+		return ""
+	}
+	parts := strings.Split(strings.Trim(parsed.Path, "/"), "/")
+	if len(parts) < 2 {
+		return ""
+	}
+	return parts[len(parts)-2]
 }

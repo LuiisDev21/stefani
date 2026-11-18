@@ -13,20 +13,18 @@ import (
 func TestUpdateInstallsTheReleaseAsset(t *testing.T) {
 	payload := strings.Repeat("x", 600<<10)
 	mux := http.NewServeMux()
-	mux.HandleFunc("/release", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(`{"tag_name":"2026.11.01","assets":[{"name":"` + assetName() + `","browser_download_url":"` +
-			"http://" + r.Host + "/binary" + `"}]}`))
+	mux.HandleFunc("/latest/download/"+assetName(), func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/download/2026.11.01/"+assetName(), http.StatusFound)
 	})
-	mux.HandleFunc("/binary", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/download/2026.11.01/"+assetName(), func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte(payload))
 	})
 	server := httptest.NewServer(mux)
 	defer server.Close()
 
-	oldEndpoint := releaseEndpoint
-	releaseEndpoint = server.URL + "/release"
-	defer func() { releaseEndpoint = oldEndpoint }()
+	oldBase := releaseBase
+	releaseBase = server.URL + "/latest/download/"
+	defer func() { releaseBase = oldBase }()
 
 	dir := t.TempDir()
 	oldDir := managedDir
@@ -52,19 +50,18 @@ func TestUpdateInstallsTheReleaseAsset(t *testing.T) {
 
 func TestUpdateRejectsShortDownloads(t *testing.T) {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/release", func(w http.ResponseWriter, r *http.Request) {
-		_, _ = w.Write([]byte(`{"tag_name":"1","assets":[{"name":"` + assetName() + `","browser_download_url":"` +
-			"http://" + r.Host + "/binary" + `"}]}`))
+	mux.HandleFunc("/latest/download/"+assetName(), func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/download/1/"+assetName(), http.StatusFound)
 	})
-	mux.HandleFunc("/binary", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/download/1/"+assetName(), func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte("tiny"))
 	})
 	server := httptest.NewServer(mux)
 	defer server.Close()
 
-	oldEndpoint := releaseEndpoint
-	releaseEndpoint = server.URL + "/release"
-	defer func() { releaseEndpoint = oldEndpoint }()
+	oldBase := releaseBase
+	releaseBase = server.URL + "/latest/download/"
+	defer func() { releaseBase = oldBase }()
 
 	dir := t.TempDir()
 	oldDir := managedDir
