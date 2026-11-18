@@ -191,6 +191,7 @@ export function LyricsView({
                     line={line}
                     active={false}
                     past={past}
+                    near={Math.abs(index - activeIndex) === 1}
                     showIPA={showIPA}
                     showTranslation={showTranslation}
                     immersive={immersive}

@@ -7,6 +7,8 @@ interface LyricLineProps {
   line: Line;
   active: boolean;
   past: boolean;
+  /** The line right before or after the active one, which also shows its gloss. */
+  near?: boolean;
   /** Playback time, passed only to the active line so idle lines stay static. */
   timeMs?: number;
   showIPA: boolean;
@@ -26,6 +28,7 @@ export const LyricLine = memo(function LyricLine({
   line,
   active,
   past,
+  near,
   timeMs = 0,
   showIPA,
   showTranslation,
@@ -96,8 +99,13 @@ export const LyricLine = memo(function LyricLine({
         </span>
       </button>
 
-      {active && annotation ? (
-        <div className="mt-2 space-y-1">
+      {annotation && (active || near) ? (
+        <div
+          className={cn(
+            "mt-2 space-y-1 transition-opacity duration-300",
+            active ? "opacity-100" : "opacity-60",
+          )}
+        >
           {showIPA ? (
             <p className={immersive ? "text-[13px] text-white/50" : "text-[14px] text-muted"} lang="en-Latn-fonipa">
               {annotation.ipa}
