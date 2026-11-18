@@ -84,15 +84,7 @@ export function ImmersiveView() {
       ) : null}
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[#0b0b0c]/72" />
 
-      <header className="relative z-10 flex items-center justify-between gap-4 px-5 pt-4 sm:px-8">
-        <button
-          type="button"
-          onClick={() => setImmersive(false)}
-          className="flex items-center gap-1.5 rounded-full px-2 py-1 text-[12px] text-white/50 transition-colors hover:text-white"
-        >
-          <ChevronDown className="h-4 w-4" aria-hidden="true" />
-          Salir
-        </button>
+      <header className="relative z-10 flex items-center justify-end gap-4 px-5 pt-4 sm:px-8">
         <div className="flex items-center gap-1.5">
           <button
             type="button"
@@ -188,6 +180,15 @@ export function ImmersiveView() {
           disabled={!current?.playable}
         />
         <span className="w-10 text-[11px] text-white/40 tnum">{formatTime(totalMs)}</span>
+        <button
+          type="button"
+          onClick={() => setImmersive(false)}
+          aria-label="Salir del modo inmersivo"
+          title="Salir del modo inmersivo"
+          className="ml-1 flex h-9 w-9 items-center justify-center rounded-full text-white/50 transition-colors hover:bg-white/10 hover:text-white"
+        >
+          <ChevronDown className="h-4 w-4" aria-hidden="true" />
+        </button>
       </footer>
     </div>
   );
