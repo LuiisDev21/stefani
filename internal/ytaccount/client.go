@@ -303,8 +303,13 @@ func browseID(row map[string]any) string {
 	return ""
 }
 
+// thumbnail reads the artwork of a card or of a page header; each keeps the
+// image under a different key.
 func thumbnail(row map[string]any) string {
 	list, _ := dig(row, "thumbnailRenderer", "musicThumbnailRenderer", "thumbnail", "thumbnails").([]any)
+	if len(list) == 0 {
+		list, _ = dig(row, "thumbnail", "musicThumbnailRenderer", "thumbnail", "thumbnails").([]any)
+	}
 	if len(list) == 0 {
 		return ""
 	}

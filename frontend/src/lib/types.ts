@@ -56,6 +56,20 @@ export interface ShelfItem {
   cover: string;
   videoId: string;
   listId: string;
+  artistId: string;
+}
+
+export interface Collection {
+  id: string;
+  title: string;
+  subtitle: string;
+  artist: string;
+  artistId: string;
+  cover: string;
+  kind: "album" | "playlist" | "artist";
+  meta: string;
+  tracks: Track[];
+  shelves: Shelf[];
 }
 
 export interface Shelf {

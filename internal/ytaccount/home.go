@@ -18,6 +18,7 @@ type ShelfItem struct {
 	Cover    string
 	VideoID  string
 	ListID   string
+	ArtistID string
 }
 
 // Home reads the personalised rows YouTube Music builds for the account:
@@ -102,9 +103,17 @@ func shelfItems(shelf map[string]any) []ShelfItem {
 					item.ListID = strings.TrimPrefix(id, "VL")
 				}
 			}
-			if item.Title != "" {
-				items = append(items, item)
+			// Cards without artwork look broken, and the "listen together"
+			// stations are live streams the player cannot seek.
+			item.ArtistID = artistFromRuns(row["subtitle"])
+			// A card that leads nowhere (radio mixes) cannot be opened or played.
+			if item.VideoID == "" && item.ListID == "" {
+				continue
 			}
+			if item.Title == "" || item.Cover == "" || isLive(row) {
+				continue
+			}
+			items = append(items, item)
 			continue
 		}
 		row, ok := dig(raw, "musicResponsiveListItemRenderer").(map[string]any)
@@ -118,11 +127,25 @@ func shelfItems(shelf map[string]any) []ShelfItem {
 		}
 		item.VideoID, _ = dig(row, "flexColumns", 0, "musicResponsiveListItemFlexColumnRenderer",
 			"text", "runs", 0, "navigationEndpoint", "watchEndpoint", "videoId").(string)
-		if item.Title != "" {
-			items = append(items, item)
+		item.ArtistID = artistFromRuns(dig(row, "flexColumns", 0, "musicResponsiveListItemFlexColumnRenderer", "text"))
+		if item.Title == "" || item.Cover == "" || isLive(row) {
+			continue
 		}
+		items = append(items, item)
 	}
 	return items
+}
+
+// isLive reports whether a card is a live station rather than a song or a
+// record; those streams come back unplayable through the media proxy.
+func isLive(row map[string]any) bool {
+	badges, _ := row["subtitleBadges"].([]any)
+	for _, raw := range badges {
+		if _, ok := dig(raw, "liveBadgeRenderer").(map[string]any); ok {
+			return true
+		}
+	}
+	return false
 }
 
 // flexText joins the runs of one flex column.
@@ -134,4 +157,20 @@ func flexText(row map[string]any, index int) string {
 	// The subtitle carries the artist and the play count; the card shows the
 	// artist and drops the counts, which read as noise in a shelf.
 	return strings.SplitN(runsJoin(text), " • ", 2)[0]
+}
+
+// artistFromRuns pulls the artist page id out of a card subtitle, so the card
+// can send the user to the artist.
+func artistFromRuns(text any) string {
+	run, ok := firstRun(text)
+	if !ok {
+		return ""
+	}
+	pageType, _ := dig(run, "navigationEndpoint", "browseEndpoint",
+		"browseEndpointContextSupportedConfigs", "browseEndpointContextMusicConfig", "pageType").(string)
+	if !strings.Contains(pageType, "ARTIST") {
+		return ""
+	}
+	id, _ := dig(run, "navigationEndpoint", "browseEndpoint", "browseId").(string)
+	return id
 }

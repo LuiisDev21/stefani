@@ -13,6 +13,7 @@ export type {
     AnnotationDTO,
     AppUpdateDTO,
     BootstrapDTO,
+    CollectionDTO,
     FeaturesDTO,
     HistoryDTO,
     ImportDTO,

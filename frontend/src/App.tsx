@@ -7,6 +7,7 @@ import { MediaSessionBridge } from "./player/MediaSessionBridge";
 import { StudyPanel } from "./components/layout/StudyPanel";
 import { Toast } from "./components/ui/Toast";
 import { PlaylistPicker } from "./components/track/PlaylistPicker";
+import { CollectionView } from "./features/collection/CollectionView";
 import { HomeView } from "./features/home/HomeView";
 import { LibraryView } from "./features/library/LibraryView";
 import { FavoritesView } from "./features/favorites/FavoritesView";
@@ -100,6 +101,7 @@ export default function App() {
           <Sidebar open={navOpen} onNavigate={() => setNavOpen(false)} />
           <main className="scroll-area min-w-0 flex-1" id="main-content">
             {view === "home" && <HomeView />}
+            {view === "collection" && <CollectionView />}
             {view === "library" && <LibraryView />}
             {view === "favorites" && <FavoritesView />}
             {view === "playlists" && <PlaylistsView />}

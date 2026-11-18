@@ -4,6 +4,7 @@ import { api, errorMessage } from "../lib/api";
 import type {
   AppUpdate,
   Account,
+  Collection,
   AccountPlaylist,
   Bootstrap,
   Info,
@@ -22,7 +23,7 @@ import { usePlayer } from "./playerStore";
 
 export type View =
   | "home"
-
+  | "collection"
   | "library"
   | "playlists"
   | "favorites"
@@ -48,6 +49,8 @@ interface AppState {
   favorites: Track[];
   playlists: Playlist[];
   homeFeed: Shelf[];
+  collection: Collection | null;
+  collectionLoading: boolean;
   providers: ProviderState[];
   settings: Settings | null;
   counts: StoredCounts | null;
@@ -98,6 +101,7 @@ interface AppState {
   loadAppUpdate: () => Promise<void>;
   loadHomeFeed: () => Promise<void>;
   playShelfItem: (item: ShelfItem) => Promise<void>;
+  openCollection: (id: string) => Promise<void>;
   installAppUpdate: () => Promise<void>;
   importAccountPlaylist: (id: string, name: string) => Promise<void>;
   openPlaylist: (playlist: Playlist) => Promise<void>;
@@ -149,6 +153,8 @@ export const useApp = create<AppState>((set, get) => ({
   favorites: [],
   playlists: [],
   homeFeed: [],
+  collection: null,
+  collectionLoading: false,
   account: null,
   accountPlaylists: [],
   providers: [],
@@ -353,18 +359,29 @@ export const useApp = create<AppState>((set, get) => ({
   },
 
   playShelfItem: async (item) => {
+    // A card with an album or a list opens its page; a loose song plays here.
+    if (item.listId) {
+      await get().openCollection(item.listId);
+      return;
+    }
     try {
       if (item.videoId) {
         const artist = item.subtitle.split(" • ")[0];
         const track = await api.playShelfItem(item.videoId, item.title, artist, item.cover);
         await get().openTrack(track, [track]);
-        return;
-      }
-      if (item.listId) {
-        const tracks = await api.playCollection(item.listId);
-        if (tracks.length > 0) await get().openTrack(tracks[0], tracks);
       }
     } catch (error) {
+      get().notify("error", errorMessage(error));
+    }
+  },
+
+  openCollection: async (id) => {
+    if (!id) return;
+    set({ collectionLoading: true, view: "collection", collection: null });
+    try {
+      set({ collection: await api.openCollection(id), collectionLoading: false });
+    } catch (error) {
+      set({ collectionLoading: false, view: "home" });
       get().notify("error", errorMessage(error));
     }
   },

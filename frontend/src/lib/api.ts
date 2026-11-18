@@ -20,6 +20,7 @@ import type {
   OnlineStatus,
   Playlist,
   SearchResult,
+  Collection,
   Shelf,
   Settings,
   SettingsInput,
@@ -45,6 +46,7 @@ export const api = {
   playShelfItem: (videoId: string, title: string, artist: string, cover: string) =>
     as<Track>(App.PlayShelfItem(videoId, title, artist, cover)),
   playCollection: (id: string) => as<Track[]>(App.PlayCollection(id)),
+  openCollection: (id: string) => as<Collection>(App.OpenCollection(id)),
   connectAccount: () => as<void>(App.ConnectAccount()),
   signOutAccount: () => as<void>(App.SignOutAccount()),
   finishAccount: () => as<Account>(App.FinishAccount()),

@@ -123,9 +123,7 @@ export function History(limit: number): $CancellablePromise<$models.HistoryDTO[]
 }
 
 /**
- * HomeFeed returns the rows YouTube Music builds for the signed-in account:
- * forgotten favourites, song mixes, what to listen to next and new releases of
- * the artists the user follows. Empty when there is no session.
+ * HomeFeed reads the rows the account sees on the YouTube Music home.
  */
 export function HomeFeed(): $CancellablePromise<$models.ShelfDTO[] | null> {
     return $Call.ByID(2874917745);
@@ -207,6 +205,14 @@ export function MovePlaylistItem(playlistID: string, $from: number, to: number):
 }
 
 /**
+ * OpenCollection reads an album, a playlist or an artist and stores its tracks
+ * so every row can be streamed straight away.
+ */
+export function OpenCollection(id: string): $CancellablePromise<$models.CollectionDTO> {
+    return $Call.ByID(3916917430, id);
+}
+
+/**
  * OpenExternal opens a link in the system browser after validating the scheme.
  */
 export function OpenExternal(rawURL: string): $CancellablePromise<void> {
@@ -214,8 +220,7 @@ export function OpenExternal(rawURL: string): $CancellablePromise<void> {
 }
 
 /**
- * PlayCollection resolves an album or a list from the account and stores its
- * tracks, so the player can queue the whole thing.
+ * PlayCollection resolves a collection and plays it from the first song.
  */
 export function PlayCollection(collectionID: string): $CancellablePromise<$models.TrackDTO[] | null> {
     return $Call.ByID(118379628, collectionID);

@@ -80,6 +80,22 @@ export interface BootstrapDTO {
 }
 
 /**
+ * CollectionDTO is an album, a playlist or an artist page.
+ */
+export interface CollectionDTO {
+    "id": string;
+    "title": string;
+    "subtitle": string;
+    "artist": string;
+    "artistId": string;
+    "cover": string;
+    "kind": string;
+    "meta": string;
+    "tracks": TrackDTO[] | null;
+    "shelves": ShelfDTO[] | null;
+}
+
+/**
  * FeaturesDTO gates experimental providers.
  */
 export interface FeaturesDTO {
@@ -248,7 +264,7 @@ export interface SettingsInput {
 }
 
 /**
- * ShelfDTO is one personalised row of the home feed.
+ * ShelfDTO is one row of the home feed.
  */
 export interface ShelfDTO {
     "title": string;
@@ -264,6 +280,7 @@ export interface ShelfItemDTO {
     "cover": string;
     "videoId": string;
     "listId": string;
+    "artistId": string;
 }
 
 /**
