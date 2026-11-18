@@ -364,7 +364,12 @@ func (c *Client) PlaylistTracks(ctx context.Context, playlistID string) ([]domai
 	if id == "" {
 		return nil, fmt.Errorf("empty playlist id")
 	}
-	res, err := c.call(ctx, "browse", map[string]any{"browseId": "VL" + id})
+	// Albums are browsed by their own id; playlists need the VL prefix.
+	browse := "VL" + id
+	if strings.HasPrefix(id, "MPRE") {
+		browse = id
+	}
+	res, err := c.call(ctx, "browse", map[string]any{"browseId": browse})
 	if err != nil {
 		return nil, err
 	}

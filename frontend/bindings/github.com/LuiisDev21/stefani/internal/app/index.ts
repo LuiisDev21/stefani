@@ -6,7 +6,7 @@ export {
     App
 };
 
-export type {
+export {
     AccountDTO,
     AccountPlaylistDTO,
     AnnotateOutcome,
@@ -27,6 +27,8 @@ export type {
     SearchDTO,
     SettingsDTO,
     SettingsInput,
+    ShelfDTO,
+    ShelfItemDTO,
     StoredCountsDTO,
     TestOutcome,
     TrackDTO,

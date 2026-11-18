@@ -21,8 +21,11 @@ test.describe("STEFANI desktop shell", () => {
 
     await waitForApp(page);
 
-    // The real counters live in the sidebar; the header no longer repeats them.
-    await expect(page.locator("aside").getByText(/^\d+ pistas$/)).toBeVisible();
+    // The sidebar dropped its counters: the active section is what it shows now.
+    await expect(page.getByRole("button", { name: "Inicio", exact: true })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
     await expect(page.getByRole("button", { name: /Reproducir Midnight Signals/ })).toBeVisible();
     await expect(page.getByRole("button", { name: /Reproducir Paper Boats/ })).toBeVisible();
     await expect(page.getByRole("button", { name: /Reproducir Slow Morning/ })).toBeVisible();
@@ -53,7 +56,8 @@ test.describe("STEFANI desktop shell", () => {
     await page.getByRole("button", { name: /Reproducir Paper Boats/ }).click();
 
     const panel = page.locator("aside[data-lyrics-state]");
-    await expect(panel.getByText("palabra por palabra")).toBeVisible();
+    // The sync wording moved to the heading's tooltip when the header was tidied.
+    await expect(panel.getByTitle(/palabra por palabra/)).toBeVisible();
     await expect(panel.getByText("/wiː ˈfoʊldɪd wɜːrdz ˈɪntuː ə boʊt/")).toBeVisible();
     await expect(panel.getByText("uii fóuldid uérds íntu a bóut")).toBeVisible();
     await expect(panel.getByText("Doblamos palabras en un barco")).toBeVisible();
