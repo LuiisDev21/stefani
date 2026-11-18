@@ -1,4 +1,4 @@
-import { LoaderCircle, Menu, Search, Settings } from "lucide-react";
+import { Download, LoaderCircle, Menu, Search, Settings } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "../../lib/cn";
 import { formatTime } from "../../lib/format";
@@ -23,6 +23,7 @@ const MAX_RESULTS = 12;
 export function TopNav({ onToggleNav }: TopNavProps) {
   const view = useApp((state) => state.view);
   const go = useApp((state) => state.go);
+  const appUpdate = useApp((state) => state.appUpdate);
   const query = useApp((state) => state.searchQuery);
   const searching = useApp((state) => state.searching);
   const result = useApp((state) => state.searchResult);
@@ -258,6 +259,18 @@ export function TopNav({ onToggleNav }: TopNavProps) {
       </div>
 
       <div className="flex items-center justify-end gap-1" style={{ ["--wails-draggable" as string]: "no-drag" }}>
+        {appUpdate?.available ? (
+          <button
+            type="button"
+            onClick={() => go("settings")}
+            className="flex h-8 items-center gap-2 rounded-[6px] px-2 text-accent transition-colors hover:bg-surface"
+            title={`Nueva versión: ${appUpdate.latest}`}
+            aria-label={`Nueva versión: ${appUpdate.latest}`}
+          >
+            <Download className="h-4 w-4" />
+            <span className="text-[12px] font-medium">Nueva versión: {appUpdate.latest}</span>
+          </button>
+        ) : null}
         <button
           type="button"
           onClick={() => go("settings")}

@@ -190,6 +190,8 @@ export const useApp = create<AppState>((set, get) => ({
       set(applyBootstrap(data));
       listenForProgress();
       void get().loadAccount();
+      // The top bar announces a new build; a failed check stays silent.
+      void get().loadAppUpdate();
     } catch (error) {
       set({ ready: true, fatalError: errorMessage(error) });
     }
