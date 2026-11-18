@@ -8,10 +8,10 @@
 			"FileVersion": "0.1.0",
 			"ProductVersion": "0.1.0",
 			"CompanyName": "Stefani Project",
-			"FileDescription": "Reproductor musical y entorno de aprendizaje de ingles",
-			"LegalCopyright": "© 2026, My Company",
+			"FileDescription": "STEFANI",
+			"LegalCopyright": "(c) 2026, Stefani Project",
 			"ProductName": "STEFANI",
-			"Comments": "This is a comment"
+			"Comments": "STEFANI: music player with synchronized lyrics and pronunciation."
 		}
 	}
 }

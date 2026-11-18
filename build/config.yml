@@ -8,9 +8,9 @@ info:
   companyName: "Stefani Project"
   productName: "STEFANI"
   productIdentifier: "app.stefani.desktop"
-  description: "Reproductor musical y entorno de aprendizaje de ingles"
+  description: "STEFANI"
   copyright: "(c) 2026, Stefani Project"
-  comments: "MVP 0.1.0. Icono provisional de la plantilla de Wails: pendiente de diseno propio."
+  comments: "STEFANI: music player with synchronized lyrics and pronunciation."
   version: "0.1.0"
   # cfBundleIconName: "appicon" # The macOS icon name in Assets.car icon bundles (optional)
   #                               # Should match the name of your .icon file without the extension
