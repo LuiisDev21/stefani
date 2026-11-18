@@ -1,12 +1,13 @@
-import { Maximize2, Minimize2, Pause, Play, SkipBack, SkipForward } from "lucide-react";
+import { useEffect } from "react";
+import { Minimize2, Pause, Play, SkipBack, SkipForward } from "lucide-react";
 import { formatTime } from "../../lib/format";
 import { useDuration, usePlaybackTime } from "../../player/clock";
 import { useApp } from "../../stores/appStore";
 import { usePlayer } from "../../stores/playerStore";
 import { api } from "../../lib/api";
 import { Chip } from "../../components/ui/Chip";
+import { AmbientBackdrop } from "./AmbientBackdrop";
 import { WaveProgress } from "../../components/ui/WaveProgress";
-import { WindowControls } from "../../components/layout/WindowControls";
 import { IconButton } from "../../components/ui/IconButton";
 import { LyricsView } from "../../components/lyrics/LyricsView";
 import { useLocalFlag } from "../../lib/useLocalFlag";
@@ -51,9 +52,17 @@ export function ImmersiveView() {
   const [showIPA, toggleIPA] = useLocalFlag("showIPA", true);
   const [showTranslation, toggleTranslation] = useLocalFlag("showTranslation", true);
 
+  useEffect(() => {
+    if (!desktop) return;
+    void api.windowSetFullscreen(true).catch(() => undefined);
+    return () => {
+      void api.windowSetFullscreen(false).catch(() => undefined);
+    };
+  }, [desktop]);
+
   return (
     <div
-      className="fixed inset-0 z-30 flex flex-col overflow-hidden bg-[#0b0b0c] text-white"
+      className="immersive-enter fixed inset-0 z-30 flex flex-col overflow-hidden bg-[#0b0b0c] text-white"
       role="dialog"
       aria-modal="true"
       aria-label="Modo inmersivo"
@@ -61,16 +70,7 @@ export function ImmersiveView() {
         if (event.key === "Escape") setImmersive(false);
       }}
     >
-      {/* The cover itself lights the room: a blurred, oversized copy behind
-          everything, dimmed so text keeps its contrast. */}
-      {current?.artworkUrl ? (
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 scale-125 opacity-40 blur-[110px]"
-          style={{ backgroundImage: `url("${hiResArtwork(current.artworkUrl)}")`, backgroundSize: "cover", backgroundPosition: "center" }}
-        />
-      ) : null}
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[#0b0b0c]/72" />
+      <AmbientBackdrop url={current?.artworkUrl ? hiResArtwork(current.artworkUrl) : undefined} active />
 
       <header
         className="relative z-10 flex items-center justify-end gap-3 px-5 pt-4 sm:px-8"
@@ -80,19 +80,6 @@ export function ImmersiveView() {
           <Chip active={showIPA} onClick={toggleIPA} label="Pronunciación" />
           <Chip active={showTranslation} onClick={toggleTranslation} label="Traducción" />
         </div>
-        {desktop ? (
-          <button
-            type="button"
-            onClick={() => void api.windowToggleFullscreen()}
-            aria-label="Pantalla completa"
-            title="Pantalla completa"
-            style={{ ["--wails-draggable" as string]: "no-drag" }}
-            className="ml-1 flex h-8 w-8 items-center justify-center rounded-full text-white/50 transition-colors hover:bg-white/10 hover:text-white"
-          >
-            <Maximize2 className="h-3.5 w-3.5" aria-hidden="true" />
-          </button>
-        ) : null}
-        <WindowControls />
       </header>
 
       <main className="relative z-10 flex min-h-0 flex-1 items-center gap-[clamp(32px,6vw,96px)] px-[clamp(20px,6vw,110px)] py-6">

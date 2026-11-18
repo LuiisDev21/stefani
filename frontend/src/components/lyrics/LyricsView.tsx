@@ -34,7 +34,10 @@ function useActiveLineIndex(lines: Line[], offsetMs: number): number {
 /** The only line that follows the clock: the one being sung. */
 function ActiveLine(props: Omit<React.ComponentProps<typeof LyricLine>, "timeMs"> & { offsetMs: number }) {
   const { offsetMs, ...rest } = props;
-  const timeMs = usePlaybackTime();
+  // 30 fps: karaoke text is not readable faster, and half the paints is real
+  // headroom on the WebView2 renderer.
+  const raw = usePlaybackTime();
+  const timeMs = Math.floor(raw / 33) * 33;
   return <LyricLine {...rest} timeMs={Math.max(0, timeMs - offsetMs)} />;
 }
 
@@ -58,7 +61,7 @@ export function LyricsView({
   const lineRefs = useRef(new Map<string, HTMLLIElement>());
   const [manual, setManual] = useState(false);
   const manualTimer = useRef<number | null>(null);
-  const frame = useRef<number | null>(null);
+  const scrollTimer = useRef<number | null>(null);
   const programmatic = useRef(false);
 
   const lines = lyrics?.lines ?? [];
@@ -73,7 +76,7 @@ export function LyricsView({
   useEffect(() => {
     return () => {
       if (manualTimer.current) window.clearTimeout(manualTimer.current);
-      if (frame.current) window.cancelAnimationFrame(frame.current);
+      if (scrollTimer.current) window.clearTimeout(scrollTimer.current);
     };
   }, []);
 
@@ -85,30 +88,14 @@ export function LyricsView({
     if (!node || !container) return;
 
     const target = Math.max(0, node.offsetTop - container.clientHeight * (immersive ? 0.42 : 0.32));
-    const start = container.scrollTop;
-    const delta = target - start;
-    if (Math.abs(delta) < 2) return;
-
-    if (frame.current) window.cancelAnimationFrame(frame.current);
-    const duration = Math.min(900, 280 + Math.abs(delta) * 0.45);
-    const started = performance.now();
+    // The browser animates this on the compositor: writing scrollTop per frame
+    // forces a layout on the main thread and is what made the view feel stuck.
     programmatic.current = true;
-
-    const step = (now: number) => {
-      const progress = Math.min(1, (now - started) / duration);
-      // Ease in and out so the line glides instead of snapping.
-      const eased = progress < 0.5 ? 2 * progress * progress : 1 - (-2 * progress + 2) ** 2 / 2;
-      container.scrollTop = start + delta * eased;
-      if (progress < 1) {
-        frame.current = window.requestAnimationFrame(step);
-      } else {
-        frame.current = null;
-        window.setTimeout(() => {
-          programmatic.current = false;
-        }, 80);
-      }
-    };
-    frame.current = window.requestAnimationFrame(step);
+    container.scrollTo({ top: target, behavior: "smooth" });
+    if (scrollTimer.current) window.clearTimeout(scrollTimer.current);
+    scrollTimer.current = window.setTimeout(() => {
+      programmatic.current = false;
+    }, 900);
   }, [activeIndex, manual, lines, immersive]);
 
   const handleScrollKey = useCallback(

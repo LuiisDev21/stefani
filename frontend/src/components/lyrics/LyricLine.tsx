@@ -44,8 +44,8 @@ export const LyricLine = memo(function LyricLine({
   return (
     <li
       className={cn(
-        "group relative scroll-mt-24 py-2.5 transition-opacity duration-200",
-        active ? "opacity-100" : past ? "opacity-55" : "opacity-80",
+        "group relative scroll-mt-24 py-2.5 transition-[opacity,transform] duration-[420ms] ease-out",
+        active ? "translate-y-0 opacity-100" : past ? "-translate-y-[1px] opacity-55" : "translate-y-[2px] opacity-80",
       )}
       data-line-id={line.id}
     >
@@ -55,7 +55,7 @@ export const LyricLine = memo(function LyricLine({
         aria-label={`Ir a: ${line.text}`}
         className="block w-full cursor-pointer text-left"
       >
-        <span className={cn("block transition-colors", sizeClass)}>
+        <span className={cn("block transition-colors duration-300", sizeClass)}>
           {hasWords ? (
             <span className="flex flex-wrap items-baseline gap-x-[0.26em] gap-y-1">
               {words.map((word, index) => {

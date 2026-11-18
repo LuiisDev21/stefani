@@ -47,6 +47,12 @@ class ClockStore {
 
 export const clock = new ClockStore();
 
+// Exposed for E2E and the visual review loop: the automation drives the clock
+// to measure karaoke repaint cost without needing an audio file.
+if (typeof window !== "undefined") {
+  (window as unknown as { __stefaniClock?: ClockStore }).__stefaniClock = clock;
+}
+
 /** Subscribes to the whole clock. Use sparingly: prefer usePlaybackTime. */
 export function useClock(): ClockState {
   return useSyncExternalStore(clock.subscribe, clock.getSnapshot, clock.getSnapshot);

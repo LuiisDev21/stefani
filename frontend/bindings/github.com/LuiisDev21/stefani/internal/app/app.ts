@@ -372,18 +372,19 @@ export function WindowMinimise(): $CancellablePromise<void> {
 }
 
 /**
+ * WindowSetFullscreen puts the window in real fullscreen, or restores it. The
+ * immersive view sets the state on mount and unmount instead of toggling, so a
+ * missed call cannot leave the window stuck without a title bar.
+ */
+export function WindowSetFullscreen(fullscreen: boolean): $CancellablePromise<void> {
+    return $Call.ByID(4002999703, fullscreen);
+}
+
+/**
  * WindowState reports the stored geometry so the window can restore itself.
  */
 export function WindowState(): $CancellablePromise<$models.WindowStateInput> {
     return $Call.ByID(1162240999);
-}
-
-/**
- * WindowToggleFullscreen takes the window to real fullscreen, not just the
- * maximised size: the immersive view has no title bar to restore from.
- */
-export function WindowToggleFullscreen(): $CancellablePromise<void> {
-    return $Call.ByID(755736559);
 }
 
 export function WindowToggleMaximise(): $CancellablePromise<void> {
