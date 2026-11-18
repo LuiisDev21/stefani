@@ -5,6 +5,7 @@ import (
 	"embed"
 	"fmt"
 	"io"
+	"io/fs"
 	"log/slog"
 	"net/http"
 	"os"
@@ -31,6 +32,25 @@ import (
 
 //go:embed all:frontend/dist
 var assets embed.FS
+
+// assetFS lets the web build serve the frontend from disk instead of the copy
+// embedded at compile time: `pnpm build` then shows up on reload, which is what
+// makes a visual review loop fast. Only STEFANI_WEB_DIST turns it on.
+func assetFS(embedded embed.FS) fs.FS {
+	if dir := os.Getenv("STEFANI_WEB_DIST"); dir != "" {
+		return os.DirFS(dir)
+	}
+	return embedded
+}
+
+// webHost is loopback unless the operator asks for another interface. Opening
+// the app to the LAN has no authentication, so it must be explicit.
+func webHost() string {
+	if host := os.Getenv("STEFANI_WEB_HOST"); host != "" {
+		return host
+	}
+	return "127.0.0.1"
+}
 
 // settingsState is the shared settings snapshot for services that need the live
 // configuration outside the app service (the phonetics engine reads the model
@@ -210,7 +230,7 @@ func run() error {
 			application.NewService(appSvc),
 		},
 		Assets: application.AssetOptions{
-			Handler:    application.AssetFileServerFS(assets),
+			Handler:    application.AssetFileServerFS(assetFS(assets)),
 			Middleware: assetMiddleware,
 		},
 		Mac: application.MacOptions{
@@ -221,7 +241,7 @@ func run() error {
 			AdditionalBrowserArgs: webviewDebugArgs(),
 		},
 		Server: application.ServerOptions{
-			Host: "127.0.0.1",
+			Host: webHost(),
 			Port: 8080,
 		},
 	})

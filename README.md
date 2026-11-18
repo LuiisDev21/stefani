@@ -79,6 +79,28 @@ go build -o bin/stefani .            # Linux / macOS
 `wails3 build` empaqueta instaladores; en Windows requiere NSIS, que no forma
 parte del alcance actual (ver [docs/DECISIONS.md](docs/DECISIONS.md)).
 
+## Ver la interfaz en el navegador
+
+El binario de escritorio no abre ningún puerto: para revisar la interfaz desde
+Chrome o Edge se usa el build de servidor, que sirve la app completa (los
+bindings tambien van por HTTP, asi que la biblioteca, la busqueda y la letra
+funcionan igual).
+
+```powershell
+# primera vez, o tras cambios en Go
+.\scripts\serve-web.ps1 -Rebuild
+
+# tras cambios de frontend: reconstruye y recarga con F5, sin reiniciar
+cd frontend; pnpm build
+```
+
+Queda en <http://127.0.0.1:8080>, con la misma base de datos que la app de
+escritorio. El servidor sirve `frontend/dist` desde disco (`STEFANI_WEB_DIST`),
+asi que un `pnpm build` se ve al recargar sin recompilar Go.
+
+`-Lan` lo expone en la red local (`STEFANI_WEB_HOST=0.0.0.0`) para abrirlo desde
+el movil o una tablet. No hay autenticacion: usalo solo en una red de confianza.
+
 ## Pruebas
 
 ```bash
