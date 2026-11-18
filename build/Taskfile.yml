@@ -1,5 +1,8 @@
 version: '3'
 
+vars:
+  PACKAGE_MANAGER: pnpm
+
 tasks:
   go:mod:tidy:
     summary: Runs `go mod tidy`
