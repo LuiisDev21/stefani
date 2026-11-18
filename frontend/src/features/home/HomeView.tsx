@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { ArrowRight, Headphones, Heart, Library, ListMusic, Pause, Play, Search, Upload } from "lucide-react";
 import { formatTime, plural } from "../../lib/format";
 import { useApp } from "../../stores/appStore";
@@ -10,6 +11,7 @@ import { TrackList } from "../../components/track/TrackList";
 import { TopBar } from "../../components/layout/TopBar";
 import { MediaCard } from "../../components/home/MediaCard";
 import { QuickCard } from "../../components/home/QuickCard";
+import { ShelfRow } from "../../components/home/ShelfRow";
 
 /**
  * Home: the record that is playing — or the first one in the library — owns the
@@ -27,10 +29,18 @@ export function HomeView() {
   const importAudio = useApp((state) => state.importAudio);
   const openPicker = useApp((state) => state.openPicker);
   const focusSearch = useApp((state) => state.focusSearch);
+  const homeFeed = useApp((state) => state.homeFeed);
+  const loadHomeFeed = useApp((state) => state.loadHomeFeed);
 
   const current = usePlayer((state) => state.current);
   const playing = usePlayer((state) => state.playing);
   const toggle = usePlayer((state) => state.toggle);
+
+  // The personalised rows come from the signed-in account, so they load after
+  // the first paint and never block the library.
+  useEffect(() => {
+    void loadHomeFeed();
+  }, [loadHomeFeed]);
 
   const hero = current ?? library[0] ?? recently[0];
   const heroIsCurrent = Boolean(current && hero && current.id === hero.id);
@@ -132,6 +142,10 @@ export function HomeView() {
             }
           />
         )}
+
+        {homeFeed.map((shelf) => (
+          <ShelfRow key={shelf.title} shelf={shelf} />
+        ))}
 
         <section className="mt-10" aria-label="Accesos rápidos">
           <SectionTitle title="Accesos rápidos" />

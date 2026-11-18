@@ -50,6 +50,19 @@ export interface Track {
   note: string;
 }
 
+export interface ShelfItem {
+  title: string;
+  subtitle: string;
+  cover: string;
+  videoId: string;
+  listId: string;
+}
+
+export interface Shelf {
+  title: string;
+  items: ShelfItem[];
+}
+
 export interface Playlist {
   id: string;
   name: string;

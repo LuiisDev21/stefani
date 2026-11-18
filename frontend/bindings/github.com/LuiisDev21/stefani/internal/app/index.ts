@@ -6,7 +6,7 @@ export {
     App
 };
 
-export {
+export type {
     AccountDTO,
     AccountPlaylistDTO,
     AnnotateOutcome,

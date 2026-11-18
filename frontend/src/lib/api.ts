@@ -20,6 +20,7 @@ import type {
   OnlineStatus,
   Playlist,
   SearchResult,
+  Shelf,
   Settings,
   SettingsInput,
   TestOutcome,
@@ -40,6 +41,10 @@ export const api = {
   installAppUpdate: () => as<AppUpdate>(App.InstallAppUpdate()),
 
   accountStatus: () => as<Account>(App.AccountStatus()),
+  homeFeed: () => as<Shelf[]>(App.HomeFeed()),
+  playShelfItem: (videoId: string, title: string, artist: string, cover: string) =>
+    as<Track>(App.PlayShelfItem(videoId, title, artist, cover)),
+  playCollection: (id: string) => as<Track[]>(App.PlayCollection(id)),
   connectAccount: () => as<void>(App.ConnectAccount()),
   signOutAccount: () => as<void>(App.SignOutAccount()),
   finishAccount: () => as<Account>(App.FinishAccount()),

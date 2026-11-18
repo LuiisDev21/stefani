@@ -8,7 +8,7 @@
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore: Unused imports
-import { Call as $Call, CancellablePromise as $CancellablePromise, Create as $Create } from "@wailsio/runtime";
+import { Call as $Call, CancellablePromise as $CancellablePromise } from "@wailsio/runtime";
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore: Unused imports
@@ -21,10 +21,8 @@ import * as $models from "./models.js";
 /**
  * AccountPlaylists lists the playlists saved in the signed-in library.
  */
-export function AccountPlaylists(): $CancellablePromise<$models.AccountPlaylistDTO[]> {
-    return $Call.ByID(2835084772).then(($result: any) => {
-        return $$createType1($result);
-    });
+export function AccountPlaylists(): $CancellablePromise<$models.AccountPlaylistDTO[] | null> {
+    return $Call.ByID(2835084772);
 }
 
 /**
@@ -33,9 +31,7 @@ export function AccountPlaylists(): $CancellablePromise<$models.AccountPlaylistD
  * be read yet.
  */
 export function AccountStatus(): $CancellablePromise<$models.AccountDTO> {
-    return $Call.ByID(514642179).then(($result: any) => {
-        return $$createType2($result);
-    });
+    return $Call.ByID(514642179);
 }
 
 /**
@@ -50,18 +46,14 @@ export function AddToPlaylist(playlistID: string, trackID: string): $Cancellable
  * track lyrics, emitting progress events as it goes.
  */
 export function AnnotateTrack(trackID: string): $CancellablePromise<$models.AnnotateOutcome> {
-    return $Call.ByID(1020749337, trackID).then(($result: any) => {
-        return $$createType3($result);
-    });
+    return $Call.ByID(1020749337, trackID);
 }
 
 /**
  * Bootstrap loads everything the shell needs on start.
  */
 export function Bootstrap(): $CancellablePromise<$models.BootstrapDTO> {
-    return $Call.ByID(3259567964).then(($result: any) => {
-        return $$createType4($result);
-    });
+    return $Call.ByID(3259567964);
 }
 
 /**
@@ -69,18 +61,14 @@ export function Bootstrap(): $CancellablePromise<$models.BootstrapDTO> {
  * It never fails: the panel shows "no se pudo comprobar" instead.
  */
 export function CheckAppUpdate(): $CancellablePromise<$models.AppUpdateDTO> {
-    return $Call.ByID(1322852020).then(($result: any) => {
-        return $$createType5($result);
-    });
+    return $Call.ByID(1322852020);
 }
 
 /**
  * ClearLLMKey deletes the stored API key.
  */
 export function ClearLLMKey(): $CancellablePromise<$models.SettingsDTO> {
-    return $Call.ByID(1843416029).then(($result: any) => {
-        return $$createType6($result);
-    });
+    return $Call.ByID(1843416029);
 }
 
 /**
@@ -103,9 +91,7 @@ export function ConnectAccount(): $CancellablePromise<void> {
  * CreatePlaylist creates an empty playlist.
  */
 export function CreatePlaylist(name: string): $CancellablePromise<$models.PlaylistDTO> {
-    return $Call.ByID(3797441004, name).then(($result: any) => {
-        return $$createType7($result);
-    });
+    return $Call.ByID(3797441004, name);
 }
 
 /**
@@ -118,28 +104,22 @@ export function DeletePlaylist(id: string): $CancellablePromise<void> {
 /**
  * Favorites lists favourite tracks.
  */
-export function Favorites(): $CancellablePromise<$models.TrackDTO[]> {
-    return $Call.ByID(977377251).then(($result: any) => {
-        return $$createType9($result);
-    });
+export function Favorites(): $CancellablePromise<$models.TrackDTO[] | null> {
+    return $Call.ByID(977377251);
 }
 
 /**
  * FinishAccount closes the login window and waits for the resulting session.
  */
 export function FinishAccount(): $CancellablePromise<$models.AccountDTO> {
-    return $Call.ByID(4084047480).then(($result: any) => {
-        return $$createType2($result);
-    });
+    return $Call.ByID(4084047480);
 }
 
 /**
  * History lists recent playback.
  */
-export function History(limit: number): $CancellablePromise<$models.HistoryDTO[]> {
-    return $Call.ByID(3845597558, limit).then(($result: any) => {
-        return $$createType11($result);
-    });
+export function History(limit: number): $CancellablePromise<$models.HistoryDTO[] | null> {
+    return $Call.ByID(3845597558, limit);
 }
 
 /**
@@ -147,64 +127,50 @@ export function History(limit: number): $CancellablePromise<$models.HistoryDTO[]
  * forgotten favourites, song mixes, what to listen to next and new releases of
  * the artists the user follows. Empty when there is no session.
  */
-export function HomeFeed(): $CancellablePromise<$models.ShelfDTO[]> {
-    return $Call.ByID(2874917745).then(($result: any) => {
-        return $$createType13($result);
-    });
+export function HomeFeed(): $CancellablePromise<$models.ShelfDTO[] | null> {
+    return $Call.ByID(2874917745);
 }
 
 /**
  * ImportAccountPlaylist imports one of the account's playlists as a local list.
  */
 export function ImportAccountPlaylist(id: string, name: string): $CancellablePromise<$models.ImportDTO> {
-    return $Call.ByID(455781904, id, name).then(($result: any) => {
-        return $$createType14($result);
-    });
+    return $Call.ByID(455781904, id, name);
 }
 
 /**
  * ImportDroppedFiles imports files dropped onto the window.
  */
-export function ImportDroppedFiles(paths: string[]): $CancellablePromise<$models.ImportDTO> {
-    return $Call.ByID(865611062, paths).then(($result: any) => {
-        return $$createType14($result);
-    });
+export function ImportDroppedFiles(paths: string[] | null): $CancellablePromise<$models.ImportDTO> {
+    return $Call.ByID(865611062, paths);
 }
 
 /**
  * ImportLocalTracks opens a native picker and imports the chosen files.
  */
 export function ImportLocalTracks(): $CancellablePromise<$models.ImportDTO> {
-    return $Call.ByID(2270584902).then(($result: any) => {
-        return $$createType14($result);
-    });
+    return $Call.ByID(2270584902);
 }
 
 /**
  * ImportLyricsFile lets the user attach a local .lrc to a track.
  */
 export function ImportLyricsFile(trackID: string): $CancellablePromise<$models.LyricsDTO> {
-    return $Call.ByID(978064089, trackID).then(($result: any) => {
-        return $$createType15($result);
-    });
+    return $Call.ByID(978064089, trackID);
 }
 
 /**
  * ImportPlaylist imports the metadata of a public YouTube Music playlist.
  */
 export function ImportPlaylist(rawURL: string): $CancellablePromise<$models.ImportDTO> {
-    return $Call.ByID(745975253, rawURL).then(($result: any) => {
-        return $$createType14($result);
-    });
+    return $Call.ByID(745975253, rawURL);
 }
 
 /**
  * Info returns application metadata for the About panel.
  */
 export function Info(): $CancellablePromise<$models.InfoDTO> {
-    return $Call.ByID(776457598).then(($result: any) => {
-        return $$createType16($result);
-    });
+    return $Call.ByID(776457598);
 }
 
 /**
@@ -213,18 +179,14 @@ export function Info(): $CancellablePromise<$models.InfoDTO> {
  * elsewhere it opens the release page instead.
  */
 export function InstallAppUpdate(): $CancellablePromise<$models.AppUpdateDTO> {
-    return $Call.ByID(3410966381).then(($result: any) => {
-        return $$createType5($result);
-    });
+    return $Call.ByID(3410966381);
 }
 
 /**
  * Library lists saved tracks.
  */
-export function Library(): $CancellablePromise<$models.TrackDTO[]> {
-    return $Call.ByID(3102670385).then(($result: any) => {
-        return $$createType9($result);
-    });
+export function Library(): $CancellablePromise<$models.TrackDTO[] | null> {
+    return $Call.ByID(3102670385);
 }
 
 /**
@@ -234,9 +196,7 @@ export function Library(): $CancellablePromise<$models.TrackDTO[]> {
  * is logged with its stack and reported as a readable state instead.
  */
 export function Lyrics(trackID: string, refresh: boolean): $CancellablePromise<$models.LyricsDTO> {
-    return $Call.ByID(1703921402, trackID, refresh).then(($result: any) => {
-        return $$createType15($result);
-    });
+    return $Call.ByID(1703921402, trackID, refresh);
 }
 
 /**
@@ -254,30 +214,40 @@ export function OpenExternal(rawURL: string): $CancellablePromise<void> {
 }
 
 /**
+ * PlayCollection resolves an album or a list from the account and stores its
+ * tracks, so the player can queue the whole thing.
+ */
+export function PlayCollection(collectionID: string): $CancellablePromise<$models.TrackDTO[] | null> {
+    return $Call.ByID(118379628, collectionID);
+}
+
+/**
+ * PlayShelfItem stores one recommendation and returns its track record, so the
+ * player can stream a song that is not in the library yet.
+ */
+export function PlayShelfItem(videoID: string, title: string, artist: string, cover: string): $CancellablePromise<$models.TrackDTO> {
+    return $Call.ByID(3652537611, videoID, title, artist, cover);
+}
+
+/**
  * Playlist returns one playlist.
  */
 export function Playlist(id: string): $CancellablePromise<$models.PlaylistDTO> {
-    return $Call.ByID(456499736, id).then(($result: any) => {
-        return $$createType7($result);
-    });
+    return $Call.ByID(456499736, id);
 }
 
 /**
  * PlaylistTracks lists a playlist's tracks in order.
  */
-export function PlaylistTracks(id: string): $CancellablePromise<$models.TrackDTO[]> {
-    return $Call.ByID(3375718916, id).then(($result: any) => {
-        return $$createType9($result);
-    });
+export function PlaylistTracks(id: string): $CancellablePromise<$models.TrackDTO[] | null> {
+    return $Call.ByID(3375718916, id);
 }
 
 /**
  * Playlists lists every playlist.
  */
-export function Playlists(): $CancellablePromise<$models.PlaylistDTO[]> {
-    return $Call.ByID(1080995441).then(($result: any) => {
-        return $$createType17($result);
-    });
+export function Playlists(): $CancellablePromise<$models.PlaylistDTO[] | null> {
+    return $Call.ByID(1080995441);
 }
 
 /**
@@ -286,9 +256,7 @@ export function Playlists(): $CancellablePromise<$models.PlaylistDTO[]> {
  * locked.
  */
 export function RefreshAccount(): $CancellablePromise<$models.AccountDTO> {
-    return $Call.ByID(1110933788).then(($result: any) => {
-        return $$createType2($result);
-    });
+    return $Call.ByID(1110933788);
 }
 
 /**
@@ -326,18 +294,14 @@ export function ResetRendererHealth(): $CancellablePromise<void> {
  * local tracks, or a proxied online stream when the feature is enabled.
  */
 export function ResolveAudioSource(trackID: string): $CancellablePromise<media$0.Source> {
-    return $Call.ByID(3020879485, trackID).then(($result: any) => {
-        return $$createType18($result);
-    });
+    return $Call.ByID(3020879485, trackID);
 }
 
 /**
  * SaveSettings validates and persists settings, storing the key in the keychain.
  */
 export function SaveSettings($in: $models.SettingsInput): $CancellablePromise<$models.SettingsDTO> {
-    return $Call.ByID(3238136870, $in).then(($result: any) => {
-        return $$createType6($result);
-    });
+    return $Call.ByID(3238136870, $in);
 }
 
 /**
@@ -351,27 +315,21 @@ export function SaveWindowState($in: $models.WindowStateInput): $CancellableProm
  * Search queries the configured providers.
  */
 export function Search(query: string, limit: number): $CancellablePromise<$models.SearchDTO> {
-    return $Call.ByID(2296388846, query, limit).then(($result: any) => {
-        return $$createType19($result);
-    });
+    return $Call.ByID(2296388846, query, limit);
 }
 
 /**
  * SetFavorite flags or unflags a track.
  */
 export function SetFavorite(trackID: string, favorite: boolean): $CancellablePromise<$models.TrackDTO> {
-    return $Call.ByID(3359295882, trackID, favorite).then(($result: any) => {
-        return $$createType8($result);
-    });
+    return $Call.ByID(3359295882, trackID, favorite);
 }
 
 /**
  * SetInLibrary saves or removes a track from the library.
  */
 export function SetInLibrary(trackID: string, save: boolean): $CancellablePromise<$models.TrackDTO> {
-    return $Call.ByID(3503078356, trackID, save).then(($result: any) => {
-        return $$createType8($result);
-    });
+    return $Call.ByID(3503078356, trackID, save);
 }
 
 /**
@@ -385,9 +343,7 @@ export function SetTrackDuration(trackID: string, durationMs: number): $Cancella
  * Settings returns the current configuration without secrets.
  */
 export function Settings(): $CancellablePromise<$models.SettingsDTO> {
-    return $Call.ByID(2660117835).then(($result: any) => {
-        return $$createType6($result);
-    });
+    return $Call.ByID(2660117835);
 }
 
 /**
@@ -402,18 +358,14 @@ export function SignOutAccount(): $CancellablePromise<void> {
  * TestLLM checks connectivity with the configured provider.
  */
 export function TestLLM(): $CancellablePromise<$models.TestOutcome> {
-    return $Call.ByID(2950311297).then(($result: any) => {
-        return $$createType20($result);
-    });
+    return $Call.ByID(2950311297);
 }
 
 /**
  * Track returns one track by id.
  */
 export function Track(id: string): $CancellablePromise<$models.TrackDTO> {
-    return $Call.ByID(3509125837, id).then(($result: any) => {
-        return $$createType8($result);
-    });
+    return $Call.ByID(3509125837, id);
 }
 
 /**
@@ -428,9 +380,7 @@ export function UpdatePlaylist(id: string, name: string, description: string): $
  * refreshes the detected binary, so the new version is used without a restart.
  */
 export function UpdateYtDlp(): $CancellablePromise<$models.OnlineDTO> {
-    return $Call.ByID(2314142790).then(($result: any) => {
-        return $$createType21($result);
-    });
+    return $Call.ByID(2314142790);
 }
 
 export function WindowClose(): $CancellablePromise<void> {
@@ -459,36 +409,9 @@ export function WindowSetFullscreen(fullscreen: boolean): $CancellablePromise<vo
  * WindowState reports the stored geometry so the window can restore itself.
  */
 export function WindowState(): $CancellablePromise<$models.WindowStateInput> {
-    return $Call.ByID(1162240999).then(($result: any) => {
-        return $$createType22($result);
-    });
+    return $Call.ByID(1162240999);
 }
 
 export function WindowToggleMaximise(): $CancellablePromise<void> {
     return $Call.ByID(4112979021);
 }
-
-// Private type creation functions
-const $$createType0 = $models.AccountPlaylistDTO.createFrom;
-const $$createType1 = $Create.Array($$createType0);
-const $$createType2 = $models.AccountDTO.createFrom;
-const $$createType3 = $models.AnnotateOutcome.createFrom;
-const $$createType4 = $models.BootstrapDTO.createFrom;
-const $$createType5 = $models.AppUpdateDTO.createFrom;
-const $$createType6 = $models.SettingsDTO.createFrom;
-const $$createType7 = $models.PlaylistDTO.createFrom;
-const $$createType8 = $models.TrackDTO.createFrom;
-const $$createType9 = $Create.Array($$createType8);
-const $$createType10 = $models.HistoryDTO.createFrom;
-const $$createType11 = $Create.Array($$createType10);
-const $$createType12 = $models.ShelfDTO.createFrom;
-const $$createType13 = $Create.Array($$createType12);
-const $$createType14 = $models.ImportDTO.createFrom;
-const $$createType15 = $models.LyricsDTO.createFrom;
-const $$createType16 = $models.InfoDTO.createFrom;
-const $$createType17 = $Create.Array($$createType7);
-const $$createType18 = media$0.Source.createFrom;
-const $$createType19 = $models.SearchDTO.createFrom;
-const $$createType20 = $models.TestOutcome.createFrom;
-const $$createType21 = $models.OnlineDTO.createFrom;
-const $$createType22 = $models.WindowStateInput.createFrom;

@@ -11,6 +11,8 @@ import type {
   Playlist,
   ProviderState,
   SearchResult,
+  Shelf,
+  ShelfItem,
   Settings,
   StoredCounts,
   Track,
@@ -45,6 +47,7 @@ interface AppState {
   library: Track[];
   favorites: Track[];
   playlists: Playlist[];
+  homeFeed: Shelf[];
   providers: ProviderState[];
   settings: Settings | null;
   counts: StoredCounts | null;
@@ -93,6 +96,8 @@ interface AppState {
   refreshAccount: () => Promise<void>;
   updateYtDlp: () => Promise<void>;
   loadAppUpdate: () => Promise<void>;
+  loadHomeFeed: () => Promise<void>;
+  playShelfItem: (item: ShelfItem) => Promise<void>;
   installAppUpdate: () => Promise<void>;
   importAccountPlaylist: (id: string, name: string) => Promise<void>;
   openPlaylist: (playlist: Playlist) => Promise<void>;
@@ -143,6 +148,7 @@ export const useApp = create<AppState>((set, get) => ({
   library: [],
   favorites: [],
   playlists: [],
+  homeFeed: [],
   account: null,
   accountPlaylists: [],
   providers: [],
@@ -333,6 +339,31 @@ export const useApp = create<AppState>((set, get) => ({
       const info = get().info;
       if (info) set({ info: { ...info, online } });
       get().notify("ok", online.available ? `yt-dlp ${online.version}` : "yt-dlp actualizado");
+    } catch (error) {
+      get().notify("error", errorMessage(error));
+    }
+  },
+
+  loadHomeFeed: async () => {
+    try {
+      set({ homeFeed: (await api.homeFeed()) ?? [] });
+    } catch {
+      // Without a signed-in account the feed is simply empty.
+    }
+  },
+
+  playShelfItem: async (item) => {
+    try {
+      if (item.videoId) {
+        const artist = item.subtitle.split(" • ")[0];
+        const track = await api.playShelfItem(item.videoId, item.title, artist, item.cover);
+        await get().openTrack(track, [track]);
+        return;
+      }
+      if (item.listId) {
+        const tracks = await api.playCollection(item.listId);
+        if (tracks.length > 0) await get().openTrack(tracks[0], tracks);
+      }
     } catch (error) {
       get().notify("error", errorMessage(error));
     }
