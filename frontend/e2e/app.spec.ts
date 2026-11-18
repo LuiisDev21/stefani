@@ -21,7 +21,8 @@ test.describe("STEFANI desktop shell", () => {
 
     await waitForApp(page);
 
-    await expect(page.getByText("3 pistas en la app")).toBeVisible();
+    // The real counters live in the sidebar; the header no longer repeats them.
+    await expect(page.getByText(/\d+ pistas · \d+ anotaciones/)).toBeVisible();
     await expect(page.getByRole("button", { name: /Reproducir Midnight Signals/ })).toBeVisible();
     await expect(page.getByRole("button", { name: /Reproducir Paper Boats/ })).toBeVisible();
     await expect(page.getByRole("button", { name: /Reproducir Slow Morning/ })).toBeVisible();

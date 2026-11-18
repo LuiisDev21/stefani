@@ -43,11 +43,6 @@ export function HomeView() {
     <div className="min-h-0">
       <TopBar
         title="Inicio"
-        subtitle={
-          counts
-            ? `${counts.tracks} pistas en la app · ${counts.annotated} anotaciones de estudio`
-            : "Preparando tu biblioteca"
-        }
         actions={
           <Button size="sm" variant="subtle" icon={<Search className="h-3.5 w-3.5" />} onClick={() => go("search")}>
             Buscar música
