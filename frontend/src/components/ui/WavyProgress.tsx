@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "../../lib/cn";
 
 interface WavyProgressProps {
@@ -20,8 +20,9 @@ interface WavyProgressProps {
  * amplitude of 5px. The wave travels one wavelength per second, which is what
  * `waveSpeed = wavelength` means in the spec.
  *
- * The playhead is a dot that rides the wave: one clock drives both the pattern
- * offset and the dot's height, so it never detaches from the stroke.
+ * The playhead is a dot that stays on the centre line, as in the reference: the
+ * wave travels underneath and tapers into the dot, so the stroke never ends
+ * away from it and the dot never bobs up and down.
  */
 const HEIGHT = 28;
 const STROKE = 3.5;
@@ -30,22 +31,6 @@ const AMPLITUDE = 5;
 const WAVELENGTH = 44;
 const PLAYHEAD = 3.4;
 const STOP = 3.2;
-
-/** Sine samples across the full bar, extended by one wavelength on each side. */
-function wavePath(width: number): string {
-  const center = HEIGHT / 2;
-  const start = -WAVELENGTH;
-  const end = width + WAVELENGTH;
-  const step = 1.6;
-  const points: string[] = [];
-  for (let x = start; x <= end; x += step) {
-    // Phase-shifted a quarter wave so the stroke leaves the left edge on a
-    // crest instead of a flat crossing: the trail visibly starts at the border.
-    const y = center + AMPLITUDE * Math.sin((2 * Math.PI * (x + WAVELENGTH / 4)) / WAVELENGTH);
-    points.push(`${points.length === 0 ? "M" : "L"} ${x.toFixed(1)} ${y.toFixed(2)}`);
-  }
-  return points.join(" ");
-}
 
 /**
  * Wavy progress bar. Under the drawing it is still a slider: pointer, keyboard
@@ -60,10 +45,7 @@ export function WavyProgress({
   className,
 }: WavyProgressProps) {
   const ref = useRef<SVGSVGElement>(null);
-  const waveRef = useRef<SVGGElement>(null);
-  const headRef = useRef<SVGCircleElement>(null);
-  // Two instances live at once (bar and immersive view): each needs its own clip.
-  const clipId = useRef(`wavy-${Math.random().toString(36).slice(2, 9)}`).current;
+  const waveRef = useRef<SVGPathElement>(null);
   const [width, setWidth] = useState(0);
   const ratio = totalMs > 0 ? Math.min(1, Math.max(0, valueMs / totalMs)) : 0;
 
@@ -79,7 +61,6 @@ export function WavyProgress({
     return () => observer.disconnect();
   }, []);
 
-  const path = useMemo(() => wavePath(Math.max(width, 1)), [width]);
   // The wave flattens below 10 % and above 95 %, as in WavyProgressIndicatorDefaults.
   const amplitude = ratio <= 0.1 ? ratio / 0.1 : ratio >= 0.95 ? (1 - ratio) / 0.05 : 1;
   const activeWidth = ratio * width;
@@ -96,29 +77,38 @@ export function WavyProgress({
   );
 
   // Read inside the loop without restarting it on every progress tick.
-  const live = useRef({ activeWidth, amplitude });
-  live.current = { activeWidth, amplitude };
+  const live = useRef({ activeWidth, amplitude, width, disabled });
+  live.current = { activeWidth, amplitude, width, disabled };
 
   useEffect(() => {
-    if (disabled) return;
     const speed = WAVELENGTH / 1100; // one wavelength per second
     const started = performance.now();
     let frame = 0;
+    let painted = 0;
     const tick = (now: number) => {
-      const offset = ((now - started) * speed) % WAVELENGTH;
-      const { activeWidth: edge, amplitude: level } = live.current;
-      waveRef.current?.setAttribute("transform", `translate(${-offset.toFixed(2)} 0)`);
-      if (headRef.current) {
-        // The path is generated with a quarter-wave shift.
-        const phase = (2 * Math.PI * (edge - offset)) / WAVELENGTH + Math.PI / 2;
-        const y = HEIGHT / 2 + level * AMPLITUDE * Math.sin(phase);
-        headRef.current.setAttribute("cy", y.toFixed(2));
-      }
       frame = requestAnimationFrame(tick);
+      // ~24 fps is plenty for a wave travelling 44 px per second: rebuilding
+      // the path at 60 costs more than the motion is worth.
+      if (now - painted < 41) return;
+      painted = now;
+      const state = live.current;
+      const offset = state.disabled ? 0 : ((now - started) * speed) % WAVELENGTH;
+      const edge = state.activeWidth;
+      const scale = state.amplitude;
+      const center = HEIGHT / 2;
+      const step = 4;
+      const parts: string[] = [];
+      for (let x = 0; x <= Math.max(edge, 0.1); x += step) {
+        const taper = Math.min(1, Math.max(0, (edge - x) / 16));
+        const y = center + scale * AMPLITUDE * taper * Math.sin((2 * Math.PI * (x - offset)) / WAVELENGTH);
+        parts.push(`${parts.length === 0 ? "M" : "L"}${x.toFixed(1)} ${y.toFixed(2)}`);
+      }
+      parts.push(`L${Math.max(edge, 0.1).toFixed(1)} ${center}`);
+      waveRef.current?.setAttribute("d", parts.join(" "));
     };
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
-  }, [disabled]);
+  }, []);
 
   const track = tone === "dark" ? "rgba(255,255,255,0.26)" : "#2c2f33";
   const fill = tone === "dark" ? "rgba(255,255,255,0.95)" : "#f4f4f6";
@@ -169,12 +159,6 @@ export function WavyProgress({
         }
       }}
     >
-      <defs>
-        <clipPath id={clipId}>
-          <rect x={0} y={0} width={Math.max(activeWidth, 0)} height={HEIGHT} />
-        </clipPath>
-      </defs>
-
       <line
         x1={activeWidth}
         y1={HEIGHT / 2}
@@ -185,23 +169,17 @@ export function WavyProgress({
         strokeLinecap="round"
       />
 
-      <g clipPath={`url(#${clipId})`}>
-        <g ref={waveRef}>
-          <g transform={`translate(0 ${HEIGHT / 2}) scale(1 ${amplitude}) translate(0 ${-HEIGHT / 2})`}>
-            <path
-              d={path}
-              fill="none"
-              stroke={fill}
-              strokeWidth={STROKE}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </g>
-        </g>
-      </g>
+      <path
+        ref={waveRef}
+        fill="none"
+        stroke={fill}
+        strokeWidth={STROKE}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
 
       <circle cx={stopX} cy={HEIGHT / 2} r={STOP} fill={track} />
-      {ratio > 0 ? <circle ref={headRef} cx={activeWidth} cy={HEIGHT / 2} r={PLAYHEAD} fill={fill} /> : null}
+      {ratio > 0 ? <circle cx={activeWidth} cy={HEIGHT / 2} r={PLAYHEAD} fill={fill} /> : null}
     </svg>
   );
 }
