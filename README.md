@@ -120,6 +120,18 @@ toca el perfil real. Detalles y cobertura en [docs/TESTING.md](docs/TESTING.md).
   pruebas automatizadas se ejecutan sobre el build `server`; la revision visual de
   la ventana nativa queda como tarea manual (ver docs/TESTING.md).
 
+## Icono
+
+El icono vive como vector en `build/icon.svg` (marca completa) y
+`build/icon-small.svg` (sin subrayado, S mas grande para 16-48 px).
+`build/appicon.png` es su render a 1024 px y es la fuente de `wails3 generate icons`,
+que produce `build/windows/icon.ico` y `build/darwin/icons.icns`. El `.ico`
+incluye un render nativo por tamano para que la S siga leyendose a 16 px.
+
+El favicon del modo servidor sale del mismo dibujo: `frontend/public/favicon.svg`,
+`favicon.ico`, `favicon-32.png` y `apple-touch-icon.png`, enlazados desde
+`frontend/index.html`.
+
 ## Documentacion
 
 - [Arquitectura](docs/ARCHITECTURE.md)
