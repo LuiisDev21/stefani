@@ -15,17 +15,21 @@ interface WavyProgressProps {
  * Material 3 wavy linear progress indicator, rebuilt on SVG.
  *
  * Tokens taken from LinearProgressIndicatorTokens: 4dp stroke, 3dp amplitude
- * (centre to peak), 40dp wavelength, 4dp stop indicator, 4dp gap. The container
- * here is 26px tall instead of 10dp, so the wave keeps the same proportions with
- * a stroke of 3.5px and an amplitude of 5px. The wave travels one wavelength per
- * second, which is what `waveSpeed = wavelength` means in the spec.
+ * (centre to peak), 40dp wavelength. The container here is 28px tall instead of
+ * 10dp, so the wave keeps the same proportions with a stroke of 3.5px and an
+ * amplitude of 5px. The wave travels one wavelength per second, which is what
+ * `waveSpeed = wavelength` means in the spec.
+ *
+ * The playhead is a dot that rides the wave: one clock drives both the pattern
+ * offset and the dot's height, so it never detaches from the stroke.
  */
 const HEIGHT = 28;
 const STROKE = 3.5;
+const TRACK_STROKE = 2;
 const AMPLITUDE = 5;
 const WAVELENGTH = 44;
-const GAP = 7;
-const STOP = 3.4;
+const PLAYHEAD = 3.4;
+const STOP = 3.2;
 
 /** Sine samples across the full bar, extended by one wavelength on each side. */
 function wavePath(width: number): string {
@@ -35,7 +39,9 @@ function wavePath(width: number): string {
   const step = 1.6;
   const points: string[] = [];
   for (let x = start; x <= end; x += step) {
-    const y = center + AMPLITUDE * Math.sin((2 * Math.PI * x) / WAVELENGTH);
+    // Phase-shifted a quarter wave so the stroke leaves the left edge on a
+    // crest instead of a flat crossing: the trail visibly starts at the border.
+    const y = center + AMPLITUDE * Math.sin((2 * Math.PI * (x + WAVELENGTH / 4)) / WAVELENGTH);
     points.push(`${points.length === 0 ? "M" : "L"} ${x.toFixed(1)} ${y.toFixed(2)}`);
   }
   return points.join(" ");
@@ -54,6 +60,8 @@ export function WavyProgress({
   className,
 }: WavyProgressProps) {
   const ref = useRef<SVGSVGElement>(null);
+  const waveRef = useRef<SVGGElement>(null);
+  const headRef = useRef<SVGCircleElement>(null);
   // Two instances live at once (bar and immersive view): each needs its own clip.
   const clipId = useRef(`wavy-${Math.random().toString(36).slice(2, 9)}`).current;
   const [width, setWidth] = useState(0);
@@ -87,9 +95,33 @@ export function WavyProgress({
     [disabled, onSeek, totalMs],
   );
 
+  // Read inside the loop without restarting it on every progress tick.
+  const live = useRef({ activeWidth, amplitude });
+  live.current = { activeWidth, amplitude };
+
+  useEffect(() => {
+    if (disabled) return;
+    const speed = WAVELENGTH / 1100; // one wavelength per second
+    const started = performance.now();
+    let frame = 0;
+    const tick = (now: number) => {
+      const offset = ((now - started) * speed) % WAVELENGTH;
+      const { activeWidth: edge, amplitude: level } = live.current;
+      waveRef.current?.setAttribute("transform", `translate(${-offset.toFixed(2)} 0)`);
+      if (headRef.current) {
+        // The path is generated with a quarter-wave shift.
+        const phase = (2 * Math.PI * (edge - offset)) / WAVELENGTH + Math.PI / 2;
+        const y = HEIGHT / 2 + level * AMPLITUDE * Math.sin(phase);
+        headRef.current.setAttribute("cy", y.toFixed(2));
+      }
+      frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [disabled]);
+
   const track = tone === "dark" ? "rgba(255,255,255,0.26)" : "#2c2f33";
   const fill = tone === "dark" ? "rgba(255,255,255,0.95)" : "#f4f4f6";
-  const trackStart = activeWidth + GAP;
   const stopX = Math.max(STOP, width - STOP);
 
   return (
@@ -144,20 +176,17 @@ export function WavyProgress({
       </defs>
 
       <line
-        x1={trackStart}
+        x1={activeWidth}
         y1={HEIGHT / 2}
-        x2={Math.max(trackStart, stopX - GAP)}
+        x2={Math.max(activeWidth, stopX - 6)}
         y2={HEIGHT / 2}
         stroke={track}
-        strokeWidth={STROKE}
+        strokeWidth={TRACK_STROKE}
         strokeLinecap="round"
       />
 
       <g clipPath={`url(#${clipId})`}>
-        <g
-          className={disabled ? undefined : "wavy-flow"}
-          style={{ animationPlayState: disabled ? "paused" : "running" }}
-        >
+        <g ref={waveRef}>
           <g transform={`translate(0 ${HEIGHT / 2}) scale(1 ${amplitude}) translate(0 ${-HEIGHT / 2})`}>
             <path
               d={path}
@@ -172,7 +201,7 @@ export function WavyProgress({
       </g>
 
       <circle cx={stopX} cy={HEIGHT / 2} r={STOP} fill={track} />
-      {ratio > 0 ? <circle cx={activeWidth} cy={HEIGHT / 2} r={STOP} fill={fill} /> : null}
+      {ratio > 0 ? <circle ref={headRef} cx={activeWidth} cy={HEIGHT / 2} r={PLAYHEAD} fill={fill} /> : null}
     </svg>
   );
 }
