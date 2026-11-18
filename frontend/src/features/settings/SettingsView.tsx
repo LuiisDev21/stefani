@@ -126,7 +126,6 @@ export function SettingsView() {
     <div className="min-h-0">
       <TopBar
         title="Ajustes"
-        subtitle="Conexión de IA, música en línea y datos locales"
         actions={
           <Button size="sm" variant="primary" onClick={() => void submit()}>
             Guardar cambios
@@ -351,15 +350,11 @@ export function SettingsView() {
         <div className="hairline my-8" />
 
         <section>
-          <SectionTitle
-            title="Música en linea"
-            hint="Catalogo y reproducción de YouTube Music mediante yt-dlp, una herramienta local y no oficial. Uso personal: puede dejar de funcionar si YouTube cambia, y va contra sus terminos de servicio."
-          />
+          <SectionTitle title="Música en linea" />
           <Switch
             checked={form.features.youtubeMusic}
             onChange={(value) => setForm({ ...form, features: { ...form.features, youtubeMusic: value } })}
             label="Buscar y reproducir desde YouTube Music"
-            description="La búsqueda usa el catálogo público. El audio se resuelve en esta máquina y se reproduce dentro de la app, con letra, velocidad y repetición."
           />
 
           <div className="mt-3 flex items-start gap-2 rounded-[9px] border border-line/70 px-3 py-2.5">

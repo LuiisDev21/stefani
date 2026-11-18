@@ -16,7 +16,7 @@ export function SearchView() {
 
   return (
     <div className="min-h-0">
-      <TopBar title="Buscar" subtitle="Tu biblioteca local y el catalogo experimental" />
+      <TopBar title="Buscar" />
 
       <div className="px-7 pb-10">
         {result?.notice ? (
