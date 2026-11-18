@@ -7,7 +7,7 @@ import { usePlayer } from "../../stores/playerStore";
 import { api } from "../../lib/api";
 import { Chip } from "../../components/ui/Chip";
 import { AmbientBackdrop } from "./AmbientBackdrop";
-import { SnakeProgress } from "../../components/ui/SnakeProgress";
+import { WavyProgress } from "../../components/ui/WavyProgress";
 import { IconButton } from "../../components/ui/IconButton";
 import { LyricsView } from "../../components/lyrics/LyricsView";
 import { useLocalFlag } from "../../lib/useLocalFlag";
@@ -144,7 +144,7 @@ export function ImmersiveView() {
         </div>
 
         <span className="w-10 text-right text-[11px] text-white/40 tnum">{formatTime(timeMs)}</span>
-        <SnakeProgress
+        <WavyProgress
           valueMs={Math.min(timeMs, totalMs)}
           totalMs={totalMs}
           onSeek={seekMs}

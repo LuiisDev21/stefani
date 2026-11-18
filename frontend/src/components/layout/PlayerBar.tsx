@@ -21,7 +21,7 @@ import { useDuration, usePlaybackTime } from "../../player/clock";
 import { Cover } from "../ui/Cover";
 import { IconButton } from "../ui/IconButton";
 import { Slider } from "../ui/Slider";
-import { SnakeProgress } from "../ui/SnakeProgress";
+import { WavyProgress } from "../ui/WavyProgress";
 
 /**
  * Persistent transport: a solid surface closed by one hairline on top. Depth
@@ -136,7 +136,7 @@ export function PlayerBar() {
 
           <div className="flex w-full items-center gap-2">
             <span className="w-9 text-right text-[11px] text-faint tnum">{formatTime(timeMs)}</span>
-            <SnakeProgress
+            <WavyProgress
               valueMs={Math.min(timeMs, totalMs)}
               totalMs={totalMs}
               onSeek={seekMs}
