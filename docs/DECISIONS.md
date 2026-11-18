@@ -198,3 +198,24 @@ persistido aparte; el cliente envia `x-opencode-session` solo para
 **Consecuencia**: no hay modelos hardcodeados en la UI (los presets son solo un
 punto de partida editable), un proveedor sin `/models` sigue siendo usable, y el
 session id sobrevive a cambios de configuracion sin exponerse en config.json.
+
+## ADR-018: inmersivo de dos columnas y sesion de medios del sistema
+
+**Contexto**: el modo inmersivo centraba la letra y no mostraba la portada, y la
+app no aparecia en el widget de medios de Windows.
+
+**Decision**: el inmersivo adopta la composicion de referencia (portada y
+creditos a la izquierda, letra a la derecha, activa en ambar). La integracion con
+el sistema va por la **Media Session API** del renderer: metadatos, caratula de
+544 px, estado de reproduccion, posicion y handlers de play/pausa/siguiente/
+anterior/seek. No se implementa SMTC por COM porque WebView2 ya publica la
+sesion.
+
+**Evidencia**: con el WebView2 de la app reproduciendo, PowerShell enumera
+`msedgewebview2.exe | Friend, Please | Twenty One Pilots | Playing`, y
+`TryTogglePlayPauseAsync` sobre esa sesion pausa y reanuda el `<audio>` real
+(`paused` cambia en el renderer).
+
+**Consecuencia**: el widget de Windows y las teclas multimedia controlan la app
+sin codigo nativo por plataforma. En macOS/Linux el equivalente depende del
+soporte de Media Session del WebView del sistema y no se ha verificado.

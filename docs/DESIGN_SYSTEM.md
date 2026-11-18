@@ -100,8 +100,15 @@ navegacion y el lienzo blanco son el marco; la letra es lo que se expone.
 - **Panel de estudio**: 400 px, blanco, borde izquierdo hairline, letra a 16 px.
 - **Reproductor**: barra frosted de 72 px, sin sombra, con la portada de 48 px
   como unico objeto elevado.
-- **Modo inmersivo**: negro puro, letra blanca, controles blancos. Invierte la
-  superficie, no la identidad.
+- **Modo inmersivo**: dos columnas sobre `#0b0b0c`. A la izquierda, la portada
+  (26vw, tope 460 px) y debajo titulo 23 px / artista 15 px; la propia portada
+  ilumina el fondo con una copia desenfocada al 40 % y velo negro al 72 %. A la
+  derecha, la letra en 20-29 px semibold con la linea activa en ambar `#ffc000`
+  y el resto en blanco al 65 %. Controles y progreso en una fila inferior
+  discreta. Invierte la superficie, no la identidad.
+- **Barra superior**: cuando hay pista, muestra portada de 28 px, `Artista —
+  Titulo` truncado y play/pausa y siguiente, separados del resto por una linea
+  vertical. El contador de la biblioteca se oculta mientras suena algo.
 
 ## Movimiento
 

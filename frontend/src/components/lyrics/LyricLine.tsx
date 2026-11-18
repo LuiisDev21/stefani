@@ -39,7 +39,7 @@ export const LyricLine = memo(function LyricLine({
   const hasWords = line.words.length > 0;
   const annotation = line.annotation;
   const sizeClass = immersive
-    ? "text-[clamp(24px,3vw,40px)] leading-[1.3]"
+    ? "text-[clamp(20px,2.05vw,29px)] font-semibold leading-[1.34] tracking-[-0.3px]"
     : active
       ? "text-[21px] leading-[1.35] font-semibold tracking-[-0.3px]"
       : "text-[16px] leading-[1.45]";
@@ -65,8 +65,10 @@ export const LyricLine = memo(function LyricLine({
                 const progress = active ? wordProgress(word, timeMs) : past ? 1 : 0;
                 /* One span per word: a hard gradient fills it left to right
                    without duplicating text nodes. */
-                const base = immersive ? "#ffffff" : "#1d1d1f";
-                const rest = immersive ? "#6e6e73" : "#a1a1a6";
+                // Immersive follows the reference: the sung line is amber and
+                // the upcoming words stay grey inside the same sentence.
+                const base = immersive ? "#ffc000" : "#1d1d1f";
+                const rest = immersive ? "#8a8a8e" : "#a1a1a6";
                 const fillStyle = active
                   ? {
                       backgroundImage: `linear-gradient(to right, ${base} ${progress * 100}%, ${rest} ${progress * 100}%)`,
@@ -96,7 +98,7 @@ export const LyricLine = memo(function LyricLine({
                     className={cn(
                       "relative inline-block cursor-pointer rounded-[4px] outline-offset-4 transition-colors",
                       immersive ? "hover:bg-white/10" : "hover:bg-accent/8",
-                      active ? (immersive ? "text-white" : "text-ink") : immersive ? "text-white/55" : "text-muted",
+                      active ? (immersive ? "text-[#ffc000]" : "text-ink") : immersive ? "text-white/65" : "text-muted",
                     )}
                   >
                     {word.text}
@@ -105,7 +107,7 @@ export const LyricLine = memo(function LyricLine({
               })}
             </span>
           ) : (
-            <span className={active ? (immersive ? "text-white" : "text-ink") : immersive ? "text-white/55" : "text-muted"}>
+            <span className={active ? (immersive ? "text-[#ffc000]" : "text-ink") : immersive ? "text-white/65" : "text-muted"}>
               {line.text || "\u00a0"}
             </span>
           )}
@@ -115,7 +117,7 @@ export const LyricLine = memo(function LyricLine({
       {active && annotation ? (
         <div className="mt-2 space-y-1">
           {showIPA ? (
-            <p className={immersive ? "text-[14px] text-white/55" : "text-[14px] text-muted"} lang="en-Latn-fonipa">
+            <p className={immersive ? "text-[13px] text-white/50" : "text-[14px] text-muted"} lang="en-Latn-fonipa">
               {annotation.ipa}
             </p>
           ) : null}
@@ -125,7 +127,7 @@ export const LyricLine = memo(function LyricLine({
             </p>
           ) : null}
           {showTranslation ? (
-            <p className={immersive ? "text-[14px] leading-[1.43] text-white/55" : "text-[14px] leading-[1.43] text-muted"}>
+            <p className={immersive ? "text-[13px] leading-[1.45] text-white/45" : "text-[14px] leading-[1.43] text-muted"}>
               {annotation.translation}
             </p>
           ) : null}

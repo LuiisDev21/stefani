@@ -1,4 +1,4 @@
-import { ChevronDown, Pause, Play, SkipBack, SkipForward, Repeat1 } from "lucide-react";
+import { ChevronDown, Pause, Play, Repeat1, SkipBack, SkipForward } from "lucide-react";
 import { useMemo } from "react";
 import { activeLineIndex, loopFromLines } from "../../lib/timeline";
 import { formatTime } from "../../lib/format";
@@ -8,11 +8,25 @@ import { usePlayer } from "../../stores/playerStore";
 import { IconButton } from "../../components/ui/IconButton";
 import { LyricsView } from "../../components/lyrics/LyricsView";
 import { useLocalFlag } from "../../lib/useLocalFlag";
+import { hiResArtwork } from "../../lib/artwork";
+
+/** Two initials for the artwork placeholder. */
+function initials(title: string): string {
+  return title
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((word) => word[0]?.toUpperCase() ?? "")
+    .join("");
+}
 
 /**
- * Immersive study mode: the library and the list disappear, artwork becomes the
- * background and the lyric column owns the screen. Nothing is duplicated from the
- * side panel except the lyric renderer itself.
+ * Immersive study mode.
+ *
+ * Layout follows the reference player: the artwork and the song credits take
+ * the left column, the lyric owns the right one, and the record itself tints
+ * the background through a blurred copy of the cover. The active line is amber;
+ * everything else stays quiet grey so the eye only has one place to land.
  */
 export function ImmersiveView() {
   const setImmersive = useApp((state) => state.setImmersive);
@@ -50,23 +64,42 @@ export function ImmersiveView() {
   };
 
   return (
-    <div className="fixed inset-0 z-30 flex flex-col bg-black text-white" role="dialog" aria-modal="true" aria-label="Modo inmersivo">
+    <div
+      className="fixed inset-0 z-30 flex flex-col overflow-hidden bg-[#0b0b0c] text-white"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Modo inmersivo"
+      onKeyDown={(event) => {
+        if (event.key === "Escape") setImmersive(false);
+      }}
+    >
+      {/* The cover itself lights the room: a blurred, oversized copy behind
+          everything, dimmed so text keeps its contrast. */}
+      {current?.artworkUrl ? (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 scale-125 opacity-40 blur-[110px]"
+          style={{ backgroundImage: `url("${hiResArtwork(current.artworkUrl)}")`, backgroundSize: "cover", backgroundPosition: "center" }}
+        />
+      ) : null}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[#0b0b0c]/72" />
 
-      <header className="relative z-10 flex items-start justify-between gap-4 px-6 pt-4">
-        <div className="min-w-0">
-          <p className="text-[12px] font-medium text-white/45">Modo inmersivo</p>
-          <h2 className="mt-1 truncate text-[21px] font-semibold tracking-[-0.3px] text-white">
-            {current?.title ?? "Sin canción"}
-          </h2>
-          <p className="truncate text-[13px] text-white/55">{current?.artist ?? "Elige una canción"}</p>
-        </div>
-        <div className="flex items-center gap-1">
+      <header className="relative z-10 flex items-center justify-between gap-4 px-5 pt-4 sm:px-8">
+        <button
+          type="button"
+          onClick={() => setImmersive(false)}
+          className="flex items-center gap-1.5 rounded-full px-2 py-1 text-[12px] text-white/50 transition-colors hover:text-white"
+        >
+          <ChevronDown className="h-4 w-4" aria-hidden="true" />
+          Salir
+        </button>
+        <div className="flex items-center gap-1.5">
           <button
             type="button"
             onClick={toggleIPA}
             aria-pressed={showIPA}
-            className={`rounded-full border px-3 py-1 text-[12px] transition-colors ${
-              showIPA ? "border-white bg-white text-black" : "border-white/20 text-white/60 hover:text-white"
+            className={`rounded-full border px-3 py-1 text-[11px] transition-colors ${
+              showIPA ? "border-white/90 text-white" : "border-white/15 text-white/45 hover:text-white"
             }`}
           >
             IPA + ES
@@ -75,33 +108,52 @@ export function ImmersiveView() {
             type="button"
             onClick={toggleTranslation}
             aria-pressed={showTranslation}
-            className={`rounded-full border px-3 py-1 text-[12px] transition-colors ${
-              showTranslation ? "border-white bg-white text-black" : "border-white/20 text-white/60 hover:text-white"
+            className={`rounded-full border px-3 py-1 text-[11px] transition-colors ${
+              showTranslation ? "border-white/90 text-white" : "border-white/15 text-white/45 hover:text-white"
             }`}
           >
             Traducción
           </button>
-          <IconButton label="Salir del modo inmersivo" onClick={() => setImmersive(false)}>
-            <ChevronDown className="h-4 w-4" />
-          </IconButton>
         </div>
       </header>
 
-      <div className="relative z-10 mx-auto min-h-0 w-full max-w-[900px] flex-1 px-6">
-        <LyricsView
-          lyrics={lyrics}
-          loading={loading}
-          offsetMs={0}
-          showIPA={showIPA}
-          showTranslation={showTranslation}
-          immersive
-          onSeek={seekMs}
-          onWord={(word, line) => void lookupWord(word, line.id, line.text)}
-          onImport={() => void importLyrics()}
-        />
-      </div>
+      <main className="relative z-10 flex min-h-0 flex-1 items-center gap-[clamp(32px,6vw,96px)] px-[clamp(20px,6vw,110px)] py-6">
+        <section className="hidden w-[clamp(200px,26vw,460px)] shrink-0 self-center sm:block">
+          <div className="aspect-square w-full overflow-hidden rounded-[12px] bg-white/[0.06] shadow-[var(--shadow-product)]">
+            {current?.artworkUrl ? (
+              <img src={hiResArtwork(current.artworkUrl)} alt="" className="h-full w-full object-cover" draggable={false} />
+            ) : (
+              <div className="flex h-full items-center justify-center text-[clamp(48px,6vw,96px)] font-semibold text-white/20">
+                {current ? initials(current.title) : ""}
+              </div>
+            )}
+          </div>
+          <div className="mt-5 min-w-0">
+            <h2 className="truncate text-[clamp(18px,1.7vw,23px)] font-semibold tracking-[-0.4px] text-white">
+              {current?.title ?? "Sin canción"}
+            </h2>
+            <p className="mt-0.5 truncate text-[clamp(13px,1.1vw,15px)] text-white/55">
+              {current?.artist ?? "Elige una canción"}
+            </p>
+          </div>
+        </section>
 
-      <footer className="relative z-10 flex items-center gap-4 border-t border-white/15 bg-black/70 px-6 py-3">
+        <section className="relative min-h-0 flex-1 self-stretch" aria-label="Letra">
+          <LyricsView
+            lyrics={lyrics}
+            loading={loading}
+            offsetMs={0}
+            showIPA={showIPA}
+            showTranslation={showTranslation}
+            immersive
+            onSeek={seekMs}
+            onWord={(word, line) => void lookupWord(word, line.id, line.text)}
+            onImport={() => void importLyrics()}
+          />
+        </section>
+      </main>
+
+      <footer className="relative z-10 flex items-center gap-3 px-[clamp(20px,6vw,110px)] pb-5">
         <div className="flex items-center gap-1">
           <IconButton label="Anterior" onClick={previous} disabled={!current}>
             <SkipBack className="h-4 w-4" />
@@ -111,7 +163,7 @@ export function ImmersiveView() {
             onClick={toggle}
             disabled={!current}
             aria-label={playing ? "Pausar" : "Reproducir"}
-            className="mx-1 flex h-10 w-10 items-center justify-center rounded-full bg-white text-black transition-colors hover:bg-white/85 disabled:opacity-40"
+            className="mx-1 flex h-12 w-12 items-center justify-center rounded-full bg-white text-black transition-transform active:scale-[0.96] disabled:opacity-40"
           >
             {playing ? <Pause className="h-4 w-4 fill-current" /> : <Play className="ml-0.5 h-4 w-4 fill-current" />}
           </button>
@@ -123,7 +175,7 @@ export function ImmersiveView() {
           </IconButton>
         </div>
 
-        <span className="w-10 text-right text-[11px] text-white/45 tnum">{formatTime(timeMs)}</span>
+        <span className="w-10 text-right text-[11px] text-white/40 tnum">{formatTime(timeMs)}</span>
         <input
           type="range"
           min={0}
@@ -135,7 +187,7 @@ export function ImmersiveView() {
           style={{ ["--fill" as string]: `${totalMs > 0 ? (timeMs / totalMs) * 100 : 0}%` }}
           disabled={!current?.playable}
         />
-        <span className="w-10 text-[11px] text-white/45 tnum">{formatTime(totalMs)}</span>
+        <span className="w-10 text-[11px] text-white/40 tnum">{formatTime(totalMs)}</span>
       </footer>
     </div>
   );

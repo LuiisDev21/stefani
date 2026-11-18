@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { TooltipProvider } from "@radix-ui/react-tooltip";
 import { TopNav } from "./components/layout/TopNav";
 import { PlayerBar } from "./components/layout/PlayerBar";
+import { MediaSessionBridge } from "./player/MediaSessionBridge";
 import { StudyPanel } from "./components/layout/StudyPanel";
 import { Toast } from "./components/ui/Toast";
 import { PlaylistPicker } from "./components/track/PlaylistPicker";
@@ -89,6 +90,7 @@ export default function App() {
           </div>
         </div>
         <PlayerBar />
+        <MediaSessionBridge />
         <Toast />
         <PlaylistPicker track={pickerTrack} playlists={playlists} onClose={closePicker} />
         {immersive ? <ImmersiveView /> : null}

@@ -6,7 +6,7 @@
 |---|---|---|
 | Go (dominio, storage, proveedores, letras, IA, demo, medios, app) | `go test ./internal/... -count=1` | **115 pruebas, 8 paquetes, todas pasan** |
 | Go estatico | `go vet ./...` | sin hallazgos |
-| Frontend unitario | `pnpm test` (Vitest + Testing Library) | **29 pruebas, 3 archivos, todas pasan** |
+| Frontend unitario | `pnpm test` (Vitest + Testing Library) | **32 pruebas, 3 archivos, todas pasan** |
 | Tipos | `pnpm exec tsc --noEmit` | sin errores, `strict: true` |
 | E2E | `pnpm exec playwright test` | **7 pruebas, todas pasan** contra el build `server` real |
 | Build escritorio | `go build -o bin/stefani.exe .` | binario de ~26 MB |

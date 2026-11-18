@@ -216,6 +216,10 @@ func run() error {
 		Mac: application.MacOptions{
 			ApplicationShouldTerminateAfterLastWindowClosed: true,
 		},
+		Windows: application.WindowsOptions{
+			// Opt-in only: a debugging port must never be open in normal use.
+			AdditionalBrowserArgs: webviewDebugArgs(),
+		},
 		Server: application.ServerOptions{
 			Host: "127.0.0.1",
 			Port: 8080,
@@ -261,4 +265,13 @@ func run() error {
 	logger.Info("starting", "name", brand.Name, "version", brand.Version, "db", db.Path(),
 		"online", streamer.Detail())
 	return wailsApp.Run()
+}
+
+// webviewDebugArgs exposes the WebView2 debugging port only when the operator
+// asks for it, which is what lets an automated check inspect the renderer.
+func webviewDebugArgs() []string {
+	if os.Getenv("STEFANI_DEBUG_WEBVIEW") == "1" {
+		return []string{"--remote-debugging-port=9222"}
+	}
+	return nil
 }

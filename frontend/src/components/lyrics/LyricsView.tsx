@@ -65,7 +65,7 @@ export function LyricsView({
     const node = line ? lineRefs.current.get(line.id) : null;
     const container = containerRef.current;
     if (!node || !container) return;
-    const target = node.offsetTop - container.clientHeight * (immersive ? 0.38 : 0.32);
+    const target = node.offsetTop - container.clientHeight * (immersive ? 0.42 : 0.32);
     container.scrollTo({ top: Math.max(0, target), behavior: "smooth" });
   }, [activeIndex, manual, lines, immersive]);
 
@@ -131,7 +131,7 @@ export function LyricsView({
         onTouchMove={pauseAutoscroll}
         aria-label="Letra sincronizada"
       >
-        <ol className={immersive ? "space-y-3 pb-40 pt-24" : "space-y-1 pb-24 pt-2"}>
+        <ol className={immersive ? "space-y-5 pb-40 pt-24" : "space-y-1 pb-24 pt-2"}>
           {lines.map((line, index) => {
             const isActive = index === activeIndex;
             return (
