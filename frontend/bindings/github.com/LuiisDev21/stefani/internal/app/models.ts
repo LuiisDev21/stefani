@@ -320,6 +320,7 @@ export interface TestOutcome {
 export interface TrackDTO {
     "id": string;
     "provider": string;
+    "providerId": string;
     "title": string;
     "artist": string;
     "album": string;

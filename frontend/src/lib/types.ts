@@ -36,6 +36,7 @@ export interface Info {
 export interface Track {
   id: string;
   provider: string;
+  providerId: string;
   title: string;
   artist: string;
   album: string;

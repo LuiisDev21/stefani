@@ -396,6 +396,15 @@ export function UpdateYtDlp(): $CancellablePromise<$models.OnlineDTO> {
     return $Call.ByID(2314142790);
 }
 
+/**
+ * WarmTracks resolves songs before they are played, so the next one starts at
+ * once instead of waiting for yt-dlp to answer. It is fire and forget: a song
+ * that fails here simply resolves when the user presses play.
+ */
+export function WarmTracks(ids: string[] | null): $CancellablePromise<void> {
+    return $Call.ByID(989638331, ids);
+}
+
 export function WindowClose(): $CancellablePromise<void> {
     return $Call.ByID(893234206);
 }

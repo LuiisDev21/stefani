@@ -48,6 +48,7 @@ export const api = {
   playCollection: (id: string) => as<Track[]>(App.PlayCollection(id)),
   openCollection: (id: string) => as<Collection>(App.OpenCollection(id)),
   openArtist: (name: string) => as<Collection>(App.OpenArtist(name)),
+  warmTracks: (ids: string[]) => as<void>(App.WarmTracks(ids)),
   connectAccount: () => as<void>(App.ConnectAccount()),
   signOutAccount: () => as<void>(App.SignOutAccount()),
   finishAccount: () => as<Account>(App.FinishAccount()),

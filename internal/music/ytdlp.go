@@ -3,6 +3,7 @@ package music
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/url"
@@ -46,6 +47,7 @@ const (
 	urlSafetyMargin  = 90 * time.Second
 	defaultStreamTTL = 4 * time.Hour
 	maxCacheEntries  = 256
+	warmTimeout      = 12 * time.Second
 )
 
 // Runner executes an external command. It is injectable so tests never shell
@@ -77,13 +79,16 @@ type cachedStream struct {
 // YtDlp resolves audio URLs through a local yt-dlp binary.
 type YtDlp struct {
 	path    string
-	version string
 	run     Runner
 	now     func() time.Time
 	ttl     time.Duration
 
-	mu    sync.Mutex
-	cache map[string]cachedStream
+	verMu   sync.RWMutex
+	version string
+
+	mu       sync.Mutex
+	cache    map[string]cachedStream
+	inflight map[string]chan struct{}
 }
 
 // NewYtDlpWithRunner builds a resolver with an injected runner, for tests and
@@ -184,13 +189,20 @@ func DetectYtDlp() *YtDlp {
 		return y
 	}
 	y.path = path
-	ctx, cancel := context.WithTimeout(context.Background(), probeTimeout)
-	defer cancel()
-	if out, _, err := y.run(ctx, path, "--version"); err == nil {
-		if v := strings.TrimSpace(string(out)); v != "" && len(v) < 40 {
-			y.version = v
+	// The version probe costs seconds on Windows (a packed Python binary), so it
+	// runs in the background: the window opens before it answers.
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), probeTimeout)
+		defer cancel()
+		if out, _, err := y.run(ctx, path, "--version"); err == nil {
+			if v := strings.TrimSpace(string(out)); v != "" && len(v) < 40 {
+				y.verMu.Lock()
+				y.version = v
+				y.verMu.Unlock()
+			}
 		}
-	}
+	}()
+	y.loadCache()
 	return y
 }
 
@@ -204,14 +216,16 @@ func (y *YtDlp) Version() string {
 	if y == nil {
 		return ""
 	}
+	y.verMu.RLock()
+	defer y.verMu.RUnlock()
 	return y.version
 }
 
 // Detail is a short human-readable status for the settings panel.
 func (y *YtDlp) Detail() string {
 	if y.Available() {
-		if y.version != "" {
-			return "yt-dlp " + y.version
+		if v := y.Version(); v != "" {
+			return "yt-dlp " + v
 		}
 		return "yt-dlp detectado"
 	}
@@ -231,6 +245,20 @@ func (y *YtDlp) Resolve(ctx context.Context, videoID string) (StreamURL, error) 
 	if cached, ok := y.lookup(videoID); ok {
 		return cached, nil
 	}
+	// A warm-up and a play can ask for the same song at the same time; one
+	// process answers both.
+	if wait, ok := y.claim(videoID); ok {
+		select {
+		case <-wait:
+		case <-ctx.Done():
+			return StreamURL{}, ctx.Err()
+		}
+		if cached, ok := y.lookup(videoID); ok {
+			return cached, nil
+		}
+		return StreamURL{}, fmt.Errorf("%w: no se pudo resolver", ErrStreamResolve)
+	}
+	defer y.release(videoID)
 
 	runCtx, cancel := context.WithTimeout(ctx, resolveTimeout)
 	defer cancel()
@@ -323,6 +351,7 @@ func (y *YtDlp) store(videoID string, s StreamURL) {
 		}
 	}
 	y.cache[videoID] = cachedStream{url: s.URL, expiresAt: s.ExpiresAt}
+	go y.saveCache()
 }
 
 // firstURL picks the first http(s) line of yt-dlp's stdout.
@@ -336,16 +365,123 @@ func firstURL(stdout []byte) string {
 	return ""
 }
 
-// sanitizeStderr keeps the useful part of an error message without leaking
-// URLs or cookies into logs.
+// sanitizeStderr keeps the last line, which is the one that says what went
+// wrong, and drops the ERROR: prefix the UI does not need.
 func sanitizeStderr(stderr []byte) string {
-	line := strings.TrimSpace(string(stderr))
-	if idx := strings.IndexByte(line, '\n'); idx > 0 {
-		line = line[:idx]
+	text := strings.TrimSpace(string(stderr))
+	if text == "" {
+		return ""
 	}
-	line = strings.ReplaceAll(line, "https://", "hxxps://")
-	if len(line) > 180 {
-		line = line[:180]
+	lines := strings.Split(text, "\n")
+	last := strings.TrimSpace(lines[len(lines)-1])
+	last = strings.TrimPrefix(last, "ERROR: ")
+	// Signed media URLs carry tokens; the UI never needs them, so the scheme is
+	// defused rather than dropped and the line still explains the failure.
+	last = strings.ReplaceAll(last, "https://", "hxxps://")
+	last = strings.ReplaceAll(last, "http://", "hxxp://")
+	if len(last) > 240 {
+		last = last[:240] + "…"
 	}
-	return line
+	return last
+}
+
+
+// SetCacheFile points the resolved-URL cache at a file so a URL found before a
+// restart is still usable: they live for hours, the process does not.
+func SetCacheFile(path string) {
+	cacheMu.Lock()
+	cacheFile = path
+	cacheMu.Unlock()
+}
+
+var (
+	cacheMu   sync.Mutex
+	cacheFile string
+)
+
+// loadCache seeds the in-memory cache from disk, dropping anything expired.
+func (y *YtDlp) loadCache() {
+	cacheMu.Lock()
+	path := cacheFile
+	cacheMu.Unlock()
+	if path == "" {
+		return
+	}
+	blob, err := os.ReadFile(path)
+	if err != nil {
+		return
+	}
+	var saved map[string]struct {
+		URL       string    `json:"url"`
+		ExpiresAt time.Time `json:"expiresAt"`
+	}
+	if json.Unmarshal(blob, &saved) != nil {
+		return
+	}
+	now := y.now()
+	y.mu.Lock()
+	defer y.mu.Unlock()
+	for id, entry := range saved {
+		if entry.URL != "" && now.Before(entry.ExpiresAt) {
+			y.cache[id] = cachedStream{url: entry.URL, expiresAt: entry.ExpiresAt}
+		}
+	}
+}
+
+// saveCache writes the live entries back. It runs off the request path.
+func (y *YtDlp) saveCache() {
+	cacheMu.Lock()
+	path := cacheFile
+	cacheMu.Unlock()
+	if path == "" {
+		return
+	}
+	now := y.now()
+	y.mu.Lock()
+	saved := make(map[string]struct {
+		URL       string    `json:"url"`
+		ExpiresAt time.Time `json:"expiresAt"`
+	}, len(y.cache))
+	for id, entry := range y.cache {
+		if now.Before(entry.expiresAt) {
+			saved[id] = struct {
+				URL       string    `json:"url"`
+				ExpiresAt time.Time `json:"expiresAt"`
+			}{URL: entry.url, ExpiresAt: entry.expiresAt}
+		}
+	}
+	y.mu.Unlock()
+	blob, err := json.Marshal(saved)
+	if err != nil {
+		return
+	}
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		return
+	}
+	_ = os.WriteFile(path, blob, 0o600)
+}
+
+// claim registers a resolve in flight. It returns a channel to wait on when
+// another caller is already resolving the same video, and ok=false when this
+// caller owns the work.
+func (y *YtDlp) claim(videoID string) (chan struct{}, bool) {
+	y.mu.Lock()
+	defer y.mu.Unlock()
+	if y.inflight == nil {
+		y.inflight = make(map[string]chan struct{})
+	}
+	if wait, busy := y.inflight[videoID]; busy {
+		return wait, true
+	}
+	y.inflight[videoID] = make(chan struct{})
+	return nil, false
+}
+
+func (y *YtDlp) release(videoID string) {
+	y.mu.Lock()
+	defer y.mu.Unlock()
+	if wait, ok := y.inflight[videoID]; ok {
+		close(wait)
+		delete(y.inflight, videoID)
+	}
 }

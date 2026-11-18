@@ -49,6 +49,7 @@ type AppUpdateDTO struct {
 type TrackDTO struct {
 	ID          string `json:"id"`
 	Provider    string `json:"provider"`
+	ProviderID  string `json:"providerId"`
 	Title       string `json:"title"`
 	Artist      string `json:"artist"`
 	Album       string `json:"album"`
@@ -331,6 +332,7 @@ func toTrackDTO(t domain.Track, inLibrary, favorite, playable bool) TrackDTO {
 	dto := TrackDTO{
 		ID:          t.ID,
 		Provider:    string(t.Provider),
+		ProviderID:  t.ProviderID,
 		Title:       t.Title,
 		Artist:      t.Artist,
 		Album:       t.Album,

@@ -205,6 +205,13 @@ export const useApp = create<AppState>((set, get) => ({
 
   openTrack: async (track, queue) => {
     usePlayer.getState().playTrack(track, queue);
+    // Ask for the next songs while this one plays: yt-dlp takes seconds, and
+    // spending them here is what keeps the next press instant.
+    const upcoming = (queue ?? usePlayer.getState().queue)
+      .slice(usePlayer.getState().index + 1, usePlayer.getState().index + 3)
+      .map((item) => item.providerId)
+      .filter(Boolean);
+    if (upcoming.length > 0) void api.warmTracks(upcoming);
     set({ lyrics: null, lyricsLoading: true });
     await get().loadLyrics(track.id);
   },
@@ -383,7 +390,12 @@ export const useApp = create<AppState>((set, get) => ({
     if (!id) return;
     set({ collectionLoading: true, view: "collection", collection: null });
     try {
-      set({ collection: await api.openCollection(id), collectionLoading: false });
+      const collection = await api.openCollection(id);
+      set({ collection, collectionLoading: false });
+      // The first song is the one most likely to be pressed, so its URL is
+      // fetched while the page is being read.
+      const first = collection.tracks[0]?.providerId;
+      if (first) void api.warmTracks([first]);
     } catch (error) {
       set({ collectionLoading: false, view: "home" });
       get().notify("error", errorMessage(error));
