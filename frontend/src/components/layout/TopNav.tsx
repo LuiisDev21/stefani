@@ -1,109 +1,127 @@
-import { Pause, Play, SkipForward, Upload } from "lucide-react";
+import { LoaderCircle, Menu, Search, Settings2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { cn } from "../../lib/cn";
-import { useApp, type View } from "../../stores/appStore";
-import { usePlayer } from "../../stores/playerStore";
+import { useApp } from "../../stores/appStore";
 
-const items: Array<{ view: View; label: string }> = [
-  { view: "home", label: "Inicio" },
-  { view: "search", label: "Buscar" },
-  { view: "library", label: "Biblioteca" },
-  { view: "playlists", label: "Listas" },
-  { view: "favorites", label: "Favoritos" },
-  { view: "learning", label: "Aprendizaje" },
-  { view: "settings", label: "Ajustes" },
-];
+interface TopNavProps {
+  onToggleNav: () => void;
+}
 
 /**
- * Global navigation: a 52px canvas bar closed by a single hairline, with the
- * active destination on the card surface instead of a colored underline. Every
- * destination is a real view; the count on the right is real data, and import
- * sits here because it is the one action that turns an empty app into a usable
- * one.
+ * Application chrome: the mark, one global search field and settings. Every
+ * other destination lives in the sidebar, so the bar stays a command line
+ * rather than a second menu.
  */
-export function TopNav() {
+export function TopNav({ onToggleNav }: TopNavProps) {
   const view = useApp((state) => state.view);
   const go = useApp((state) => state.go);
-  const counts = useApp((state) => state.counts);
-  const importAudio = useApp((state) => state.importAudio);
-  const current = usePlayer((state) => state.current);
-  const playing = usePlayer((state) => state.playing);
-  const toggle = usePlayer((state) => state.toggle);
-  const next = usePlayer((state) => state.next);
+  const query = useApp((state) => state.searchQuery);
+  const searching = useApp((state) => state.searching);
+  const search = useApp((state) => state.search);
+
+  const [value, setValue] = useState(query);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const timer = useRef<number | null>(null);
+
+  // Keep the field in sync when the query is cleared from elsewhere.
+  useEffect(() => {
+    setValue(query);
+  }, [query]);
+
+  useEffect(() => {
+    return () => {
+      if (timer.current) window.clearTimeout(timer.current);
+    };
+  }, []);
+
+  // Ctrl/Cmd+K focuses the field from anywhere, the way a command palette does.
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        inputRef.current?.focus();
+        inputRef.current?.select();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  const run = (next: string) => {
+    if (timer.current) window.clearTimeout(timer.current);
+    void search(next);
+  };
+
+  const schedule = (next: string) => {
+    setValue(next);
+    if (view !== "search") go("search");
+    if (timer.current) window.clearTimeout(timer.current);
+    timer.current = window.setTimeout(() => void search(next), 350);
+  };
 
   return (
-    <header className="flex h-[52px] shrink-0 items-center gap-6 border-b border-line bg-bg px-4 sm:px-6">
-      <button
-        type="button"
-        onClick={() => go("home")}
-        className="shrink-0 font-display text-[15px] font-semibold tracking-[-0.03em] text-ink transition-opacity hover:opacity-80"
-        aria-label="STEFANI, ir al inicio"
-      >
-        STEFANI
-      </button>
-
-      <nav aria-label="Navegacion principal" className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto">
-        {items.map(({ view: target, label }) => {
-          const active = view === target;
-          return (
-            <button
-              key={target}
-              type="button"
-              onClick={() => go(target)}
-              aria-current={active ? "page" : undefined}
-              className={cn(
-                "shrink-0 rounded-[6px] px-3 py-1.5 text-[13px] transition-colors",
-                active ? "bg-card text-ink" : "text-muted hover:bg-surface hover:text-ink",
-              )}
-            >
-              {label}
-            </button>
-          );
-        })}
-      </nav>
-
-      <div className="flex shrink-0 items-center gap-4">
-        {current ? (
-          <div className="flex min-w-0 items-center gap-2 border-r border-line pr-3">
-            <div className="h-7 w-7 shrink-0 overflow-hidden rounded-[6px] border border-line bg-card">
-              {current.artworkUrl ? (
-                <img src={current.artworkUrl} alt="" className="h-full w-full object-cover" draggable={false} />
-              ) : (
-                <span className="flex h-full items-center justify-center text-[11px] font-semibold text-ash">
-                  {current.title.slice(0, 1).toUpperCase()}
-                </span>
-              )}
-            </div>
-            <p className="hidden min-w-0 max-w-[210px] truncate text-[12px] text-body lg:block" title={`${current.artist} — ${current.title}`}>
-              {current.artist} — {current.title}
-            </p>
-            <button
-              type="button"
-              onClick={toggle}
-              aria-label={playing ? "Pausar" : "Reproducir"}
-              className="flex h-7 w-7 items-center justify-center rounded-[6px] text-body transition-colors hover:bg-surface hover:text-ink"
-            >
-              {playing ? <Pause className="h-3.5 w-3.5 fill-current" /> : <Play className="ml-0.5 h-3.5 w-3.5 fill-current" />}
-            </button>
-            <button
-              type="button"
-              onClick={next}
-              aria-label="Siguiente"
-              className="flex h-7 w-7 items-center justify-center rounded-[6px] text-body transition-colors hover:bg-surface hover:text-ink"
-            >
-              <SkipForward className="h-3.5 w-3.5 fill-current" />
-            </button>
-          </div>
-        ) : null}
-        <p className={cn("text-[11px] text-ash tnum", current ? "hidden" : "hidden md:block")}>
-          {counts ? `${counts.tracks} pistas · ${counts.annotated} anotaciones` : "Cargando"}
-        </p>
+    <header className="grid h-[52px] shrink-0 grid-cols-[1fr_minmax(0,520px)_1fr] items-center gap-4 border-b border-line bg-bg px-4 sm:px-6">
+      <div className="flex min-w-0 items-center gap-2">
         <button
           type="button"
-          onClick={() => void importAudio()}
-          className="flex h-8 items-center gap-1.5 rounded-[6px] bg-accent px-3 text-[13px] font-medium text-on-accent transition-colors hover:bg-accent-focus active:scale-[0.98]"
+          onClick={onToggleNav}
+          aria-label="Abrir navegación"
+          className="flex h-8 w-8 items-center justify-center rounded-[6px] text-muted transition-colors hover:bg-surface hover:text-ink lg:hidden"
         >
-          <Upload className="h-3.5 w-3.5" aria-hidden="true" />
-          Importar
+          <Menu className="h-4 w-4" />
+        </button>
+        <button
+          type="button"
+          onClick={() => go("home")}
+          className="shrink-0 font-display text-[15px] font-semibold tracking-[-0.03em] text-ink transition-opacity hover:opacity-80"
+          aria-label="STEFANI, ir al inicio"
+        >
+          STEFANI
+        </button>
+      </div>
+
+      <form
+        role="search"
+        onSubmit={(event) => {
+          event.preventDefault();
+          run(value);
+        }}
+        className="relative min-w-0"
+      >
+        <Search
+          className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-faint"
+          aria-hidden="true"
+        />
+        <input
+          ref={inputRef}
+          type="search"
+          value={value}
+          onChange={(event) => schedule(event.target.value)}
+          placeholder="Buscar canciones, artistas o álbumes"
+          aria-label="Buscar canciones"
+          className="h-8 w-full rounded-[6px] border border-line bg-elevated pl-9 pr-16 text-[13px] text-ink placeholder:text-faint focus:border-line-strong"
+        />
+        <span className="pointer-events-none absolute right-2.5 top-1/2 hidden -translate-y-1/2 items-center gap-1 sm:flex">
+          {searching ? (
+            <LoaderCircle className="h-3.5 w-3.5 animate-spin text-faint" aria-hidden="true" />
+          ) : (
+            <kbd className="rounded-[3px] border border-line px-1 py-[1px] text-[10px] text-ash">Ctrl K</kbd>
+          )}
+        </span>
+      </form>
+
+      <div className="flex items-center justify-end gap-1">
+        <button
+          type="button"
+          onClick={() => go("settings")}
+          aria-label="Ajustes"
+          aria-current={view === "settings" ? "page" : undefined}
+          className={cn(
+            "flex h-8 w-8 items-center justify-center rounded-[6px] transition-colors",
+            view === "settings" ? "bg-card text-ink" : "text-muted hover:bg-surface hover:text-ink",
+          )}
+        >
+          <Settings2 className="h-4 w-4" />
         </button>
       </div>
     </header>

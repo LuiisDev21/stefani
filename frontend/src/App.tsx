@@ -1,6 +1,7 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { TooltipProvider } from "@radix-ui/react-tooltip";
 import { TopNav } from "./components/layout/TopNav";
+import { Sidebar } from "./components/layout/Sidebar";
 import { PlayerBar } from "./components/layout/PlayerBar";
 import { MediaSessionBridge } from "./player/MediaSessionBridge";
 import { StudyPanel } from "./components/layout/StudyPanel";
@@ -27,6 +28,7 @@ export default function App() {
   const playlists = useApp((state) => state.playlists);
   const closePicker = useApp((state) => state.closePicker);
   const init = useApp((state) => state.init);
+  const [navOpen, setNavOpen] = useState(false);
 
   useEffect(() => {
     void init();
@@ -74,8 +76,9 @@ export default function App() {
   return (
     <TooltipProvider delayDuration={350}>
       <div className="flex h-full flex-col bg-bg">
-        <TopNav />
+        <TopNav onToggleNav={() => setNavOpen((open) => !open)} />
         <div className="flex min-h-0 flex-1">
+          <Sidebar open={navOpen} onNavigate={() => setNavOpen(false)} />
           <main className="scroll-area min-w-0 flex-1" id="main-content">
             {view === "home" && <HomeView />}
             {view === "search" && <SearchView />}

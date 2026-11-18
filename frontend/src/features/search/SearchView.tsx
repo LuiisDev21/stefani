@@ -1,38 +1,17 @@
-import { LoaderCircle, Search } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
 import { useApp } from "../../stores/appStore";
 import { EmptyState } from "../../components/ui/EmptyState";
 import { TopBar } from "../../components/layout/TopBar";
 import { TrackList } from "../../components/track/TrackList";
 
-/** Search across the local library and, when enabled, the YouTube Music catalog. */
+/**
+ * Search results. The field itself lives in the top bar, so this view only
+ * reports what the query found and which providers answered.
+ */
 export function SearchView() {
-  const search = useApp((state) => state.search);
   const searching = useApp((state) => state.searching);
   const result = useApp((state) => state.searchResult);
-  const query = useApp((state) => state.searchQuery);
   const providers = useApp((state) => state.providers);
   const openPicker = useApp((state) => state.openPicker);
-
-  const [text, setText] = useState(query);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const timer = useRef<number | null>(null);
-
-  useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      if (timer.current) window.clearTimeout(timer.current);
-    };
-  }, []);
-
-  const schedule = (value: string) => {
-    setText(value);
-    if (timer.current) window.clearTimeout(timer.current);
-    timer.current = window.setTimeout(() => void search(value), 350);
-  };
 
   const items = result?.items ?? [];
 
@@ -41,30 +20,7 @@ export function SearchView() {
       <TopBar title="Buscar" subtitle="Tu biblioteca local y el catalogo experimental" />
 
       <div className="px-7 pb-10">
-        <form
-          role="search"
-          onSubmit={(event) => {
-            event.preventDefault();
-            void search(text);
-          }}
-          className="relative max-w-[560px]"
-        >
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-faint" aria-hidden="true" />
-          <input
-            ref={inputRef}
-            type="search"
-            value={text}
-            onChange={(event) => schedule(event.target.value)}
-            placeholder="Canción, artista o álbum"
-            aria-label="Buscar canciones"
-            className="h-10 w-full rounded-[8px] border border-line bg-elevated pl-9 pr-10 text-[13px] text-ink placeholder:text-faint focus:border-line-strong"
-          />
-          {searching ? (
-            <LoaderCircle className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-faint" aria-hidden="true" />
-          ) : null}
-        </form>
-
-        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-faint">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-faint">
           {providers.map((provider) => (
             <span key={provider.name} className="flex items-center gap-1.5" title={provider.detail}>
               <span
@@ -104,7 +60,7 @@ export function SearchView() {
           ) : (
             <EmptyState
               title="Busca en tu música"
-              description="Escribe el titulo o el artista. La busqueda consulta tu biblioteca y el catalogo de YouTube Music si la música en linea esta activa."
+              description="Escribe el titulo o el artista en la barra de arriba. La busqueda consulta tu biblioteca y el catalogo de YouTube Music si la música en linea esta activa."
             />
           )}
         </div>
