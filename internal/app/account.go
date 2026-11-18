@@ -9,7 +9,7 @@ import (
 
 const (
 	loginURL  = "https://accounts.google.com/ServiceLogin?service=youtube&continue=https%3A%2F%2Fmusic.youtube.com%2F"
-	logoutURL = "https://accounts.google.com/Logout?continue=https%3A%2F%2Fmusic.youtube.com%2F"
+	logoutURL = "https://www.youtube.com/logout"
 )
 
 // AccountStatus reports the Google session that lives in the app's WebView
