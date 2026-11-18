@@ -330,6 +330,7 @@ func run() error {
 		MinWidth:         960,
 		MinHeight:        620,
 		BackgroundColour: application.NewRGB(11, 14, 22),
+		Frameless:        true,
 		URL:              "/",
 		Mac: application.MacWindow{
 			InvisibleTitleBarHeight: 38,

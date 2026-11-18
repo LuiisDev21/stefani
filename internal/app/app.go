@@ -102,6 +102,7 @@ func New(d Deps) *App {
 	if log == nil {
 		log = slog.Default()
 	}
+	registerShellIdentity()
 	return &App{
 		db:         d.DB,
 		configs:    d.Configs,

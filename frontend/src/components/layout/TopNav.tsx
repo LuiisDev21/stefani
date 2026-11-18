@@ -6,6 +6,7 @@ import type { Track } from "../../lib/types";
 import { useApp } from "../../stores/appStore";
 import { usePlayer } from "../../stores/playerStore";
 import { Cover } from "../ui/Cover";
+import { WindowControls } from "./WindowControls";
 
 interface TopNavProps {
   onToggleNav: () => void;
@@ -143,7 +144,10 @@ export function TopNav({ onToggleNav }: TopNavProps) {
   };
 
   return (
-    <header className="grid h-[52px] shrink-0 grid-cols-[1fr_minmax(0,520px)_1fr] items-center gap-4 border-b border-line bg-bg px-4 sm:px-6">
+    <header
+      className="grid h-[52px] shrink-0 grid-cols-[1fr_minmax(0,520px)_1fr] items-center gap-4 border-b border-line bg-bg px-4 sm:px-6"
+      style={{ ["--wails-draggable" as string]: "drag" }}
+    >
       <div className="flex min-w-0 items-center gap-2">
         <button
           type="button"
@@ -163,7 +167,7 @@ export function TopNav({ onToggleNav }: TopNavProps) {
         </button>
       </div>
 
-      <div ref={boxRef} className="relative min-w-0">
+      <div ref={boxRef} className="relative min-w-0" style={{ ["--wails-draggable" as string]: "no-drag" }}>
         <form
           role="search"
           onSubmit={(event) => {
@@ -253,7 +257,7 @@ export function TopNav({ onToggleNav }: TopNavProps) {
         ) : null}
       </div>
 
-      <div className="flex items-center justify-end gap-1">
+      <div className="flex items-center justify-end gap-1" style={{ ["--wails-draggable" as string]: "no-drag" }}>
         <button
           type="button"
           onClick={() => go("settings")}
@@ -266,6 +270,7 @@ export function TopNav({ onToggleNav }: TopNavProps) {
         >
           <Settings className="h-4 w-4" />
         </button>
+        <WindowControls />
       </div>
     </header>
   );

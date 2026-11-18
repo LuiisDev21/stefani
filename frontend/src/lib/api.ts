@@ -33,6 +33,9 @@ export const api = {
   updateYtDlp: () => as<OnlineStatus>(App.UpdateYtDlp()),
   checkAppUpdate: () => as<AppUpdate>(App.CheckAppUpdate()),
   heartbeat: (report: string) => as<void>(App.ClientHeartbeat(report)),
+  windowMinimise: () => as<void>(App.WindowMinimise()),
+  windowToggleMaximise: () => as<void>(App.WindowToggleMaximise()),
+  windowClose: () => as<void>(App.WindowClose()),
   installAppUpdate: () => as<AppUpdate>(App.InstallAppUpdate()),
 
   accountStatus: () => as<Account>(App.AccountStatus()),
