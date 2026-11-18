@@ -37,10 +37,6 @@ export function StudyPanel() {
   const notify = useApp((state) => state.notify);
 
   const current = usePlayer((state) => state.current);
-  const hasLocalPronunciation = useMemo(
-    () => Boolean(lyrics?.lines.some((line) => line.annotation?.source === "local")),
-    [lyrics],
-  );
   const hasGeneratedAnnotations = useMemo(
     () => Boolean(lyrics?.lines.some((line) => line.annotation?.source === "ai")),
     [lyrics],
@@ -119,21 +115,14 @@ export function StudyPanel() {
       data-lyrics-lines={lyrics?.lines.length ?? 0}
       data-lyrics-notice={lyrics?.notice ?? ""}
     >
-      <div className="px-6 pt-6">
+      <div className="px-6 pt-5">
         <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0">
-            <p className="text-[17px] font-semibold tracking-[-0.2px] text-ink">Letra y pronunciación</p>
-            <p className="mt-1 truncate text-[12px] text-muted">
-              {lyrics?.available
-                ? `${lyrics.provider} · ${syncLabel}${lyrics.hasWords ? "" : " (sin tiempos por palabra)"}${
-                    hasLocalPronunciation ? " · IPA local" : ""
-                  }`
-                : loading && current
-                  ? "Buscando letra…"
-                  : current
-                    ? "Sin letra cargada"
-                    : "Elige una canción"}
-            </p>
+          <div className="flex min-w-0 items-center gap-3">
+            <p className="text-[17px] font-semibold tracking-[-0.02em] text-ink">Letra</p>
+            {syncLabel ? <span className="truncate text-[11px] text-muted">{syncLabel}</span> : null}
+            {!lyrics?.available && loading && current ? (
+              <span className="truncate text-[11px] text-muted">Buscando…</span>
+            ) : null}
           </div>
           <div className="flex items-center gap-0.5">
             <IconButton
@@ -150,20 +139,21 @@ export function StudyPanel() {
           </div>
         </div>
 
-        <div className="mt-4 flex flex-wrap items-center gap-2">
+        <div className="mt-3 flex flex-wrap items-center gap-1.5">
           <Chip active={showIPA} onClick={toggleIPA} label="IPA + ES" />
           <Chip active={showTranslation} onClick={toggleTranslation} label="Traducción" />
           {lyrics?.available ? (
             <Button
               size="sm"
               variant={hasGeneratedAnnotations ? "subtle" : "primary"}
-              className="ml-auto"
+              className="ml-auto h-7 px-3 text-[12px]"
               icon={<PenLine className="h-3.5 w-3.5" />}
+              aria-label="Anotar con IA"
               disabled={annotating}
               title="Traducir y anotar los versos con tu proveedor de IA"
               onClick={() => void annotate()}
             >
-              {annotating ? "Anotando…" : "Anotar con IA"}
+              {annotating ? "Anotando…" : "Anotar"}
             </Button>
           ) : null}
         </div>
@@ -274,7 +264,7 @@ function Chip({ active, onClick, label }: { active: boolean; onClick: () => void
       onClick={onClick}
       aria-pressed={active}
       className={cn(
-        "rounded-full border px-3 py-1 text-[12px] transition-colors",
+        "rounded-full border px-2.5 py-[3px] text-[11.5px] transition-colors",
         active
           ? "border-accent bg-accent/6 text-accent"
           : "border-line bg-transparent text-muted hover:bg-elevated hover:text-ink",

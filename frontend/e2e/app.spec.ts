@@ -53,7 +53,7 @@ test.describe("STEFANI desktop shell", () => {
     await waitForApp(page);
     await page.getByRole("button", { name: /Reproducir Paper Boats/ }).click();
 
-    const panel = page.locator("aside").filter({ hasText: "Letra y pronunciación" });
+    const panel = page.locator("aside[data-lyrics-state]");
     await expect(panel.getByText("palabra por palabra")).toBeVisible();
     await expect(panel.getByText("/wiː ˈfoʊldɪd wɜːrdz ˈɪntuː ə boʊt/")).toBeVisible();
     await expect(panel.getByText("uii fóuldid uérds íntu a bóut")).toBeVisible();
@@ -78,7 +78,7 @@ test.describe("STEFANI desktop shell", () => {
   test("asks for AI setup instead of failing when no key is stored", async ({ page }) => {
     await waitForApp(page);
     await page.getByRole("button", { name: /Reproducir Midnight Signals/ }).click();
-    const panel = page.locator("aside").filter({ hasText: "Letra y pronunciación" });
+    const panel = page.locator("aside[data-lyrics-state]");
     await panel.getByRole("button", { name: "Anotar con IA" }).click();
 
     await expect(page.getByRole("status").filter({ hasText: /Configura|clave/i })).toBeVisible();
