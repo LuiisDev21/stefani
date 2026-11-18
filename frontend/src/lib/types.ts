@@ -23,6 +23,7 @@ export interface AppUpdate {
 }
 
 export interface Info {
+  desktop: boolean;
   name: string;
   tagline: string;
   version: string;

@@ -20,6 +20,7 @@ import { useDuration, usePlaybackTime } from "../../player/clock";
 import { Cover } from "../ui/Cover";
 import { IconButton } from "../ui/IconButton";
 import { Slider } from "../ui/Slider";
+import { WaveProgress } from "../ui/WaveProgress";
 
 /**
  * Persistent transport: a solid surface closed by one hairline on top. Depth
@@ -127,12 +128,11 @@ export function PlayerBar() {
 
           <div className="flex w-full items-center gap-2">
             <span className="w-9 text-right text-[11px] text-faint tnum">{formatTime(timeMs)}</span>
-            <Slider
-              label="Progreso de la canción"
-              value={Math.min(timeMs, totalMs)}
-              max={totalMs}
-              onChange={seekMs}
-              format={(value) => `${formatTime(value)} de ${formatTime(totalMs)}`}
+            <WaveProgress
+              valueMs={Math.min(timeMs, totalMs)}
+              totalMs={totalMs}
+              onSeek={seekMs}
+              seed={current?.id}
               className="flex-1"
               disabled={!current?.playable}
             />

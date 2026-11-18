@@ -1,14 +1,16 @@
 import { Minus, Square, X } from "lucide-react";
 import { api } from "../../lib/api";
-
-const native = typeof window !== "undefined" && "_wails" in window;
+import { useApp } from "../../stores/appStore";
 
 /**
  * Minimise, maximise and close for the frameless window. Only rendered inside
  * the desktop app; the browser build keeps the system chrome.
  */
 export function WindowControls() {
-  if (!native) return null;
+  // The server build still gets the Wails runtime, so the runtime alone does
+  // not mean there is a window: the backend reports whether it owns a frame.
+  const desktop = useApp((state) => state.info?.desktop ?? true);
+  if (!desktop) return null;
   return (
     <div
       className="ml-1 flex items-center"

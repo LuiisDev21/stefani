@@ -378,6 +378,14 @@ export function WindowState(): $CancellablePromise<$models.WindowStateInput> {
     return $Call.ByID(1162240999);
 }
 
+/**
+ * WindowToggleFullscreen takes the window to real fullscreen, not just the
+ * maximised size: the immersive view has no title bar to restore from.
+ */
+export function WindowToggleFullscreen(): $CancellablePromise<void> {
+    return $Call.ByID(755736559);
+}
+
 export function WindowToggleMaximise(): $CancellablePromise<void> {
     return $Call.ByID(4112979021);
 }

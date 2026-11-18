@@ -24,7 +24,6 @@ interface SidebarProps {
 export function Sidebar({ open, onNavigate }: SidebarProps) {
   const view = useApp((state) => state.view);
   const go = useApp((state) => state.go);
-  const counts = useApp((state) => state.counts);
   const importAudio = useApp((state) => state.importAudio);
 
   const navigate = (target: View) => {
@@ -75,10 +74,6 @@ export function Sidebar({ open, onNavigate }: SidebarProps) {
         </nav>
 
         <div className="mt-auto space-y-3 border-t border-line pt-3">
-          <div className="px-2.5 text-[11px] leading-[1.6] text-ash tnum">
-            <p>{counts ? `${counts.tracks} ${counts.tracks === 1 ? "pista" : "pistas"}` : "Cargando"}</p>
-            <p>{counts ? `${counts.libraryTracks} ${counts.libraryTracks === 1 ? "guardada" : "guardadas"}` : ""}</p>
-          </div>
           <Button
             variant="subtle"
             size="sm"

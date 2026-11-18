@@ -156,6 +156,7 @@ func (a *App) Info() InfoDTO {
 		Identifier: brand.Identifier,
 		DBPath:     a.db.Path(),
 		Schema:     schema,
+		Desktop:    shellDesktop(),
 		Online: OnlineDTO{
 			Enabled:   a.currentConfig().Features.YouTubeMusic,
 			Available: a.streamer.Available(),

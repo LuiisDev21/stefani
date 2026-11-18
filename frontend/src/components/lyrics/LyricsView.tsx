@@ -1,8 +1,8 @@
 import { ArrowDown, LoaderCircle, Music4 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { usePlaybackTime } from "../../player/clock";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { clock, usePlaybackTime } from "../../player/clock";
 import { activeLineIndex } from "../../lib/timeline";
-import type { Lyrics } from "../../lib/types";
+import type { Line, Lyrics } from "../../lib/types";
 import { EmptyState } from "../ui/EmptyState";
 import { Button } from "../ui/Button";
 import { LyricLine } from "./LyricLine";
@@ -19,11 +19,30 @@ interface LyricsViewProps {
 }
 
 /**
+ * The active line index, without subscribing the whole column to the clock.
+ * The clock publishes at animation-frame rate; here only a change of index
+ * re-renders the list, and the active line subscribes on its own.
+ */
+function useActiveLineIndex(lines: Line[], offsetMs: number): number {
+  return useSyncExternalStore(
+    clock.subscribe,
+    () => (lines.length === 0 ? -1 : activeLineIndex(lines, Math.max(0, clock.getSnapshot().timeMs - offsetMs))),
+    () => -1,
+  );
+}
+
+/** The only line that follows the clock: the one being sung. */
+function ActiveLine(props: Omit<React.ComponentProps<typeof LyricLine>, "timeMs"> & { offsetMs: number }) {
+  const { offsetMs, ...rest } = props;
+  const timeMs = usePlaybackTime();
+  return <LyricLine {...rest} timeMs={Math.max(0, timeMs - offsetMs)} />;
+}
+
+/**
  * Scrollable lyric column.
  *
- * Autoscroll follows the active line, but the moment a wheel, touch or keyboard
- * scroll happens the view stops moving and offers a "follow again" control.
- * Nothing here owns a timer: position comes from the shared clock.
+ * Autoscroll follows the active line with an eased animation; a wheel, touch,
+ * keyboard or scrollbar movement pauses it and offers a "follow again" control.
  */
 export function LyricsView({
   lyrics,
@@ -39,11 +58,11 @@ export function LyricsView({
   const lineRefs = useRef(new Map<string, HTMLLIElement>());
   const [manual, setManual] = useState(false);
   const manualTimer = useRef<number | null>(null);
-  const timeMs = usePlaybackTime();
+  const frame = useRef<number | null>(null);
+  const programmatic = useRef(false);
 
   const lines = lyrics?.lines ?? [];
-  const effectiveTime = Math.max(0, timeMs - offsetMs);
-  const activeIndex = useMemo(() => activeLineIndex(lines, effectiveTime), [lines, effectiveTime]);
+  const activeIndex = useActiveLineIndex(lines, offsetMs);
 
   const pauseAutoscroll = useCallback(() => {
     setManual(true);
@@ -54,6 +73,7 @@ export function LyricsView({
   useEffect(() => {
     return () => {
       if (manualTimer.current) window.clearTimeout(manualTimer.current);
+      if (frame.current) window.cancelAnimationFrame(frame.current);
     };
   }, []);
 
@@ -63,8 +83,32 @@ export function LyricsView({
     const node = line ? lineRefs.current.get(line.id) : null;
     const container = containerRef.current;
     if (!node || !container) return;
-    const target = node.offsetTop - container.clientHeight * (immersive ? 0.42 : 0.32);
-    container.scrollTo({ top: Math.max(0, target), behavior: "smooth" });
+
+    const target = Math.max(0, node.offsetTop - container.clientHeight * (immersive ? 0.42 : 0.32));
+    const start = container.scrollTop;
+    const delta = target - start;
+    if (Math.abs(delta) < 2) return;
+
+    if (frame.current) window.cancelAnimationFrame(frame.current);
+    const duration = Math.min(900, 280 + Math.abs(delta) * 0.45);
+    const started = performance.now();
+    programmatic.current = true;
+
+    const step = (now: number) => {
+      const progress = Math.min(1, (now - started) / duration);
+      // Ease in and out so the line glides instead of snapping.
+      const eased = progress < 0.5 ? 2 * progress * progress : 1 - (-2 * progress + 2) ** 2 / 2;
+      container.scrollTop = start + delta * eased;
+      if (progress < 1) {
+        frame.current = window.requestAnimationFrame(step);
+      } else {
+        frame.current = null;
+        window.setTimeout(() => {
+          programmatic.current = false;
+        }, 80);
+      }
+    };
+    frame.current = window.requestAnimationFrame(step);
   }, [activeIndex, manual, lines, immersive]);
 
   const handleScrollKey = useCallback(
@@ -127,11 +171,15 @@ export function LyricsView({
         onKeyDown={handleScrollKey}
         onWheel={pauseAutoscroll}
         onTouchMove={pauseAutoscroll}
+        onScroll={() => {
+          if (!programmatic.current) pauseAutoscroll();
+        }}
         aria-label="Letra sincronizada"
       >
         <ol className={immersive ? "space-y-5 pb-40 pt-24" : "space-y-1 pb-24 pt-2"}>
           {lines.map((line, index) => {
             const isActive = index === activeIndex;
+            const past = index < activeIndex;
             return (
               <div
                 key={line.id}
@@ -140,16 +188,28 @@ export function LyricsView({
                   else lineRefs.current.delete(line.id);
                 }}
               >
-                <LyricLine
-                  line={line}
-                  active={isActive}
-                  past={index < activeIndex}
-                  timeMs={isActive ? effectiveTime : undefined}
-                  showIPA={showIPA}
-                  showTranslation={showTranslation}
-                  immersive={immersive}
-                  onSeek={onSeek}
-                />
+                {isActive ? (
+                  <ActiveLine
+                    line={line}
+                    active
+                    past={false}
+                    offsetMs={offsetMs}
+                    showIPA={showIPA}
+                    showTranslation={showTranslation}
+                    immersive={immersive}
+                    onSeek={onSeek}
+                  />
+                ) : (
+                  <LyricLine
+                    line={line}
+                    active={false}
+                    past={past}
+                    showIPA={showIPA}
+                    showTranslation={showTranslation}
+                    immersive={immersive}
+                    onSeek={onSeek}
+                  />
+                )}
               </div>
             );
           })}

@@ -14,13 +14,15 @@ import (
 
 // InfoDTO is the About panel and window metadata.
 type InfoDTO struct {
-	Name       string    `json:"name"`
-	Tagline    string    `json:"tagline"`
-	Version    string    `json:"version"`
-	Identifier string    `json:"identifier"`
-	DBPath     string    `json:"dbPath"`
-	Schema     int       `json:"schema"`
-	Online     OnlineDTO `json:"online"`
+	Name       string `json:"name"`
+	Tagline    string `json:"tagline"`
+	Version    string `json:"version"`
+	Identifier string `json:"identifier"`
+	DBPath     string `json:"dbPath"`
+	Schema     int    `json:"schema"`
+	// Desktop is false in the server build: the UI hides window chrome there.
+	Desktop bool      `json:"desktop"`
+	Online  OnlineDTO `json:"online"`
 }
 
 // OnlineDTO reports whether online playback can work here: the feature flag

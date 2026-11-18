@@ -1,11 +1,11 @@
 import { FileText, Languages, RefreshCw } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { cn } from "../../lib/cn";
 import { clamp } from "../../lib/format";
 import { useApp } from "../../stores/appStore";
 import { usePlayer } from "../../stores/playerStore";
 import { Button } from "../ui/Button";
 import { IconButton } from "../ui/IconButton";
+import { Chip } from "../ui/Chip";
 import { LyricsView } from "../lyrics/LyricsView";
 import { useLocalFlag } from "../../lib/useLocalFlag";
 
@@ -168,20 +168,3 @@ export function StudyPanel() {
   );
 }
 
-function Chip({ active, onClick, label }: { active: boolean; onClick: () => void; label: string }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      className={cn(
-        "rounded-full border px-2.5 py-[3px] text-[11.5px] transition-colors",
-        active
-          ? "border-accent bg-accent/6 text-accent"
-          : "border-line bg-transparent text-muted hover:bg-elevated hover:text-ink",
-      )}
-    >
-      {label}
-    </button>
-  );
-}

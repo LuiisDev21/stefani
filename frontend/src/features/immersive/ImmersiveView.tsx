@@ -1,8 +1,12 @@
-import { ChevronDown, Pause, Play, SkipBack, SkipForward } from "lucide-react";
+import { Maximize2, Minimize2, Pause, Play, SkipBack, SkipForward } from "lucide-react";
 import { formatTime } from "../../lib/format";
 import { useDuration, usePlaybackTime } from "../../player/clock";
 import { useApp } from "../../stores/appStore";
 import { usePlayer } from "../../stores/playerStore";
+import { api } from "../../lib/api";
+import { Chip } from "../../components/ui/Chip";
+import { WaveProgress } from "../../components/ui/WaveProgress";
+import { WindowControls } from "../../components/layout/WindowControls";
 import { IconButton } from "../../components/ui/IconButton";
 import { LyricsView } from "../../components/lyrics/LyricsView";
 import { useLocalFlag } from "../../lib/useLocalFlag";
@@ -43,6 +47,7 @@ export function ImmersiveView() {
   const durationMs = useDuration();
   const totalMs = durationMs || current?.durationMs || 0;
 
+  const desktop = useApp((state) => state.info?.desktop ?? true);
   const [showIPA, toggleIPA] = useLocalFlag("showIPA", true);
   const [showTranslation, toggleTranslation] = useLocalFlag("showTranslation", true);
 
@@ -67,29 +72,27 @@ export function ImmersiveView() {
       ) : null}
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[#0b0b0c]/72" />
 
-      <header className="relative z-10 flex items-center justify-end gap-4 px-5 pt-4 sm:px-8">
-        <div className="flex items-center gap-1.5">
-          <button
-            type="button"
-            onClick={toggleIPA}
-            aria-pressed={showIPA}
-            className={`rounded-full border px-3 py-1 text-[11px] transition-colors ${
-              showIPA ? "border-white/90 text-white" : "border-white/15 text-white/45 hover:text-white"
-            }`}
-          >
-            IPA + ES
-          </button>
-          <button
-            type="button"
-            onClick={toggleTranslation}
-            aria-pressed={showTranslation}
-            className={`rounded-full border px-3 py-1 text-[11px] transition-colors ${
-              showTranslation ? "border-white/90 text-white" : "border-white/15 text-white/45 hover:text-white"
-            }`}
-          >
-            Traducción
-          </button>
+      <header
+        className="relative z-10 flex items-center justify-end gap-3 px-5 pt-4 sm:px-8"
+        style={{ ["--wails-draggable" as string]: "drag" }}
+      >
+        <div className="flex items-center gap-1.5" style={{ ["--wails-draggable" as string]: "no-drag" }}>
+          <Chip active={showIPA} onClick={toggleIPA} label="Pronunciación" />
+          <Chip active={showTranslation} onClick={toggleTranslation} label="Traducción" />
         </div>
+        {desktop ? (
+          <button
+            type="button"
+            onClick={() => void api.windowToggleFullscreen()}
+            aria-label="Pantalla completa"
+            title="Pantalla completa"
+            style={{ ["--wails-draggable" as string]: "no-drag" }}
+            className="ml-1 flex h-8 w-8 items-center justify-center rounded-full text-white/50 transition-colors hover:bg-white/10 hover:text-white"
+          >
+            <Maximize2 className="h-3.5 w-3.5" aria-hidden="true" />
+          </button>
+        ) : null}
+        <WindowControls />
       </header>
 
       <main className="relative z-10 flex min-h-0 flex-1 items-center gap-[clamp(32px,6vw,96px)] px-[clamp(20px,6vw,110px)] py-6">
@@ -147,15 +150,13 @@ export function ImmersiveView() {
         </div>
 
         <span className="w-10 text-right text-[11px] text-white/40 tnum">{formatTime(timeMs)}</span>
-        <input
-          type="range"
-          min={0}
-          max={Math.max(totalMs, 1)}
-          value={Math.min(timeMs, totalMs)}
-          onChange={(event) => seekMs(Number(event.target.value))}
-          aria-label="Progreso de la canción"
-          className="stefani-slider on-dark flex-1"
-          style={{ ["--fill" as string]: `${totalMs > 0 ? (timeMs / totalMs) * 100 : 0}%` }}
+        <WaveProgress
+          valueMs={Math.min(timeMs, totalMs)}
+          totalMs={totalMs}
+          onSeek={seekMs}
+          seed={current?.id}
+          tone="dark"
+          className="flex-1"
           disabled={!current?.playable}
         />
         <span className="w-10 text-[11px] text-white/40 tnum">{formatTime(totalMs)}</span>
@@ -166,7 +167,7 @@ export function ImmersiveView() {
           title="Salir del modo inmersivo"
           className="ml-1 flex h-9 w-9 items-center justify-center rounded-full text-white/50 transition-colors hover:bg-white/10 hover:text-white"
         >
-          <ChevronDown className="h-4 w-4" aria-hidden="true" />
+          <Minimize2 className="h-4 w-4" aria-hidden="true" />
         </button>
       </footer>
     </div>

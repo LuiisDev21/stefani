@@ -17,6 +17,14 @@ func (a *App) WindowToggleMaximise() {
 	}
 }
 
+// WindowToggleFullscreen takes the window to real fullscreen, not just the
+// maximised size: the immersive view has no title bar to restore from.
+func (a *App) WindowToggleFullscreen() {
+	if w := application.Get().Window.Current(); w != nil {
+		w.ToggleFullscreen()
+	}
+}
+
 func (a *App) WindowClose() {
 	if w := application.Get().Window.Current(); w != nil {
 		w.Close()

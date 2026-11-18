@@ -35,6 +35,7 @@ export const api = {
   heartbeat: (report: string) => as<void>(App.ClientHeartbeat(report)),
   windowMinimise: () => as<void>(App.WindowMinimise()),
   windowToggleMaximise: () => as<void>(App.WindowToggleMaximise()),
+  windowToggleFullscreen: () => as<void>(App.WindowToggleFullscreen()),
   windowClose: () => as<void>(App.WindowClose()),
   installAppUpdate: () => as<AppUpdate>(App.InstallAppUpdate()),
 

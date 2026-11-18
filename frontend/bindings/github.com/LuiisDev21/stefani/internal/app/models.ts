@@ -118,6 +118,11 @@ export interface InfoDTO {
     "identifier": string;
     "dbPath": string;
     "schema": number;
+
+    /**
+     * Desktop is false in the server build: the UI hides window chrome there.
+     */
+    "desktop": boolean;
     "online": OnlineDTO;
 }
 
