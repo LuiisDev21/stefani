@@ -141,6 +141,7 @@ export function PlayerBar() {
               totalMs={totalMs}
               onSeek={seekMs}
               seed={current?.id}
+              playing={playing}
               className="flex-1"
               disabled={!current?.playable}
             />

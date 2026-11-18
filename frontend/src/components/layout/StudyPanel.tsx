@@ -67,9 +67,10 @@ export function StudyPanel() {
     >
       <div className="px-6 pt-5">
         <div className="flex items-start justify-between gap-2">
-          <div className="flex min-w-0 items-center gap-3">
-            <p className="text-[17px] font-semibold tracking-[-0.02em] text-ink">Letra</p>
-            {syncLabel ? <span className="truncate text-[11px] text-muted">{syncLabel}</span> : null}
+          <div className="flex min-w-0 items-center gap-2">
+            <p className="text-[17px] font-semibold tracking-[-0.02em] text-ink" title={syncLabel || undefined}>
+              Letra
+            </p>
             {!lyrics?.available && loading && current ? (
               <span className="truncate text-[11px] text-muted">Buscando…</span>
             ) : null}
@@ -86,26 +87,26 @@ export function StudyPanel() {
             <IconButton label="Importar archivo .lrc" size="sm" disabled={!current} onClick={() => void importLyrics()}>
               <FileText className="h-3.5 w-3.5" />
             </IconButton>
+            {lyrics?.available ? (
+              <Button
+                size="sm"
+                variant={hasGeneratedAnnotations ? "subtle" : "primary"}
+                className="ml-1 h-7 px-3 text-[12px]"
+                icon={<Languages className="h-3.5 w-3.5" />}
+                aria-label="Generar traducción"
+                disabled={annotating}
+                title="Generar la traducción de los versos con tu proveedor de IA"
+                onClick={() => void annotate()}
+              >
+                {annotating ? "Generando…" : "Generar"}
+              </Button>
+            ) : null}
           </div>
         </div>
 
         <div className="mt-3 flex flex-wrap items-center gap-1.5">
           <Chip active={showIPA} onClick={toggleIPA} label="Pronunciación" />
           <Chip active={showTranslation} onClick={toggleTranslation} label="Traducción" />
-          {lyrics?.available ? (
-            <Button
-              size="sm"
-              variant={hasGeneratedAnnotations ? "subtle" : "primary"}
-              className="ml-auto h-7 px-3 text-[12px]"
-              icon={<Languages className="h-3.5 w-3.5" />}
-              aria-label="Generar traducción"
-              disabled={annotating}
-              title="Generar la traducción de los versos con tu proveedor de IA"
-              onClick={() => void annotate()}
-            >
-              {annotating ? "Generando…" : "Generar"}
-            </Button>
-          ) : null}
         </div>
 
         {annotating && progress && progress.total > 0 ? (

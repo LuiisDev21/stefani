@@ -149,6 +149,7 @@ export function ImmersiveView() {
           totalMs={totalMs}
           onSeek={seekMs}
           seed={current?.id}
+          playing={playing}
           tone="dark"
           className="flex-1"
           disabled={!current?.playable}

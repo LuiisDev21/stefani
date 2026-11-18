@@ -6,6 +6,7 @@ interface WavyProgressProps {
   totalMs: number;
   onSeek: (ms: number) => void;
   disabled?: boolean;
+  playing?: boolean;
   seed?: string;
   tone?: "app" | "dark";
   className?: string;
@@ -41,6 +42,7 @@ export function WavyProgress({
   totalMs,
   onSeek,
   disabled,
+  playing = true,
   tone = "app",
   className,
 }: WavyProgressProps) {
@@ -77,8 +79,10 @@ export function WavyProgress({
   );
 
   // Read inside the loop without restarting it on every progress tick.
-  const live = useRef({ activeWidth, amplitude, width, disabled });
-  live.current = { activeWidth, amplitude, width, disabled };
+  const live = useRef({ activeWidth, amplitude, width, disabled, playing });
+  live.current = { activeWidth, amplitude, width, disabled, playing };
+  const level = useRef(0);
+  const phase = useRef(0);
 
   useEffect(() => {
     const speed = WAVELENGTH / 1100; // one wavelength per second
@@ -92,9 +96,15 @@ export function WavyProgress({
       if (now - painted < 41) return;
       painted = now;
       const state = live.current;
-      const offset = state.disabled ? 0 : ((now - started) * speed) % WAVELENGTH;
+      // A paused track shows a straight line: the wave eases flat instead of
+      // snapping, and the phase freezes where it was.
+      if (state.playing && !state.disabled) phase.current = ((now - started) * speed) % WAVELENGTH;
+      const offset = phase.current;
+      const target = state.playing && !state.disabled ? state.amplitude : 0;
+      level.current += (target - level.current) * 0.18;
+      if (Math.abs(target - level.current) < 0.002) level.current = target;
       const edge = state.activeWidth;
-      const scale = state.amplitude;
+      const scale = level.current;
       const center = HEIGHT / 2;
       const step = 4;
       const parts: string[] = [];
