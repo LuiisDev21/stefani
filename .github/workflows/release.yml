@@ -64,11 +64,21 @@ jobs:
 
       - name: Install NSIS
         if: runner.os == 'Windows'
-        run: choco install nsis --no-progress -y
+        shell: pwsh
+        run: |
+          choco install nsis --no-progress -y
+          $nsis = Get-ChildItem "C:\ProgramData\chocolatey\lib\nsis" -Recurse -Filter makensis.exe -ErrorAction SilentlyContinue |
+            Select-Object -First 1
+          if ($nsis) {
+            Split-Path $nsis.FullName | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
+          } elseif (Test-Path "C:\Program Files (x86)\NSIS\makensis.exe") {
+            "C:\Program Files (x86)\NSIS" | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
+          } else {
+            throw "makensis not found"
+          }
 
       - name: Build installer
         if: runner.os == 'Windows'
-        continue-on-error: true
         run: wails3 package
 
       - name: Package (Windows)
