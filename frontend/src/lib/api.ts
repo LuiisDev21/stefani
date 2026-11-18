@@ -33,6 +33,7 @@ export const api = {
   connectAccount: () => as<void>(App.ConnectAccount()),
   signOutAccount: () => as<void>(App.SignOutAccount()),
   finishAccount: () => as<Account>(App.FinishAccount()),
+  refreshAccount: () => as<Account>(App.RefreshAccount()),
   accountPlaylists: () => as<AccountPlaylist[]>(App.AccountPlaylists()),
   importAccountPlaylist: (id: string, name: string) =>
     as<ImportResult>(App.ImportAccountPlaylist(id, name)),

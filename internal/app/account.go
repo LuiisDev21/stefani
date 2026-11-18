@@ -8,7 +8,9 @@ import (
 )
 
 const (
-	loginURL  = "https://accounts.google.com/ServiceLogin?service=youtube&continue=https%3A%2F%2Fmusic.youtube.com%2F"
+	// After signing in Google lands on the account page, not on the YouTube
+	// Music interface: the window is only for the login.
+	loginURL  = "https://accounts.google.com/ServiceLogin?service=youtube&continue=https%3A%2F%2Fmyaccount.google.com%2F"
 	logoutURL = "https://www.youtube.com/logout"
 )
 
@@ -60,13 +62,25 @@ func (a *App) SignOutAccount() error {
 	return a.openLogin(logoutURL)
 }
 
-// FinishAccount closes the login window, waits for WebView2 to release the
-// profile database and reads the resulting session.
+// FinishAccount closes the login window and waits for the resulting session.
 func (a *App) FinishAccount() AccountDTO {
 	if a.closeLogin != nil {
 		_ = a.closeLogin()
 	}
-	time.Sleep(1500 * time.Millisecond)
+	return a.RefreshAccount()
+}
+
+// RefreshAccount retries until WebView2 releases the profile database, so a
+// session that was already signed in is picked up instead of reported as
+// locked.
+func (a *App) RefreshAccount() AccountDTO {
+	for attempt := 0; attempt < 24; attempt++ {
+		status := a.AccountStatus()
+		if !status.Locked {
+			return status
+		}
+		time.Sleep(500 * time.Millisecond)
+	}
 	return a.AccountStatus()
 }
 

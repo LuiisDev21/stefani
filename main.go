@@ -9,6 +9,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -136,6 +137,13 @@ func keyringService() string {
 }
 
 func run() error {
+	// A separate process owns the login window, so its cookie database is
+	// released as soon as the user closes it.
+	if len(os.Args) >= 4 && os.Args[1] == "--login" {
+		runLoginWindow(os.Args[2], os.Args[3])
+		return nil
+	}
+
 	var paths config.Paths
 	var err error
 	if override := strings.TrimSpace(os.Getenv("STEFANI_HOME")); override != "" {
@@ -197,41 +205,54 @@ func run() error {
 	aiClient := ai.New(45 * time.Second)
 	phonSvc := phonetics.NewService(db, aiClient, state.llm, logger)
 
-	// The Google session lives in this profile; the login window and the cookie
-	// reader must agree on the path.
-	profileRoot := filepath.Join(paths.ConfigDir, "webview")
-	accountClient := ytaccount.New(filepath.Join(profileRoot, "EBWebView"))
+	// The login window runs in its own process with its own profile: WebView2
+	// keeps the cookie database locked while a window is open, so the session
+	// can only be read once that process exits. The main window never uses the
+	// login profile.
+	loginProfile := filepath.Join(paths.ConfigDir, "webview-login")
+	if _, err := os.Stat(loginProfile); os.IsNotExist(err) {
+		if err := copyTree(filepath.Join(paths.ConfigDir, "webview", "EBWebView"), filepath.Join(loginProfile, "EBWebView")); err != nil {
+			logger.Warn("no se pudo migrar el perfil de inicio de sesión", "error", err)
+		}
+	}
+	accountClient := ytaccount.New(filepath.Join(loginProfile, "EBWebView"))
 
-	var loginWindow *application.WebviewWindow
+	var loginCmd *exec.Cmd
+	var loginMu sync.Mutex
 	openLogin := func(url string) error {
-		if loginWindow != nil {
-			loginWindow.Focus()
+		loginMu.Lock()
+		defer loginMu.Unlock()
+		if loginCmd != nil {
 			return nil
 		}
-		w := application.Get().Window.NewWithOptions(application.WebviewWindowOptions{
-			Name:             "account-login",
-			Title:            "Conectar con YouTube Music",
-			URL:              url,
-			Width:            560,
-			Height:           780,
-			MinWidth:         420,
-			MinHeight:        560,
-			BackgroundColour: application.NewRGB(11, 14, 22),
-		})
-		loginWindow = w
-		w.OnWindowEvent(events.Common.WindowClosing, func(*application.WindowEvent) {
-			loginWindow = nil
-		})
-		w.Focus()
+		exe, err := os.Executable()
+		if err != nil {
+			return err
+		}
+		cmd := exec.Command(exe, "--login", loginProfile, url)
+		if err := cmd.Start(); err != nil {
+			return err
+		}
+		loginCmd = cmd
+		go func() {
+			_ = cmd.Wait()
+			loginMu.Lock()
+			if loginCmd == cmd {
+				loginCmd = nil
+			}
+			loginMu.Unlock()
+			application.Get().Event.Emit("account:closed")
+		}()
 		return nil
 	}
 	closeLogin := func() error {
-		if loginWindow == nil {
-			return nil
+		loginMu.Lock()
+		cmd := loginCmd
+		loginCmd = nil
+		loginMu.Unlock()
+		if cmd != nil && cmd.Process != nil {
+			_ = cmd.Process.Kill()
 		}
-		w := loginWindow
-		loginWindow = nil
-		w.Close()
 		return nil
 	}
 
@@ -285,7 +306,7 @@ func run() error {
 		Windows: application.WindowsOptions{
 			// The Google session must survive restarts and stay inside the app's
 			// own directory, so the cookie reader knows exactly where to look.
-			WebviewUserDataPath: profileRoot,
+			WebviewUserDataPath: filepath.Join(paths.ConfigDir, "webview"),
 			// Opt-in only: a debugging port must never be open in normal use.
 			AdditionalBrowserArgs: webviewDebugArgs(),
 		},

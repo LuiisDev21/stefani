@@ -123,8 +123,7 @@ export function Favorites() {
 }
 
 /**
- * FinishAccount closes the login window, waits for WebView2 to release the
- * profile database and reads the resulting session.
+ * FinishAccount closes the login window and waits for the resulting session.
  * @returns {$CancellablePromise<$models.AccountDTO>}
  */
 export function FinishAccount() {
@@ -283,6 +282,18 @@ export function PlaylistTracks(id) {
 export function Playlists() {
     return $Call.ByID(1080995441).then(/** @type {($result: any) => any} */(($result) => {
         return $$createType14($result);
+    }));
+}
+
+/**
+ * RefreshAccount retries until WebView2 releases the profile database, so a
+ * session that was already signed in is picked up instead of reported as
+ * locked.
+ * @returns {$CancellablePromise<$models.AccountDTO>}
+ */
+export function RefreshAccount() {
+    return $Call.ByID(1110933788).then(/** @type {($result: any) => any} */(($result) => {
+        return $$createType2($result);
     }));
 }
 

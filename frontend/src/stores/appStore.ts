@@ -87,6 +87,7 @@ interface AppState {
   connectAccount: () => Promise<void>;
   signOutAccount: () => Promise<void>;
   finishAccount: () => Promise<void>;
+  refreshAccount: () => Promise<void>;
   importAccountPlaylist: (id: string, name: string) => Promise<void>;
   openPlaylist: (playlist: Playlist) => Promise<void>;
   createPlaylist: (name: string) => Promise<Playlist | null>;
@@ -318,6 +319,20 @@ export const useApp = create<AppState>((set, get) => ({
     }
   },
 
+  refreshAccount: async () => {
+    try {
+      const account = await api.refreshAccount();
+      set({ account });
+      if (account.connected) {
+        set({ accountPlaylists: await api.accountPlaylists() });
+      } else {
+        set({ accountPlaylists: [] });
+      }
+    } catch {
+      set({ account: null, accountPlaylists: [] });
+    }
+  },
+
   finishAccount: async () => {
     try {
       const account = await api.finishAccount();
@@ -506,6 +521,9 @@ function listenForProgress() {
       const total = Number(payload.total ?? 0);
       if (!Number.isFinite(done) || !Number.isFinite(total)) return;
       useApp.setState({ annotateProgress: { done, total } });
+    });
+    Events.On("account:closed", () => {
+      void useApp.getState().refreshAccount();
     });
   } catch {
     // The runtime is unavailable in a plain browser; progress simply stays idle.
