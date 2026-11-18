@@ -35,7 +35,6 @@ const llmSchema = z.object({
 export function SettingsView() {
   const settings = useApp((state) => state.settings);
   const info = useApp((state) => state.info);
-  const providers = useApp((state) => state.providers);
   const saveSettings = useApp((state) => state.saveSettings);
   const testLLM = useApp((state) => state.testLLM);
   const clearKey = useApp((state) => state.clearKey);
@@ -137,10 +136,7 @@ export function SettingsView() {
 
       <div className="mx-auto max-w-[820px] px-8 pb-24">
         <section>
-          <SectionTitle
-            title="Proveedor de IA"
-            hint="Elige un proveedor para rellenar el endpoint, prueba la conexión para descubrir sus modelos y guarda. La clave vive en el almacén de credenciales del sistema."
-          />
+          <SectionTitle title="Proveedor de IA" />
           <div className="mt-4">
             <p className="text-[12px] font-semibold text-ink">Proveedor</p>
             <div className="mt-2 flex flex-wrap gap-2" role="group" aria-label="Presets de proveedor de IA">
@@ -175,17 +171,6 @@ export function SettingsView() {
                 Personalizado
               </button>
             </div>
-            {activePreset ? (
-              <div className="mt-3 rounded-[14px] bg-elevated px-4 py-3">
-                <p className="text-[13px] leading-[1.43] text-muted">{activePreset.note}</p>
-                <p className="mt-1.5 text-[12px] text-faint">{activePreset.docsUrl}</p>
-                {activePreset.session ? (
-                  <p className="mt-1.5 text-[12px] text-accent">
-                    Sesión automática: cada petición lleva x-opencode-session con un id estable.
-                  </p>
-                ) : null}
-              </div>
-            ) : null}
           </div>
 
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -380,7 +365,7 @@ export function SettingsView() {
           <div className="mt-3 flex items-start gap-2 rounded-[9px] border border-line/70 px-3 py-2.5">
             <span
               className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full"
-              style={{ background: info?.online.available ? "#0066cc" : "#ff9b9b" }}
+              style={{ background: info?.online.available ? "var(--color-ink)" : "var(--color-danger)" }}
               aria-hidden
             />
             <p className="text-[11.5px] leading-relaxed text-muted">
@@ -397,26 +382,6 @@ export function SettingsView() {
               )}
             </p>
           </div>
-        </section>
-
-        <div className="hairline my-8" />
-
-        <section>
-          <SectionTitle title="Proveedores" />
-          <ul className="space-y-1.5">
-            {providers.map((provider) => (
-              <li key={provider.name} className="flex items-start gap-2 text-[12px]">
-                <CheckCircle2
-                  className="mt-0.5 h-3.5 w-3.5 shrink-0"
-                  style={{ color: provider.state === "disabled" ? "#8e8e93" : "#0066cc" }}
-                />
-                <span>
-                  <span className="text-ink">{provider.name}</span>
-                  <span className="text-muted"> · {provider.detail}</span>
-                </span>
-              </li>
-            ))}
-          </ul>
         </section>
 
         <div className="hairline my-8" />
