@@ -1,5 +1,5 @@
-import { ArrowRight, Headphones, Play, Upload } from "lucide-react";
-import { formatStudyTime, formatTime } from "../../lib/format";
+import { ArrowRight, GraduationCap, Headphones, Heart, Library, ListMusic, Pause, Play, Search, Upload } from "lucide-react";
+import { formatStudyTime, formatTime, plural } from "../../lib/format";
 import { useApp } from "../../stores/appStore";
 import { usePlayer } from "../../stores/playerStore";
 import { Button } from "../../components/ui/Button";
@@ -8,11 +8,16 @@ import { EmptyState } from "../../components/ui/EmptyState";
 import { SectionTitle } from "../../components/ui/SectionTitle";
 import { TrackList } from "../../components/track/TrackList";
 import { TopBar } from "../../components/layout/TopBar";
+import { MediaCard } from "../../components/home/MediaCard";
+import { QuickCard } from "../../components/home/QuickCard";
 
 /**
- * Home: a full-bleed parchment tile for the session you can start right now,
- * then the two lists that matter — study progress and your listening history.
- * No metric grid, no decorative glow: the artwork is the only elevation.
+ * Home: a web-player dashboard. The record that is playing — or the session
+ * ready to start — owns the top of the page with its cover, the one white
+ * action, and three real counters. Below it: shortcuts into the library, the
+ * demo songs, your lists, and the last records you played.
+ *
+ * Every number here comes from the database; there are no invented metrics.
  */
 export function HomeView() {
   const demo = useApp((state) => state.demo);
@@ -24,10 +29,15 @@ export function HomeView() {
   const go = useApp((state) => state.go);
   const importAudio = useApp((state) => state.importAudio);
   const openPicker = useApp((state) => state.openPicker);
-  const current = usePlayer((state) => state.current);
 
-  const featured = demo[0];
+  const current = usePlayer((state) => state.current);
+  const playing = usePlayer((state) => state.playing);
+  const toggle = usePlayer((state) => state.toggle);
+
+  const hero = current ?? demo[0];
+  const heroIsCurrent = Boolean(current && hero && current.id === hero.id);
   const totalStudy = progress.reduce((sum, item) => sum + item.studySeconds, 0);
+  const heroAction = !hero ? undefined : heroIsCurrent ? "toggle" : "open";
 
   return (
     <div className="min-h-0">
@@ -38,51 +48,88 @@ export function HomeView() {
             ? `${counts.tracks} pistas en la app · ${counts.annotated} anotaciones de estudio`
             : "Preparando tu biblioteca"
         }
+        actions={
+          <Button size="sm" variant="subtle" icon={<Search className="h-3.5 w-3.5" />} onClick={() => go("search")}>
+            Buscar música
+          </Button>
+        }
       />
 
-      <div className="px-8 pb-24">
-        {featured ? (
-          <section className="grid items-center gap-10 rounded-[18px] bg-elevated px-10 py-9 lg:grid-cols-[minmax(0,1fr)_auto]">
+      <div className="px-8 pb-28">
+        {hero ? (
+          <section
+            aria-label={heroIsCurrent ? "Sonando ahora" : "Sesión destacada"}
+            className="grid gap-7 rounded-[16px] border border-line bg-elevated p-6 lg:grid-cols-[220px_minmax(0,1fr)_200px] lg:items-center lg:p-8"
+          >
+            <Cover
+              title={hero.title}
+              artist={hero.artist}
+              src={hero.artworkUrl}
+              size={220}
+              rounded="rounded-[10px]"
+              className="hidden lg:block"
+            />
+
             <div className="min-w-0">
-              <p className="text-[12px] font-semibold tracking-[-0.12px] text-accent">Sesión de estudio lista</p>
-              <h2 className="mt-3 max-w-[18ch] text-[40px] font-semibold leading-[1.1] tracking-[-0.28px] text-ink">
-                {featured.title}
+              <p className="text-[12px] text-muted">
+                {heroIsCurrent ? (playing ? "Sonando ahora" : "En pausa") : "Sesión de estudio"}
+              </p>
+              <h2 className="mt-2 text-[36px] font-semibold leading-[1.04] tracking-[-0.04em] text-ink sm:text-[44px]">
+                {hero.title}
               </h2>
-              <p className="mt-2 text-[21px] font-normal leading-[1.19] text-muted">
-                {featured.artist} · {formatTime(featured.durationMs)}
+              <p className="mt-2 truncate text-[14px] text-body">
+                {hero.artist || "Artista desconocido"}
+                {hero.album ? ` · ${hero.album}` : ""}
+                {hero.durationMs ? ` · ${formatTime(hero.durationMs)}` : ""}
               </p>
-              <p className="mt-4 max-w-[46ch] text-[22px] font-light leading-[1.35] text-ink/80">
-                La letra se ilumina palabra por palabra mientras suena. IPA y lectura en español, sin configurar nada.
+              <p className="mt-4 max-w-[54ch] text-[14px] leading-[1.5] text-muted">
+                La letra se ilumina palabra por palabra mientras suena, con IPA y lectura en español. Sin configurar
+                nada.
               </p>
-              <p className="mt-3 max-w-[52ch] text-[14px] leading-[1.43] text-muted">
-                Traducción y notas de pronunciación cuando conectes tu proveedor de IA.
-              </p>
-              <div className="mt-7 flex flex-wrap items-center gap-3">
+              <div className="mt-6 flex flex-wrap items-center gap-2">
                 <Button
                   variant="primary"
-                  size="lg"
-                  icon={<Play className="h-4 w-4 fill-current" />}
-                  onClick={() => void openTrack(featured, demo)}
+                  icon={
+                    heroAction === "toggle" && playing ? (
+                      <Pause className="h-4 w-4 fill-current" />
+                    ) : (
+                      <Play className="h-4 w-4 fill-current" />
+                    )
+                  }
+                  onClick={() => {
+                    if (!hero) return;
+                    if (heroAction === "toggle") toggle();
+                    else void openTrack(hero, current ? [hero] : demo);
+                  }}
                 >
-                  Empezar a escuchar
+                  {heroAction === "toggle" ? (playing ? "Pausar" : "Reanudar") : "Reproducir"}
                 </Button>
-                <button
-                  type="button"
-                  onClick={() => go("learning")}
-                  className="text-[15px] text-accent transition-opacity hover:opacity-75"
-                >
-                  Ver mi progreso
-                </button>
+                <Button variant="subtle" onClick={() => go("learning")} icon={<GraduationCap className="h-4 w-4" />}>
+                  Estudiar
+                </Button>
               </div>
             </div>
-            <Cover
-              title={featured.title}
-              src={featured.artworkUrl}
-              size={204}
-              rounded="rounded-[18px]"
-              shadow
-              className="hidden justify-self-end lg:block"
-            />
+
+            <dl className="hidden shrink-0 flex-col gap-5 border-l border-line pl-8 lg:flex">
+              <div>
+                <dt className="text-[12px] text-muted">Práctica acumulada</dt>
+                <dd className="mt-1 text-[24px] font-semibold tracking-[-0.03em] text-ink tnum">
+                  {totalStudy > 0 ? formatStudyTime(totalStudy) : "Sin sesiones"}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-[12px] text-muted">Versos anotados</dt>
+                <dd className="mt-1 text-[24px] font-semibold tracking-[-0.03em] text-ink tnum">
+                  {counts?.annotated ?? 0}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-[12px] text-muted">Pistas</dt>
+                <dd className="mt-1 text-[24px] font-semibold tracking-[-0.03em] text-ink tnum">
+                  {counts?.tracks ?? 0}
+                </dd>
+              </div>
+            </dl>
           </section>
         ) : (
           <EmptyState
@@ -97,49 +144,51 @@ export function HomeView() {
           />
         )}
 
-        <section className="mt-12 grid gap-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+        <section className="mt-10" aria-label="Accesos rápidos">
+          <SectionTitle title="Accesos rápidos" />
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <QuickCard
+              icon={<Library className="h-4 w-4" />}
+              label="Biblioteca"
+              detail={`${plural(counts?.libraryTracks ?? 0, "pista", "pistas")} guardadas`}
+              onClick={() => go("library")}
+            />
+            <QuickCard
+              icon={<Heart className="h-4 w-4" />}
+              label="Favoritos"
+              detail={plural(counts?.favorites ?? 0, "canción", "canciones")}
+              onClick={() => go("favorites")}
+            />
+            <QuickCard
+              icon={<ListMusic className="h-4 w-4" />}
+              label="Listas"
+              detail={plural(counts?.playlists ?? 0, "lista", "listas")}
+              onClick={() => go("playlists")}
+            />
+            <QuickCard
+              icon={<GraduationCap className="h-4 w-4" />}
+              label="Aprendizaje"
+              detail={`${plural(counts?.vocabulary ?? 0, "palabra", "palabras")} guardadas`}
+              onClick={() => go("learning")}
+            />
+          </div>
+        </section>
+
+        <section className="mt-12 grid gap-10 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,0.75fr)]">
           <div>
             <SectionTitle
-              title="Continuar"
-              hint={totalStudy > 0 ? `${formatStudyTime(totalStudy)} de práctica acumulada` : undefined}
+              title="Canciones de demostración"
+              hint="Audio generado por la app; puedes estudiar sin cuenta ni servicios externos"
               action={
-                progress.length > 0 ? (
-                  <button
-                    type="button"
-                    onClick={() => go("learning")}
-                    className="flex items-center gap-1 text-[13px] text-accent transition-opacity hover:opacity-75"
-                  >
-                    Detalle <ArrowRight className="h-3 w-3" />
-                  </button>
-                ) : undefined
+                <Button size="sm" variant="ghost" onClick={() => go("search")}>
+                  Buscar más
+                </Button>
               }
             />
-            {progress.length === 0 ? (
-              <div className="rounded-[18px] bg-elevated px-5 py-5">
-                <p className="max-w-[48ch] text-[14px] leading-[1.43] text-muted">
-                  Todavía no hay sesiones. Cuando escuches una canción, aquí aparecerá el tiempo de práctica y los
-                  versos que trabajaste.
-                </p>
-                <Button size="sm" variant="ghost" className="mt-2 px-0" onClick={() => void openTrack(featured!, demo)}>
-                  Empezar con la demo
-                </Button>
-              </div>
+            {demo.length === 0 ? (
+              <p className="text-[14px] text-muted">Sin canciones de demostración.</p>
             ) : (
-              <ul className="divide-y divide-line-soft">
-                {progress.slice(0, 4).map((item) => (
-                  <li key={item.trackId} className="flex items-center justify-between gap-3 py-3">
-                    <div className="min-w-0">
-                      <p className="truncate text-[14px] text-ink">{item.title || item.trackId}</p>
-                      <p className="truncate text-[12px] text-faint">
-                        {item.artist || "Artista desconocido"} · {formatStudyTime(item.studySeconds)}
-                      </p>
-                    </div>
-                    <span className="shrink-0 text-[12px] text-muted">
-                      {item.status === "known" ? "conocida" : "en curso"}
-                    </span>
-                  </li>
-                ))}
-              </ul>
+              <TrackList tracks={demo} onAdd={openPicker} />
             )}
           </div>
 
@@ -148,15 +197,19 @@ export function HomeView() {
               title="Tus listas"
               action={
                 playlists.length > 0 ? (
-                  <Button size="sm" variant="ghost" onClick={() => go("playlists")}>
-                    Administrar
-                  </Button>
+                  <button
+                    type="button"
+                    onClick={() => go("playlists")}
+                    className="flex items-center gap-1 text-[13px] text-body transition-colors hover:text-ink"
+                  >
+                    Administrar <ArrowRight className="h-3 w-3" />
+                  </button>
                 ) : undefined
               }
             />
             {playlists.length === 0 ? (
-              <div className="rounded-[18px] bg-elevated px-5 py-5">
-                <p className="max-w-[48ch] text-[14px] leading-[1.43] text-muted">
+              <div className="rounded-[10px] border border-line bg-elevated px-4 py-4">
+                <p className="text-[13px] leading-[1.5] text-muted">
                   Aún no tienes listas. Crea una desde Listas o importa una playlist pública de YouTube Music.
                 </p>
                 <Button size="sm" variant="ghost" className="mt-2 px-0" onClick={() => go("playlists")}>
@@ -164,18 +217,20 @@ export function HomeView() {
                 </Button>
               </div>
             ) : (
-              <ul className="grid gap-2">
-                {playlists.slice(0, 4).map((playlist) => (
+              <ul className="space-y-1">
+                {playlists.slice(0, 5).map((playlist) => (
                   <li key={playlist.id}>
                     <button
                       type="button"
                       onClick={() => go("playlists", playlist)}
-                      className="flex w-full items-center gap-3 rounded-[18px] px-3 py-2.5 text-left transition-colors hover:bg-elevated"
+                      className="flex w-full items-center gap-3 rounded-[8px] px-2 py-2 text-left transition-colors hover:bg-surface"
                     >
-                      <Cover title={playlist.name} size={38} />
-                      <span className="min-w-0">
-                        <span className="block truncate text-[14px] text-ink">{playlist.name}</span>
-                        <span className="block text-[12px] text-faint tnum">{playlist.trackCount} canciones</span>
+                      <Cover title={playlist.name} size={36} rounded="rounded-[6px]" />
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-[13px] text-ink">{playlist.name}</span>
+                        <span className="block truncate text-[12px] text-ash tnum">
+                          {plural(playlist.trackCount, "canción", "canciones")}
+                        </span>
                       </span>
                     </button>
                   </li>
@@ -185,33 +240,56 @@ export function HomeView() {
           </div>
         </section>
 
-        <div className="hairline my-10" />
-
-        <section>
-          <SectionTitle
-            title="Canciones de demostración"
-            hint="Audio generado por la app; puedes estudiar sin cuenta ni servicios externos"
-            action={
-              <Button size="sm" variant="ghost" onClick={() => go("search")}>
-                Buscar mas
-              </Button>
-            }
-          />
-          {demo.length === 0 ? (
-            <p className="text-[14px] text-muted">Sin canciones de demostración.</p>
-          ) : (
-            <TrackList tracks={demo} onAdd={openPicker} />
-          )}
-        </section>
-
         {recently.length > 0 ? (
-          <section className="mt-10">
-            <SectionTitle title="Escuchado hace poco" />
-            <TrackList tracks={recently} onAdd={openPicker} />
+          <section className="mt-12" aria-label="Escuchado hace poco">
+            <SectionTitle
+              title="Escuchado hace poco"
+              action={
+                <Button size="sm" variant="ghost" onClick={() => go("library")}>
+                  Ver biblioteca
+                </Button>
+              }
+            />
+            <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 xl:grid-cols-5">
+              {recently.slice(0, 5).map((track) => (
+                <MediaCard key={track.id} track={track} onPlay={() => void openTrack(track, recently)} />
+              ))}
+            </div>
           </section>
         ) : null}
 
-        {current && !current.playable ? <p className="mt-8 text-[12px] text-faint">{current.note}</p> : null}
+        {progress.length > 0 ? (
+          <section className="mt-12" aria-label="Continuar estudiando">
+            <SectionTitle
+              title="Continuar estudiando"
+              hint={`${formatStudyTime(totalStudy)} de práctica acumulada`}
+              action={
+                <button
+                  type="button"
+                  onClick={() => go("learning")}
+                  className="flex items-center gap-1 text-[13px] text-body transition-colors hover:text-ink"
+                >
+                  Detalle <ArrowRight className="h-3 w-3" />
+                </button>
+              }
+            />
+            <ul className="grid gap-2 rounded-[16px] border border-line bg-elevated p-2 sm:grid-cols-2">
+              {progress.slice(0, 4).map((item) => (
+                <li key={item.trackId} className="flex items-center justify-between gap-3 rounded-[8px] px-3 py-2.5">
+                  <div className="min-w-0">
+                    <p className="truncate text-[13px] text-ink">{item.title || item.trackId}</p>
+                    <p className="truncate text-[12px] text-ash">
+                      {item.artist || "Artista desconocido"} · {formatStudyTime(item.studySeconds)}
+                    </p>
+                  </div>
+                  <span className="shrink-0 text-[12px] text-muted">
+                    {item.status === "known" ? "conocida" : "en curso"}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
       </div>
     </div>
   );

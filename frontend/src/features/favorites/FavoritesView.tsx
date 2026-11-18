@@ -1,6 +1,7 @@
 import { Heart } from "lucide-react";
 import { useApp } from "../../stores/appStore";
 import { EmptyState } from "../../components/ui/EmptyState";
+import { plural } from "../../lib/format";
 import { TopBar } from "../../components/layout/TopBar";
 import { TrackList } from "../../components/track/TrackList";
 
@@ -11,7 +12,7 @@ export function FavoritesView() {
 
   return (
     <div className="min-h-0">
-      <TopBar title="Favoritos" subtitle={favorites.length > 0 ? `${favorites.length} canciones` : undefined} />
+      <TopBar title="Favoritos" subtitle={favorites.length > 0 ? plural(favorites.length, "canción", "canciones") : undefined} />
       <div className="px-7 pb-10">
         {favorites.length === 0 ? (
           <EmptyState

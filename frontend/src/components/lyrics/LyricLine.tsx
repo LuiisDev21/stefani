@@ -98,7 +98,7 @@ export const LyricLine = memo(function LyricLine({
                     className={cn(
                       "relative inline-block cursor-pointer rounded-[4px] outline-offset-4 transition-colors",
                       immersive ? "hover:bg-white/10" : "hover:bg-accent/8",
-                      active ? (immersive ? "text-[#ffc000]" : "text-ink") : immersive ? "text-white/65" : "text-muted",
+                      active ? (immersive ? "text-[#ffc000]" : "text-ink") : immersive ? "text-white/65" : "text-body",
                     )}
                   >
                     {word.text}
@@ -107,7 +107,7 @@ export const LyricLine = memo(function LyricLine({
               })}
             </span>
           ) : (
-            <span className={active ? (immersive ? "text-[#ffc000]" : "text-ink") : immersive ? "text-white/65" : "text-muted"}>
+            <span className={active ? (immersive ? "text-[#ffc000]" : "text-ink") : immersive ? "text-white/65" : "text-body"}>
               {line.text || "\u00a0"}
             </span>
           )}

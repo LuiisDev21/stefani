@@ -135,7 +135,7 @@ export function SettingsView() {
         }
       />
 
-      <div className="mx-auto max-w-[820px] px-8 pb-16">
+      <div className="mx-auto max-w-[820px] px-8 pb-24">
         <section>
           <SectionTitle
             title="Proveedor de IA"

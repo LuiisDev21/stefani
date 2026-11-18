@@ -36,10 +36,10 @@ export function IconButton({ label, children, active, size = "md", className, ..
       <Tooltip.Portal>
         <Tooltip.Content
           sideOffset={6}
-          className="z-50 rounded-[8px] border border-line bg-bg px-2.5 py-1.5 text-[12px] text-ink shadow-[var(--shadow-overlay)]"
+          className="z-50 rounded-[6px] border border-line bg-card px-2.5 py-1.5 text-[12px] text-ink"
         >
           {label}
-          <Tooltip.Arrow className="fill-bg" />
+          <Tooltip.Arrow className="fill-card" />
         </Tooltip.Content>
       </Tooltip.Portal>
     </Tooltip.Root>

@@ -36,3 +36,8 @@ export function formatRelativeDate(ms: number, now = Date.now()): string {
 export function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }
+
+/** "1 canción" / "3 canciones": a count and its noun never disagree. */
+export function plural(count: number, one: string, many: string): string {
+  return `${count} ${count === 1 ? one : many}`;
+}

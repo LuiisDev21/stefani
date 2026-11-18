@@ -37,14 +37,14 @@ export default function App() {
   if (!ready) {
     return (
       <div className="flex h-full flex-col bg-bg" aria-busy="true" aria-label="Iniciando STEFANI">
-        <div className="h-11 bg-black" />
+        <div className="h-[52px] border-b border-line bg-bg" />
         <div className="mx-auto w-full max-w-[900px] px-8 pt-16">
           <div className="h-9 w-64 animate-pulse rounded-[8px] bg-surface" />
           <div className="mt-4 h-5 w-80 animate-pulse rounded-[6px] bg-line-soft" />
           <div className="mt-12 grid grid-cols-3 gap-6">
             {[0, 1, 2].map((key) => (
               <div key={key} className="space-y-3">
-                <div className="aspect-square animate-pulse rounded-[18px] bg-surface" />
+                <div className="aspect-square animate-pulse rounded-[16px] bg-surface" />
                 <div className="h-4 w-3/4 animate-pulse rounded bg-line-soft" />
                 <div className="h-3 w-1/2 animate-pulse rounded bg-line-soft" />
               </div>

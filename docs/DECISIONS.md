@@ -219,3 +219,19 @@ sesion.
 **Consecuencia**: el widget de Windows y las teclas multimedia controlan la app
 sin codigo nativo por plataforma. En macOS/Linux el equivalente depende del
 soporte de Media Session del WebView del sistema y no se ha verificado.
+
+## ADR-020: rediseno sobre DESIGN.md (Raycast) y inicio como reproductor web
+
+**Contexto**: el sistema claro de apple.design.md daba una app correcta pero de
+documento; el usuario pidio el sistema de DESIGN.md y un inicio con la
+consistencia de un reproductor web.
+
+**Decision**: se sustituyen los tokens por la paleta Raycast (lienzo #07080a,
+escalera de cuatro superficies, hairlines #242728, CTA blanca) con Inter y ss03.
+El inicio pasa a ser un dashboard: hero con la portada de lo que suena (o de la
+sesion lista), tres contadores reales, accesos rapidos, canciones, listas y una
+estanteria de lo escuchado. El modo inmersivo queda intacto, incluido su ambar.
+
+**Consecuencia**: cero sombras fuera del inmersivo, un solo color de accion y
+un unico momento cromatico. Los metadatos suben a `#a9a9ab`/`#8b8c8d` para
+cumplir AA sobre negro. Cualquier vista nueva hereda el tema usando los tokens.

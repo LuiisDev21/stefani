@@ -96,7 +96,7 @@ export function PlaylistPicker({ track, playlists, onClose }: PlaylistPickerProp
             value={name}
             onChange={(event) => setName(event.target.value)}
             placeholder="Nombre de la lista"
-            className="h-9 w-full rounded-[7px] border border-line bg-bg px-3 text-[13px] text-ink placeholder:text-faint focus:border-accent/60"
+            className="h-9 w-full rounded-[7px] border border-line bg-surface px-3 text-[13px] text-ink placeholder:text-faint focus:border-line-strong"
           />
         </div>
       </div>

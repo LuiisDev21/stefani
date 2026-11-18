@@ -22,8 +22,7 @@ export function WordCard({ entry, word, loading, error, alreadySaved, onSave, on
   return (
     <div
       className={cn(
-        "mx-3 mb-3 rounded-[10px] border border-line bg-surface/95 p-3",
-        "shadow-[var(--shadow-overlay)]",
+        "mx-3 mb-3 rounded-[10px] border border-line bg-card p-3",
       )}
       role="region"
       aria-label={`Consulta de ${word}`}
@@ -40,7 +39,7 @@ export function WordCard({ entry, word, loading, error, alreadySaved, onSave, on
             type="button"
             onClick={() => onSpeak(entry?.word || word)}
             aria-label={`Escuchar ${word}`}
-            className="rounded p-1 text-faint transition-colors hover:bg-elevated hover:text-ink"
+            className="rounded p-1 text-faint transition-colors hover:bg-surface hover:text-ink"
           >
             <Volume2 className="h-3.5 w-3.5" />
           </button>

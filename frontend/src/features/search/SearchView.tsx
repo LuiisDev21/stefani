@@ -57,7 +57,7 @@ export function SearchView() {
             onChange={(event) => schedule(event.target.value)}
             placeholder="Canción, artista o álbum"
             aria-label="Buscar canciones"
-            className="h-10 w-full rounded-[9px] border border-line bg-elevated pl-9 pr-10 text-[13px] text-ink placeholder:text-faint focus:border-accent/60"
+            className="h-10 w-full rounded-[8px] border border-line bg-elevated pl-9 pr-10 text-[13px] text-ink placeholder:text-faint focus:border-line-strong"
           />
           {searching ? (
             <LoaderCircle className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-faint" aria-hidden="true" />
@@ -69,7 +69,12 @@ export function SearchView() {
             <span key={provider.name} className="flex items-center gap-1.5" title={provider.detail}>
               <span
                 className="h-1.5 w-1.5 rounded-full"
-                style={{ background: provider.state === "ready" || provider.state === "enabled" ? "#0066cc" : "#3a4457" }}
+                style={{
+                  background:
+                    provider.state === "ready" || provider.state === "enabled"
+                      ? "var(--color-ink)"
+                      : "var(--color-ash)",
+                }}
               />
               {provider.name}
             </span>

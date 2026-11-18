@@ -32,12 +32,12 @@ export function Switch({ checked, onChange, label, description, id }: SwitchProp
         onClick={() => onChange(!checked)}
         className={cn(
           "relative mt-0.5 h-[26px] w-[44px] shrink-0 rounded-full transition-colors duration-200",
-          checked ? "bg-accent" : "bg-[#d2d2d7]",
+          checked ? "bg-accent" : "bg-line-strong",
         )}
       >
         <span
           className={cn(
-            "absolute top-[3px] h-5 w-5 rounded-full bg-white shadow-[0_1px_2px_rgba(0,0,0,0.18)] transition-[left] duration-200",
+            "absolute top-[3px] h-5 w-5 rounded-full bg-black transition-[left] duration-200",
             checked ? "left-[21px]" : "left-[3px]",
           )}
         />

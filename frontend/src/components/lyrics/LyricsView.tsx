@@ -115,7 +115,7 @@ export function LyricsView({
             size="sm"
             variant="subtle"
             icon={<ArrowDown className="h-3.5 w-3.5" />}
-            className="pointer-events-auto shadow-[var(--shadow-overlay)]"
+            className="pointer-events-auto border border-line bg-card"
             onClick={() => setManual(false)}
           >
             Seguir la letra

@@ -34,7 +34,7 @@ export function TrackRow({
   return (
     <li
       className={cn(
-        "group grid grid-cols-[28px_minmax(0,1fr)_auto] items-center gap-3 rounded-[7px] px-2 py-[6px]",
+        "group grid grid-cols-[28px_minmax(0,1fr)_auto] items-center gap-3 rounded-[7px] px-2 py-2",
         "transition-colors hover:bg-surface/50",
         active && "bg-surface",
       )}
@@ -82,7 +82,7 @@ export function TrackRow({
       </button>
 
       <div className="flex items-center gap-0.5">
-        <span className="mr-1 w-9 text-right text-[10.5px] text-faint tnum">
+        <span className="mr-1 w-9 text-right text-[10.5px] text-ash tnum">
           {track.durationMs > 0 ? formatTime(track.durationMs) : "—"}
         </span>
         {onAdd ? (
@@ -99,7 +99,7 @@ export function TrackRow({
           label={track.favorite ? "Quitar de favoritos" : "Guardar en favoritos"}
           size="sm"
           onClick={onFavorite}
-          className={cn(track.favorite && "text-accent hover:text-accent")}
+          className={cn(!track.favorite && "text-muted", track.favorite && "text-ink")}
         >
           <Heart className={cn("h-3.5 w-3.5", track.favorite && "fill-current")} />
         </IconButton>

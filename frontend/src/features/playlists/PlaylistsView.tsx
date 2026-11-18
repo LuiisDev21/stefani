@@ -1,7 +1,7 @@
 import { ArrowDown, ArrowLeft, ArrowUp, ListMusic, Play, Plus, Trash2, UploadCloud } from "lucide-react";
 import { useState } from "react";
 import { api } from "../../lib/api";
-import { formatRelativeDate, formatTime } from "../../lib/format";
+import { formatRelativeDate, formatTime, plural } from "../../lib/format";
 import type { Playlist, Track } from "../../lib/types";
 import { useApp } from "../../stores/appStore";
 import { usePlayer } from "../../stores/playerStore";
@@ -70,7 +70,7 @@ export function PlaylistsView() {
       <div className="min-h-0">
         <TopBar
           title={active.name}
-          subtitle={`${tracks.length} canciones · ${formatTime(totalMs)} · ${active.origin === "ytmusic" ? "importada de YouTube Music" : "lista local"}`}
+          subtitle={`${plural(tracks.length, "canción", "canciones")} · ${formatTime(totalMs)} · ${active.origin === "ytmusic" ? "importada de YouTube Music" : "lista local"}`}
           actions={
             <>
               <Button size="sm" variant="ghost" icon={<ArrowLeft className="h-3.5 w-3.5" />} onClick={() => go("playlists")}>
@@ -147,7 +147,7 @@ export function PlaylistsView() {
               <input
                 value={editName}
                 onChange={(event) => setEditName(event.target.value)}
-                className="h-9 w-full rounded-[7px] border border-line bg-bg px-3 text-[13px] text-ink focus:border-accent/60"
+                className="h-9 w-full rounded-[7px] border border-line bg-surface px-3 text-[13px] text-ink focus:border-line-strong"
               />
             </label>
             <label className="block">
@@ -156,7 +156,7 @@ export function PlaylistsView() {
                 value={editDescription}
                 onChange={(event) => setEditDescription(event.target.value)}
                 rows={3}
-                className="w-full rounded-[7px] border border-line bg-bg px-3 py-2 text-[13px] text-ink focus:border-accent/60"
+                className="w-full rounded-[7px] border border-line bg-surface px-3 py-2 text-[13px] text-ink focus:border-line-strong"
               />
             </label>
           </div>
@@ -196,7 +196,7 @@ export function PlaylistsView() {
     <div className="min-h-0">
       <TopBar
         title="Listas"
-        subtitle={playlists.length > 0 ? `${playlists.length} listas` : "Organiza lo que estudias"}
+        subtitle={playlists.length > 0 ? plural(playlists.length, "lista", "listas") : "Organiza lo que estudias"}
         actions={
           <>
             <Button size="sm" variant="subtle" icon={<UploadCloud className="h-3.5 w-3.5" />} onClick={() => setImporting(true)}>
@@ -285,7 +285,7 @@ export function PlaylistsView() {
           onChange={(event) => setName(event.target.value)}
           placeholder="Nombre de la lista"
           aria-label="Nombre de la lista"
-          className="h-9 w-full rounded-[7px] border border-line bg-bg px-3 text-[13px] text-ink placeholder:text-faint focus:border-accent/60"
+          className="h-9 w-full rounded-[7px] border border-line bg-surface px-3 text-[13px] text-ink placeholder:text-faint focus:border-line-strong"
         />
       </Modal>
 
@@ -321,7 +321,7 @@ export function PlaylistsView() {
           onChange={(event) => setUrl(event.target.value)}
           placeholder="https://music.youtube.com/playlist?list=..."
           aria-label="URL de la playlist"
-          className="h-9 w-full rounded-[7px] border border-line bg-bg px-3 text-[12.5px] text-ink placeholder:text-faint focus:border-accent/60"
+          className="h-9 w-full rounded-[7px] border border-line bg-surface px-3 text-[12.5px] text-ink placeholder:text-faint focus:border-line-strong"
         />
       </Modal>
     </div>

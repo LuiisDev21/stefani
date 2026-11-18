@@ -11,24 +11,24 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 /*
-  Two grammars, exactly as the design system defines them: the pill for
-  actions (Action Blue, full radius) and quiet surfaces for everything else.
-  Weight stays 400; the ladder has no 500.
+  Two grammars, exactly as the design system defines them: the white pill with
+  black text for the one primary action, and quiet surfaces for everything
+  else. Labels sit at weight 500; the rest of the chrome stays at 400.
 */
 const base =
-  "inline-flex select-none items-center justify-center gap-2 whitespace-nowrap font-normal transition-[background-color,color,transform,border-color] duration-150 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-40";
+  "inline-flex select-none items-center justify-center gap-2 whitespace-nowrap font-medium transition-[background-color,color,border-color,transform] duration-150 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-40";
 
 const variants: Record<Variant, string> = {
-  primary: "rounded-full bg-accent text-on-accent hover:bg-accent-focus",
-  subtle: "rounded-full border border-line bg-bg text-ink hover:bg-elevated",
-  ghost: "rounded-full text-accent hover:bg-accent/8",
-  danger: "rounded-full border border-line bg-bg text-danger hover:bg-danger/6",
+  primary: "rounded-[8px] bg-accent text-on-accent hover:bg-accent-focus",
+  subtle: "rounded-[8px] border border-line bg-transparent text-ink hover:border-line-strong hover:bg-surface",
+  ghost: "rounded-[8px] text-body hover:bg-surface hover:text-ink",
+  danger: "rounded-[8px] border border-line bg-transparent text-danger hover:border-danger/40 hover:bg-danger/10",
 };
 
 const sizes: Record<Size, string> = {
   sm: "h-8 px-3.5 text-[13px]",
-  md: "h-10 px-5 text-[14px]",
-  lg: "h-11 px-6 text-[15px]",
+  md: "h-9 px-4 text-[14px]",
+  lg: "h-10 px-5 text-[14px]",
 };
 
 export function Button({ variant = "subtle", size = "md", icon, className, children, ...rest }: ButtonProps) {

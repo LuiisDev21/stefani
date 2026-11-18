@@ -21,17 +21,17 @@ export function Modal({ open, onOpenChange, title, description, children, footer
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-40 bg-black/35" />
+        <Dialog.Overlay className="fixed inset-0 z-40 bg-black/70" />
         <Dialog.Content
           className={cn(
             "fixed left-1/2 top-1/2 z-50 w-[calc(100vw-32px)] -translate-x-1/2 -translate-y-1/2",
-            "rounded-[18px] border border-line bg-bg p-6 shadow-[var(--shadow-overlay)]",
+            "rounded-[16px] border border-line bg-card p-6",
             width,
           )}
         >
           <div className="flex items-start justify-between gap-4">
             <div>
-              <Dialog.Title className="text-[15px] font-medium text-ink">{title}</Dialog.Title>
+              <Dialog.Title className="text-[16px] font-medium text-ink">{title}</Dialog.Title>
               {description ? (
                 <Dialog.Description className="mt-1 text-[12.5px] text-muted">{description}</Dialog.Description>
               ) : null}

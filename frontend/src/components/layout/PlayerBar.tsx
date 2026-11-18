@@ -22,9 +22,8 @@ import { IconButton } from "../ui/IconButton";
 import { Slider } from "../ui/Slider";
 
 /**
- * Persistent transport: the design system's floating sticky bar. Parchment at
- * 82% with a 20px blur, one hairline on top, no shadow — the only elevation on
- * screen belongs to the artwork.
+ * Persistent transport: a solid surface closed by one hairline on top. Depth
+ * comes from the surface ladder, never from a shadow.
  */
 export function PlayerBar() {
   const current = usePlayer((state) => state.current);
@@ -62,7 +61,7 @@ export function PlayerBar() {
   };
 
   return (
-    <footer className="frosted shrink-0 border-t border-line px-6 py-3">
+    <footer className="shrink-0 border-t border-line bg-elevated px-6 py-3">
       <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)_minmax(0,1fr)] items-center gap-6">
         {/* Now playing */}
         <div className="flex min-w-0 items-center gap-3">
@@ -80,7 +79,7 @@ export function PlayerBar() {
                 label={current.favorite ? "Quitar de favoritos" : "Guardar en favoritos"}
                 size="sm"
                 onClick={() => void toggleFavorite(current)}
-                className={cn("ml-1", current.favorite && "text-accent hover:text-accent")}
+                className={cn("ml-1", current.favorite && "text-amber hover:text-amber")}
               >
                 <Heart className={cn("h-4 w-4", current.favorite && "fill-current")} />
               </IconButton>
@@ -103,7 +102,7 @@ export function PlayerBar() {
               aria-label={playing ? "Pausar" : "Reproducir"}
               className={cn(
                 "mx-1 flex h-10 w-10 items-center justify-center rounded-full transition-[background-color,transform]",
-                "bg-ink text-white hover:bg-black active:scale-[0.95] disabled:opacity-40",
+                "bg-accent text-on-accent hover:bg-accent-focus active:scale-[0.95] disabled:opacity-40",
               )}
             >
               {playing ? <Pause className="h-4 w-4 fill-current" /> : <Play className="ml-0.5 h-4 w-4 fill-current" />}
@@ -157,7 +156,7 @@ export function PlayerBar() {
             disabled={!caps.rate}
             aria-label={`Velocidad de reproducción: ${rate}x. Cambiar`}
             title={caps.rate ? "Cambiar velocidad" : "Esta fuente no controla la velocidad"}
-            className="rounded-full px-2.5 py-1 text-[12px] font-medium text-muted tnum transition-colors hover:bg-surface hover:text-ink disabled:opacity-40"
+            className="rounded-[6px] px-2.5 py-1 text-[12px] font-medium text-muted tnum transition-colors hover:bg-surface hover:text-ink disabled:opacity-40"
           >
             {rate}x
           </button>

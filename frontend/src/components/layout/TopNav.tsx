@@ -14,10 +14,11 @@ const items: Array<{ view: View; label: string }> = [
 ];
 
 /**
- * Global navigation: the 44px black bar from the design system, with 12px
- * links and no icons. Every destination is a real view; the library count on
- * the right is real data, and import sits here because it is the one action
- * that turns an empty app into a usable one.
+ * Global navigation: a 52px canvas bar closed by a single hairline, with the
+ * active destination on the card surface instead of a colored underline. Every
+ * destination is a real view; the count on the right is real data, and import
+ * sits here because it is the one action that turns an empty app into a usable
+ * one.
  */
 export function TopNav() {
   const view = useApp((state) => state.view);
@@ -30,17 +31,17 @@ export function TopNav() {
   const next = usePlayer((state) => state.next);
 
   return (
-    <header className="flex h-11 shrink-0 items-center gap-6 bg-black px-4 text-white sm:px-6">
+    <header className="flex h-[52px] shrink-0 items-center gap-6 border-b border-line bg-bg px-4 sm:px-6">
       <button
         type="button"
         onClick={() => go("home")}
-        className="shrink-0 font-display text-[15px] font-semibold tracking-[-0.03em] text-white transition-opacity hover:opacity-80"
+        className="shrink-0 font-display text-[15px] font-semibold tracking-[-0.03em] text-ink transition-opacity hover:opacity-80"
         aria-label="STEFANI, ir al inicio"
       >
         STEFANI
       </button>
 
-      <nav aria-label="Navegacion principal" className="flex min-w-0 flex-1 items-center gap-0.5 overflow-x-auto">
+      <nav aria-label="Navegacion principal" className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto">
         {items.map(({ view: target, label }) => {
           const active = view === target;
           return (
@@ -50,8 +51,8 @@ export function TopNav() {
               onClick={() => go(target)}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "shrink-0 rounded-full px-3 py-1.5 text-[12px] tracking-[-0.12px] transition-colors",
-                active ? "text-white" : "text-white/70 hover:text-white",
+                "shrink-0 rounded-[6px] px-3 py-1.5 text-[13px] transition-colors",
+                active ? "bg-card text-ink" : "text-muted hover:bg-surface hover:text-ink",
               )}
             >
               {label}
@@ -61,27 +62,25 @@ export function TopNav() {
       </nav>
 
       <div className="flex shrink-0 items-center gap-4">
-        {/* Compact now-playing block: what Windows' media widget shows, but in
-            the app's own bar, with the two controls that matter while reading. */}
         {current ? (
-          <div className="flex min-w-0 items-center gap-2 border-r border-white/15 pr-3">
-            <div className="h-7 w-7 shrink-0 overflow-hidden rounded-[6px] bg-white/10">
+          <div className="flex min-w-0 items-center gap-2 border-r border-line pr-3">
+            <div className="h-7 w-7 shrink-0 overflow-hidden rounded-[6px] border border-line bg-card">
               {current.artworkUrl ? (
                 <img src={current.artworkUrl} alt="" className="h-full w-full object-cover" draggable={false} />
               ) : (
-                <span className="flex h-full items-center justify-center text-[11px] font-semibold text-white/40">
+                <span className="flex h-full items-center justify-center text-[11px] font-semibold text-ash">
                   {current.title.slice(0, 1).toUpperCase()}
                 </span>
               )}
             </div>
-            <p className="hidden min-w-0 max-w-[210px] truncate text-[12px] text-white/80 lg:block" title={`${current.artist} — ${current.title}`}>
+            <p className="hidden min-w-0 max-w-[210px] truncate text-[12px] text-body lg:block" title={`${current.artist} — ${current.title}`}>
               {current.artist} — {current.title}
             </p>
             <button
               type="button"
               onClick={toggle}
               aria-label={playing ? "Pausar" : "Reproducir"}
-              className="flex h-7 w-7 items-center justify-center rounded-full text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+              className="flex h-7 w-7 items-center justify-center rounded-[6px] text-body transition-colors hover:bg-surface hover:text-ink"
             >
               {playing ? <Pause className="h-3.5 w-3.5 fill-current" /> : <Play className="ml-0.5 h-3.5 w-3.5 fill-current" />}
             </button>
@@ -89,21 +88,21 @@ export function TopNav() {
               type="button"
               onClick={next}
               aria-label="Siguiente"
-              className="flex h-7 w-7 items-center justify-center rounded-full text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+              className="flex h-7 w-7 items-center justify-center rounded-[6px] text-body transition-colors hover:bg-surface hover:text-ink"
             >
               <SkipForward className="h-3.5 w-3.5 fill-current" />
             </button>
           </div>
         ) : null}
-        <p className={cn("text-[11px] text-white/45 tnum", current ? "hidden" : "hidden md:block")}>
+        <p className={cn("text-[11px] text-ash tnum", current ? "hidden" : "hidden md:block")}>
           {counts ? `${counts.tracks} pistas · ${counts.annotated} anotaciones` : "Cargando"}
         </p>
         <button
           type="button"
           onClick={() => void importAudio()}
-          className="flex h-7 items-center gap-1.5 rounded-[8px] bg-white px-3 text-[12px] font-normal text-ink transition-opacity hover:opacity-85 active:scale-[0.97]"
+          className="flex h-8 items-center gap-1.5 rounded-[6px] bg-accent px-3 text-[13px] font-medium text-on-accent transition-colors hover:bg-accent-focus active:scale-[0.98]"
         >
-          <Upload className="h-3 w-3" aria-hidden="true" />
+          <Upload className="h-3.5 w-3.5" aria-hidden="true" />
           Importar
         </button>
       </div>
