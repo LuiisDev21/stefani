@@ -142,22 +142,3 @@ func isLocked(err error) bool {
 	text := strings.ToLower(err.Error())
 	return strings.Contains(text, "locked") || strings.Contains(text, "busy")
 }
-
-// cookieHeader sends only the YouTube/Google cookies, deduplicated by name and
-// with the .youtube.com copies first: the .google.com duplicates carry the same
-// names and make the server sign with the wrong SAPISID.
-func cookieHeader(jar []cookie) string {
-	seen := map[string]bool{}
-	parts := make([]string, 0, len(jar))
-	for _, domain := range []string{"youtube.com", "google.com"} {
-		for _, c := range jar {
-			host := strings.TrimPrefix(c.host, ".")
-			if !strings.HasSuffix(host, domain) || seen[c.name] {
-				continue
-			}
-			seen[c.name] = true
-			parts = append(parts, c.name+"="+c.value)
-		}
-	}
-	return strings.Join(parts, "; ")
-}

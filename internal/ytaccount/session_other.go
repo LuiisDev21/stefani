@@ -20,5 +20,3 @@ func profileExists(string) bool { return false }
 func readCookies(string) ([]cookie, error) {
 	return nil, errors.New("la cuenta de YouTube Music solo está disponible en Windows")
 }
-
-func cookieHeader([]cookie) string { return "" }
