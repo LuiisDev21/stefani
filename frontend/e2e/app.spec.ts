@@ -9,11 +9,11 @@ import { expect, test, type Page } from "@playwright/test";
 async function waitForApp(page: Page) {
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Inicio" })).toBeVisible();
-  await expect(page.getByText("Canciones de demostración")).toBeVisible();
+  await expect(page.getByText("Accesos rápidos")).toBeVisible();
 }
 
 test.describe("STEFANI desktop shell", () => {
-  test("loads the demo library from the Go service", async ({ page }) => {
+  test("loads the library from the Go service", async ({ page }) => {
     const consoleErrors: string[] = [];
     page.on("console", (message) => {
       if (message.type() === "error") consoleErrors.push(message.text());
@@ -22,7 +22,7 @@ test.describe("STEFANI desktop shell", () => {
     await waitForApp(page);
 
     // The real counters live in the sidebar; the header no longer repeats them.
-    await expect(page.getByText(/\d+ pistas · \d+ anotaciones/)).toBeVisible();
+    await expect(page.locator("aside").getByText(/^\d+ pistas$/)).toBeVisible();
     await expect(page.getByRole("button", { name: /Reproducir Midnight Signals/ })).toBeVisible();
     await expect(page.getByRole("button", { name: /Reproducir Paper Boats/ })).toBeVisible();
     await expect(page.getByRole("button", { name: /Reproducir Slow Morning/ })).toBeVisible();
@@ -37,7 +37,6 @@ test.describe("STEFANI desktop shell", () => {
       ["Biblioteca", "Biblioteca"],
       ["Listas", "Listas"],
       ["Favoritos", "Favoritos"],
-      ["Aprendizaje", "Aprendizaje"],
       ["Ajustes", "Ajustes"],
       ["Inicio", "Inicio"],
     ] as const) {
@@ -80,7 +79,7 @@ test.describe("STEFANI desktop shell", () => {
     await waitForApp(page);
     await page.getByRole("button", { name: /Reproducir Midnight Signals/ }).click();
     const panel = page.locator("aside[data-lyrics-state]");
-    await panel.getByRole("button", { name: "Anotar con IA" }).click();
+    await panel.getByRole("button", { name: "Generar traducción" }).click();
 
     await expect(page.getByRole("status").filter({ hasText: /Configura|clave/i })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Ajustes", level: 1 })).toBeVisible();

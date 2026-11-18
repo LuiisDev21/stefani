@@ -7,7 +7,6 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -180,69 +179,6 @@ func subset(all map[string]domain.Line, lines []domain.Line) map[string]domain.L
 		out[line.ID] = line
 	}
 	return out
-}
-
-// LookupWord returns dictionary data for one word in context. It is not stored
-// until the user saves it.
-func (s *Service) LookupWord(ctx context.Context, word, lineContext string) (domain.WordEntry, error) {
-	word = strings.TrimSpace(word)
-	if word == "" {
-		return domain.WordEntry{}, fmt.Errorf("select a word first")
-	}
-	if len(word) > 64 {
-		return domain.WordEntry{}, fmt.Errorf("that selection is too long for a word lookup")
-	}
-	llm, key, err := s.cfg()
-	if err != nil {
-		return domain.WordEntry{}, err
-	}
-	prompt := fmt.Sprintf(`Palabra: %q
-Verso donde aparece: %q
-
-Devuelve un objeto JSON con esta forma exacta:
-{"word":"...","lemma":"...","part_of_speech":"sustantivo|verbo|adjetivo|adverbio|preposicion|pronombre|conjuncion|interjeccion|expresion","ipa":"/.../","translation":"...","meaning":"...","example":"..."}
-
-Reglas:
-- "ipa" es la transcripcion IPA estadounidense de la palabra aislada.
-- "translation" es la traduccion al espanol dentro del verso.
-- "meaning" explica el uso en ese contexto en una frase.
-- "example" es una oracion corta en ingles que use la palabra (maximo 120 caracteres).`, word, lineContext)
-
-	raw, err := s.client.ChatJSON(ctx, aiConfig(llm, key),
-		`Eres un diccionario bilingue para estudiantes hispanohablantes de ingles. Respondes solo JSON valido.`,
-		prompt)
-	if err != nil {
-		return domain.WordEntry{}, err
-	}
-	var parsed struct {
-		Word         string `json:"word"`
-		Lemma        string `json:"lemma"`
-		PartOfSpeech string `json:"part_of_speech"`
-		IPA          string `json:"ipa"`
-		Translation  string `json:"translation"`
-		Meaning      string `json:"meaning"`
-		Example      string `json:"example"`
-	}
-	if err := json.Unmarshal(raw, &parsed); err != nil {
-		return domain.WordEntry{}, fmt.Errorf("the AI answer was not valid JSON")
-	}
-	entry := domain.WordEntry{
-		Word:         limit(clean(parsed.Word), 64),
-		Lemma:        limit(clean(parsed.Lemma), 64),
-		PartOfSpeech: limit(clean(parsed.PartOfSpeech), 32),
-		IPA:          limit(clean(parsed.IPA), 120),
-		Translation:  limit(clean(parsed.Translation), 240),
-		Meaning:      limit(clean(parsed.Meaning), 400),
-		Example:      limit(clean(parsed.Example), 240),
-		Source:       "ai",
-	}
-	if entry.Word == "" {
-		entry.Word = word
-	}
-	if entry.Translation == "" && entry.Meaning == "" {
-		return domain.WordEntry{}, fmt.Errorf("the AI answer had no usable definition")
-	}
-	return entry, nil
 }
 
 // ResetCache drops generated annotations for a track.

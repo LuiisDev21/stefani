@@ -191,20 +191,15 @@ type StoredCountsDTO struct {
 	LibraryTracks int `json:"libraryTracks"`
 	Favorites     int `json:"favorites"`
 	Playlists     int `json:"playlists"`
-	Vocabulary    int `json:"vocabulary"`
-	Annotated     int `json:"annotated"`
 }
 
 // BootstrapDTO is the first payload the UI loads.
 type BootstrapDTO struct {
 	App            InfoDTO            `json:"app"`
-	DemoTracks     []TrackDTO         `json:"demoTracks"`
 	RecentlyPlayed []TrackDTO         `json:"recentlyPlayed"`
 	Library        []TrackDTO         `json:"library"`
 	Favorites      []TrackDTO         `json:"favorites"`
 	Playlists      []PlaylistDTO      `json:"playlists"`
-	Progress       []ProgressDTO      `json:"progress"`
-	Vocabulary     []WordDTO          `json:"vocabulary"`
 	Settings       SettingsDTO        `json:"settings"`
 	Providers      []ProviderStateDTO `json:"providers"`
 	Counts         StoredCountsDTO    `json:"counts"`
@@ -373,35 +368,6 @@ func (a *App) toLineDTOs(lines []domain.Line, annotations map[string]domain.Anno
 		out = append(out, dto)
 	}
 	return out
-}
-
-func toWordDTO(w domain.WordEntry) WordDTO {
-	return WordDTO{
-		ID:           w.ID,
-		Word:         w.Word,
-		Lemma:        w.Lemma,
-		PartOfSpeech: w.PartOfSpeech,
-		Meaning:      w.Meaning,
-		IPA:          w.IPA,
-		Translation:  w.Translation,
-		Example:      w.Example,
-		Source:       w.Source,
-		TrackID:      w.TrackID,
-		CreatedAt:    w.CreatedAt.UnixMilli(),
-	}
-}
-
-func toProgressDTO(p domain.Progress) ProgressDTO {
-	dto := ProgressDTO{
-		TrackID:        p.TrackID,
-		LinesPracticed: p.LinesPracticed,
-		StudySeconds:   p.StudySeconds,
-		Status:         p.Status,
-	}
-	if !p.LastStudiedAt.IsZero() {
-		dto.LastStudiedAt = p.LastStudiedAt.UnixMilli()
-	}
-	return dto
 }
 
 func toHistoryDTO(h domain.HistoryEntry) HistoryDTO {

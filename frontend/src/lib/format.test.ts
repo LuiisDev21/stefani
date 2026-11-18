@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { clamp, formatRelativeDate, formatStudyTime, formatTime } from "./format";
+import { clamp, formatRelativeDate, formatTime } from "./format";
 
 describe("formatTime", () => {
   it("formats under an hour as m:ss", () => {
@@ -19,13 +19,6 @@ describe("formatTime", () => {
   });
 });
 
-describe("formatStudyTime", () => {
-  it("uses minutes below one hour and hours above", () => {
-    expect(formatStudyTime(0)).toBe("0 min");
-    expect(formatStudyTime(90)).toBe("2 min");
-    expect(formatStudyTime(3900)).toBe("1 h 05 min");
-  });
-});
 
 describe("formatRelativeDate", () => {
   const now = Date.parse("2026-11-17T12:00:00Z");

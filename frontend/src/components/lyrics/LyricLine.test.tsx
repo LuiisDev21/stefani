@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ComponentProps } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { LyricLine, cleanWord } from "./LyricLine";
+import { LyricLine } from "./LyricLine";
 import type { Line } from "../../lib/types";
 
 const wordLine: Line = {
@@ -29,7 +29,6 @@ const wordLine: Line = {
 };
 
 function renderLine(overrides: Partial<ComponentProps<typeof LyricLine>> = {}) {
-  const onWord = vi.fn();
   const onSeek = vi.fn();
   const utils = render(
     <ul>
@@ -41,12 +40,11 @@ function renderLine(overrides: Partial<ComponentProps<typeof LyricLine>> = {}) {
         showIPA
         showTranslation
         onSeek={onSeek}
-        onWord={onWord}
         {...overrides}
       />
     </ul>,
   );
-  return { onWord, onSeek, ...utils };
+  return { onSeek, ...utils };
 }
 
 describe("LyricLine", () => {
@@ -70,19 +68,7 @@ describe("LyricLine", () => {
     expect(screen.queryByText("Tómatelo con calma")).not.toBeInTheDocument();
   });
 
-  it("emits the cleaned word when clicked", async () => {
-    const { onWord } = renderLine();
-    await userEvent.click(screen.getByLabelText("Consultar slowly"));
-    expect(onWord).toHaveBeenCalledWith("slowly", wordLine);
-  });
 
-  it("supports keyboard activation on words", async () => {
-    const { onWord } = renderLine();
-    const word = screen.getByLabelText("Consultar Take");
-    word.focus();
-    await userEvent.keyboard("{Enter}");
-    expect(onWord).toHaveBeenCalledWith("Take", wordLine);
-  });
 
   it("seeks to the line start when the line body is clicked", async () => {
     const { onSeek } = renderLine({ active: false, timeMs: 0 });
@@ -93,14 +79,5 @@ describe("LyricLine", () => {
   it("does not show study data on inactive lines", () => {
     renderLine({ active: false, timeMs: 0 });
     expect(screen.queryByText("/teɪk ɪt ˈsloʊli/")).not.toBeInTheDocument();
-  });
-});
-
-describe("cleanWord", () => {
-  it("strips surrounding punctuation but keeps apostrophes", () => {
-    expect(cleanWord("slowly,")).toBe("slowly");
-    expect(cleanWord("(hello)")).toBe("hello");
-    expect(cleanWord("don't")).toBe("don't");
-    expect(cleanWord("—")).toBe("");
   });
 });

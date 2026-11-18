@@ -240,29 +240,6 @@ func TestNormalizeIPA(t *testing.T) {
 	}
 }
 
-func TestLookupWordReturnsEntry(t *testing.T) {
-	service, _, _, _ := setup(t, func(call int, user string) string {
-		return `{"word":"slowly","lemma":"slowly","part_of_speech":"adverbio","ipa":"/ˈsloʊli/","translation":"lentamente","meaning":"Se usa para indicar que algo ocurre despacio.","example":"She walked slowly."}`
-	})
-	entry, err := service.LookupWord(context.Background(), "slowly", "Take it slowly")
-	if err != nil {
-		t.Fatalf("lookup: %v", err)
-	}
-	if entry.Word != "slowly" || entry.Translation != "lentamente" {
-		t.Fatalf("unexpected entry: %+v", entry)
-	}
-	if entry.Source != "ai" {
-		t.Fatalf("source = %q", entry.Source)
-	}
-}
-
-func TestLookupWordRejectsEmptySelection(t *testing.T) {
-	service, _, _, _ := setup(t, func(call int, user string) string { return `{}` })
-	if _, err := service.LookupWord(context.Background(), "   ", "context"); err == nil {
-		t.Fatal("expected an error for an empty selection")
-	}
-}
-
 type testLogger struct{ t *testing.T }
 
 func (l testLogger) Info(msg string, args ...any) { l.t.Logf(msg, args...) }

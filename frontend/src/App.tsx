@@ -12,7 +12,6 @@ import { SearchView } from "./features/search/SearchView";
 import { LibraryView } from "./features/library/LibraryView";
 import { FavoritesView } from "./features/favorites/FavoritesView";
 import { PlaylistsView } from "./features/playlists/PlaylistsView";
-import { LearningView } from "./features/learning/LearningView";
 import { SettingsView } from "./features/settings/SettingsView";
 import { ImmersiveView } from "./features/immersive/ImmersiveView";
 import { useApp } from "./stores/appStore";
@@ -85,7 +84,6 @@ export default function App() {
             {view === "library" && <LibraryView />}
             {view === "favorites" && <FavoritesView />}
             {view === "playlists" && <PlaylistsView />}
-            {view === "learning" && <LearningView />}
             {view === "settings" && <SettingsView />}
           </main>
           <div className="hidden border-l border-line lg:flex">

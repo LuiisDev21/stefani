@@ -37,6 +37,10 @@ export default defineConfig({
       STEFANI_KEYRING_SERVICE: "stefani-e2e",
       // Deterministic and offline: the suite does not hit YouTube.
       STEFANI_DISABLE_ONLINE: "1",
+      // Never call a real provider from the suite.
+      STEFANI_DISABLE_AI: "1",
+      // The generated catalog is a fixture now: tests ask for it explicitly.
+      STEFANI_SEED_DEMO: "1",
     } as Record<string, string>,
     stdout: "pipe",
     stderr: "pipe",

@@ -1,6 +1,4 @@
-import { ChevronDown, Pause, Play, Repeat1, SkipBack, SkipForward } from "lucide-react";
-import { useMemo } from "react";
-import { activeLineIndex, loopFromLines } from "../../lib/timeline";
+import { ChevronDown, Pause, Play, SkipBack, SkipForward } from "lucide-react";
 import { formatTime } from "../../lib/format";
 import { useDuration, usePlaybackTime } from "../../player/clock";
 import { useApp } from "../../stores/appStore";
@@ -32,7 +30,6 @@ export function ImmersiveView() {
   const setImmersive = useApp((state) => state.setImmersive);
   const lyrics = useApp((state) => state.lyrics);
   const loading = useApp((state) => state.lyricsLoading);
-  const lookupWord = useApp((state) => state.lookupWord);
   const importLyrics = useApp((state) => state.importLyrics);
 
   const current = usePlayer((state) => state.current);
@@ -41,7 +38,6 @@ export function ImmersiveView() {
   const next = usePlayer((state) => state.next);
   const previous = usePlayer((state) => state.previous);
   const seekMs = usePlayer((state) => state.seekMs);
-  const setLoop = usePlayer((state) => state.setLoop);
 
   const timeMs = usePlaybackTime();
   const durationMs = useDuration();
@@ -49,19 +45,6 @@ export function ImmersiveView() {
 
   const [showIPA, toggleIPA] = useLocalFlag("showIPA", true);
   const [showTranslation, toggleTranslation] = useLocalFlag("showTranslation", true);
-
-  const activeIndex = useMemo(
-    () => (lyrics?.lines ? activeLineIndex(lyrics.lines, timeMs) : -1),
-    [lyrics, timeMs],
-  );
-
-  const repeatLine = () => {
-    if (!lyrics?.lines || activeIndex < 0) return;
-    const bounds = loopFromLines(lyrics.lines, activeIndex, activeIndex);
-    if (!bounds) return;
-    setLoop(bounds);
-    seekMs(bounds.startMs);
-  };
 
   return (
     <div
@@ -139,7 +122,6 @@ export function ImmersiveView() {
             showTranslation={showTranslation}
             immersive
             onSeek={seekMs}
-            onWord={(word, line) => void lookupWord(word, line.id, line.text)}
             onImport={() => void importLyrics()}
           />
         </section>
@@ -161,9 +143,6 @@ export function ImmersiveView() {
           </button>
           <IconButton label="Siguiente" onClick={next} disabled={!current}>
             <SkipForward className="h-4 w-4" />
-          </IconButton>
-          <IconButton label="Repetir el verso actual" onClick={repeatLine} disabled={activeIndex < 0 || !current?.playable}>
-            <Repeat1 className="h-4 w-4" />
           </IconButton>
         </div>
 

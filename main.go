@@ -177,12 +177,16 @@ func run() error {
 	}
 	state := &settingsState{cfg: cfg, secrets: secrets}
 
-	demoLib := demo.New(paths.DemoDir)
-	startupCtx, cancelStartup := context.WithTimeout(context.Background(), 90*time.Second)
-	if err := demoLib.Ensure(startupCtx, db); err != nil {
-		logger.Error("demo library could not be prepared", "error", err)
+	// The generated catalog is a test fixture now: production starts empty and
+	// the UI never presents those songs as content.
+	if os.Getenv("STEFANI_SEED_DEMO") == "1" {
+		demoLib := demo.New(paths.DemoDir)
+		startupCtx, cancelStartup := context.WithTimeout(context.Background(), 90*time.Second)
+		if err := demoLib.Ensure(startupCtx, db); err != nil {
+			logger.Error("demo fixture could not be prepared", "error", err)
+		}
+		cancelStartup()
 	}
-	cancelStartup()
 
 	yt := music.NewYTMusic(12 * time.Second)
 	streamer := music.DetectYtDlp()

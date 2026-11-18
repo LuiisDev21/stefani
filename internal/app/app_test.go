@@ -94,21 +94,21 @@ func (w testWriter) Write(p []byte) (int, error) {
 	return len(p), nil
 }
 
-func TestBootstrapLoadsDemoLibrary(t *testing.T) {
+func TestBootstrapLoadsSeededLibrary(t *testing.T) {
 	env := newTestEnv(t)
 	data, err := env.app.Bootstrap()
 	if err != nil {
 		t.Fatalf("bootstrap: %v", err)
 	}
-	if len(data.DemoTracks) != len(demo.Songs) {
-		t.Fatalf("got %d demo tracks, want %d", len(data.DemoTracks), len(demo.Songs))
+	if data.Counts.Tracks != len(demo.Songs) {
+		t.Fatalf("got %d tracks, want %d", data.Counts.Tracks, len(demo.Songs))
 	}
-	for _, track := range data.DemoTracks {
+	for _, track := range data.RecentlyPlayed {
 		if !track.Playable || track.AudioURL == "" {
 			t.Fatalf("demo track is not playable: %+v", track)
 		}
 	}
-	if data.Counts.Annotated == 0 {
+	if data.Counts.Tracks == 0 {
 		t.Fatal("expected seeded annotations in the counts")
 	}
 }
@@ -231,8 +231,14 @@ func TestLibraryToggle(t *testing.T) {
 	if err != nil {
 		t.Fatalf("library: %v", err)
 	}
-	if len(list) != 1 || list[0].ID != "demo:slow-morning" {
-		t.Fatalf("unexpected library: %+v", list)
+	found := false
+	for _, item := range list {
+		if item.ID == "demo:slow-morning" {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatalf("saved track missing from the library: %+v", list)
 	}
 
 	removed, err := env.app.SetInLibrary("demo:slow-morning", false)
@@ -398,14 +404,14 @@ func TestLocalTracksKeepStreamingWithoutOnline(t *testing.T) {
 	cfg.Features.YouTubeMusic = false
 	env := newTestEnvWith(t, cfg, music.NewYtDlpWithRunner("", nil, nil, 0))
 
-	data, err := env.app.Bootstrap()
-	if err != nil {
+	if _, err := env.app.Bootstrap(); err != nil {
 		t.Fatalf("bootstrap: %v", err)
 	}
-	if len(data.DemoTracks) == 0 {
-		t.Fatal("expected demo tracks")
+	track, err := env.app.Track("demo:paper-boats")
+	if err != nil {
+		t.Fatalf("seeded track: %v", err)
 	}
-	src, err := env.app.ResolveAudioSource(data.DemoTracks[0].ID)
+	src, err := env.app.ResolveAudioSource(track.ID)
 	if err != nil {
 		t.Fatalf("demo source: %v", err)
 	}

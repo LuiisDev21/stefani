@@ -13,7 +13,6 @@ interface LyricLineProps {
   showTranslation: boolean;
   immersive?: boolean;
   onSeek: (ms: number) => void;
-  onWord: (word: string, line: Line) => void;
 }
 
 /**
@@ -22,8 +21,6 @@ interface LyricLineProps {
  * When the document carries word timings each word is filled by a hard two-stop
  * gradient clipped to the text: that is the only way to show progress inside a
  * single text node, so selection and screen readers still see the lyric once.
- * Words are buttons so they can be reached with Tab and opened in the
- * dictionary.
  */
 export const LyricLine = memo(function LyricLine({
   line,
@@ -34,7 +31,6 @@ export const LyricLine = memo(function LyricLine({
   showTranslation,
   immersive,
   onSeek,
-  onWord,
 }: LyricLineProps) {
   const hasWords = line.words.length > 0;
   const annotation = line.annotation;
@@ -80,24 +76,9 @@ export const LyricLine = memo(function LyricLine({
                 return (
                   <span
                     key={`${word.text}-${index}`}
-                    role="button"
-                    tabIndex={active ? 0 : -1}
-                    aria-label={`Consultar ${cleanWord(word.text)}`}
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      onWord(cleanWord(word.text), line);
-                    }}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter" || event.key === " ") {
-                        event.preventDefault();
-                        event.stopPropagation();
-                        onWord(cleanWord(word.text), line);
-                      }
-                    }}
                     style={fillStyle}
                     className={cn(
-                      "relative inline-block cursor-pointer rounded-[4px] outline-offset-4 transition-colors",
-                      immersive ? "hover:bg-white/10" : "hover:bg-accent/8",
+                      "relative inline-block",
                       active ? (immersive ? "text-[#ffc000]" : "text-ink") : immersive ? "text-white/65" : "text-body",
                     )}
                   >
@@ -148,8 +129,3 @@ export const LyricLine = memo(function LyricLine({
     </li>
   );
 });
-
-/** Strips punctuation so a clicked token is a dictionary word. */
-export function cleanWord(raw: string): string {
-  return raw.replace(/^[^\p{L}']+|[^\p{L}']+$/gu, "");
-}

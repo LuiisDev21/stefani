@@ -4,7 +4,6 @@ import {
   activeLineIndex,
   activeWordIndex,
   applyOffset,
-  loopFromLines,
   supportsKaraoke,
   wordProgress,
 } from "./timeline";
@@ -87,25 +86,6 @@ describe("activeWordIndex", () => {
   });
 });
 
-describe("loopFromLines", () => {
-  it("builds inclusive bounds with a small pad", () => {
-    const bounds = loopFromLines(lines, 1, 1);
-    expect(bounds).not.toBeNull();
-    expect(bounds!.startMs).toBe(7880);
-    expect(bounds!.endMs).toBe(11120);
-    expect(bounds!.label).toBe("line 1");
-  });
-
-  it("orders the selection when the user picks backwards", () => {
-    const bounds = loopFromLines(lines, 2, 0);
-    expect(bounds!.startMs).toBe(4880);
-    expect(bounds!.endMs).toBe(14120);
-  });
-
-  it("returns null without lines", () => {
-    expect(loopFromLines([], 0, 1)).toBeNull();
-  });
-});
 
 describe("supportsKaraoke", () => {
   const base: Lyrics = {

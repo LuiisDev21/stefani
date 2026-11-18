@@ -52,27 +52,6 @@ export function activeWordIndex(words: WordTiming[], timeMs: number): number {
   return words.length - 1;
 }
 
-/** A-B loop bounds snapped to whole lines. */
-export interface LoopBounds {
-  startMs: number;
-  endMs: number;
-  label: string;
-}
-
-/** Builds loop bounds for a range of lines (inclusive). */
-export function loopFromLines(lines: Line[], from: number, to: number): LoopBounds | null {
-  if (lines.length === 0) return null;
-  const start = Math.max(0, Math.min(from, to));
-  const end = Math.min(lines.length - 1, Math.max(from, to));
-  const first = lines[start];
-  const last = lines[end];
-  if (!first || !last) return null;
-  return {
-    startMs: Math.max(0, first.startMs - 120),
-    endMs: last.endMs + 120,
-    label: start === end ? first.text : `${first.text} … ${last.text}`,
-  };
-}
 
 /**
  * Offset (in ms) between the audio clock and the lyric document. Positive values

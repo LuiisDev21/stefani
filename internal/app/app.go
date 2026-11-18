@@ -154,10 +154,6 @@ func (a *App) Bootstrap() (BootstrapDTO, error) {
 	ctx, cancel := a.opCtx()
 	defer cancel()
 
-	demoTracks, err := a.tracksOfProvider(ctx, domain.ProviderDemo)
-	if err != nil {
-		return BootstrapDTO{}, err
-	}
 	library, err := a.library(ctx)
 	if err != nil {
 		return BootstrapDTO{}, err
@@ -178,14 +174,6 @@ func (a *App) Bootstrap() (BootstrapDTO, error) {
 	if err != nil {
 		return BootstrapDTO{}, err
 	}
-	progress, err := a.Progress()
-	if err != nil {
-		return BootstrapDTO{}, err
-	}
-	vocabulary, err := a.Vocabulary()
-	if err != nil {
-		return BootstrapDTO{}, err
-	}
 	settings, err := a.Settings()
 	if err != nil {
 		return BootstrapDTO{}, err
@@ -197,13 +185,10 @@ func (a *App) Bootstrap() (BootstrapDTO, error) {
 
 	return BootstrapDTO{
 		App:            a.Info(),
-		DemoTracks:     demoTracks,
 		RecentlyPlayed: recent,
 		Library:        library,
 		Favorites:      favorites,
 		Playlists:      playlists,
-		Progress:       progress,
-		Vocabulary:     vocabulary,
 		Settings:       settings,
 		Providers:      a.providerStates(ctx),
 		Counts:         counts,
@@ -227,25 +212,11 @@ func (a *App) counts(ctx context.Context) (StoredCountsDTO, error) {
 	if err != nil {
 		return StoredCountsDTO{}, err
 	}
-	words, err := a.db.Vocabulary(ctx)
-	if err != nil {
-		return StoredCountsDTO{}, err
-	}
-	annotated := 0
-	for _, track := range all {
-		items, err := a.db.AnnotationsByTrack(ctx, track.ID)
-		if err != nil {
-			continue
-		}
-		annotated += len(items)
-	}
 	return StoredCountsDTO{
 		Tracks:        len(all),
 		LibraryTracks: lib,
 		Favorites:     fav,
 		Playlists:     len(playlists),
-		Vocabulary:    len(words),
-		Annotated:     annotated,
 	}, nil
 }
 
@@ -368,7 +339,7 @@ func (a *App) Search(query string, limit int) (SearchDTO, error) {
 			if _, err := a.db.SaveTrack(ctx, fresh); err != nil {
 				a.log.Warn("refresh cached track failed", "track", fresh.ProviderID, "error", err)
 			}
-		} else if r.Track.Provider != domain.ProviderDemo {
+		} else {
 			// Remote results need a local row: that is what gives the player a
 			// stable id, the library state and a media URL.
 			id, err := a.db.SaveTrack(ctx, r.Track)

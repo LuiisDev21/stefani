@@ -33,7 +33,7 @@ export function Cover({ title, artist, src, size = 40, className, rounded = "rou
           <span className="font-display text-[30px] font-semibold leading-[1.08] tracking-[-0.035em] text-ink">
             {title}
           </span>
-          <span className="text-[12px] text-muted">{artist || "Sesión de estudio"}</span>
+          <span className="text-[12px] text-muted">{artist || "Sin artista"}</span>
         </div>
       ) : (
         <div className="flex h-full w-full items-center justify-center">

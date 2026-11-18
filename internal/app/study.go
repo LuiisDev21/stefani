@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"os"
 	"runtime/debug"
 	"strings"
 	"time"
@@ -113,36 +114,17 @@ func (a *App) ImportLyricsFile(trackID string) (LyricsDTO, error) {
 	return a.Lyrics(trackID, false)
 }
 
-// Annotations returns stored study data for a track.
-func (a *App) Annotations(trackID string) ([]AnnotationDTO, error) {
-	ctx, cancel := a.opCtx()
-	defer cancel()
-	items, err := a.db.AnnotationsByTrack(ctx, trackID)
-	if err != nil {
-		return nil, err
-	}
-	out := make([]AnnotationDTO, 0, len(items))
-	for _, item := range items {
-		notes := make([]NoteDTO, 0, len(item.Notes))
-		for _, n := range item.Notes {
-			notes = append(notes, NoteDTO{Type: n.Type, Text: n.Text})
-		}
-		out = append(out, AnnotationDTO{
-			LineID:        item.LineID,
-			Accent:        item.Accent,
-			IPA:           item.IPA,
-			SpanishApprox: item.SpanishApprox,
-			Translation:   item.Translation,
-			Notes:         notes,
-			Model:         item.Model,
-		})
-	}
-	return out, nil
-}
-
 // AnnotateTrack generates IPA, Spanish approximation and translation for the
 // track lyrics, emitting progress events as it goes.
 func (a *App) AnnotateTrack(trackID string) (AnnotateOutcome, error) {
+	// CI and the end-to-end suite must never reach a real provider: the setup
+	// path is what those runs assert.
+	if os.Getenv("STEFANI_DISABLE_AI") == "1" {
+		return AnnotateOutcome{
+			NeedsSetup: true,
+			Message:    "Configura un proveedor de IA compatible y su clave en Ajustes.",
+		}, nil
+	}
 	ctx, cancel := a.opCtx()
 	defer cancel()
 
@@ -198,132 +180,6 @@ func annotateMessage(err error) string {
 func needsSetup(err error) bool {
 	return errors.Is(err, ai.ErrNoEndpoint) || errors.Is(err, secret.ErrNotFound) ||
 		errors.Is(err, secret.ErrUnavailable)
-}
-
-// ResetAnnotations drops generated study data for a track.
-func (a *App) ResetAnnotations(trackID string) error {
-	ctx, cancel := a.opCtx()
-	defer cancel()
-	return a.phon.ResetCache(ctx, trackID)
-}
-
-// LookupWord asks the AI provider for dictionary data about a word.
-func (a *App) LookupWord(req WordRequest) (WordDTO, error) {
-	ctx, cancel := a.opCtx()
-	defer cancel()
-	context := strings.TrimSpace(req.Context)
-	if context == "" && req.LineID != "" {
-		if doc, err := a.db.Lyrics(ctx, req.TrackID); err == nil {
-			for _, line := range doc.Lines {
-				if line.ID == req.LineID {
-					context = line.Text
-					break
-				}
-			}
-		}
-	}
-	entry, err := a.phon.LookupWord(ctx, req.Word, context)
-	if err != nil {
-		if needsSetup(err) {
-			return WordDTO{}, fmt.Errorf("%s", annotateMessage(err))
-		}
-		return WordDTO{}, err
-	}
-	entry.TrackID = req.TrackID
-	return toWordDTO(entry), nil
-}
-
-// Vocabulary lists saved words.
-func (a *App) Vocabulary() ([]WordDTO, error) {
-	ctx, cancel := a.opCtx()
-	defer cancel()
-	items, err := a.db.Vocabulary(ctx)
-	if err != nil {
-		return nil, err
-	}
-	out := make([]WordDTO, 0, len(items))
-	for _, item := range items {
-		out = append(out, toWordDTO(item))
-	}
-	return out, nil
-}
-
-// SaveWord stores a vocabulary entry.
-func (a *App) SaveWord(in WordInput) (WordDTO, error) {
-	ctx, cancel := a.opCtx()
-	defer cancel()
-	if strings.TrimSpace(in.Word) == "" {
-		return WordDTO{}, fmt.Errorf("la palabra esta vacia")
-	}
-	entry, err := a.db.SaveVocabulary(ctx, domain.WordEntry{
-		Word:         strings.TrimSpace(in.Word),
-		Lemma:        strings.TrimSpace(in.Lemma),
-		PartOfSpeech: strings.TrimSpace(in.PartOfSpeech),
-		Meaning:      strings.TrimSpace(in.Meaning),
-		IPA:          strings.TrimSpace(in.IPA),
-		Translation:  strings.TrimSpace(in.Translation),
-		Example:      strings.TrimSpace(in.Example),
-		Source:       "ai",
-		TrackID:      in.TrackID,
-	})
-	if err != nil {
-		return WordDTO{}, err
-	}
-	return toWordDTO(entry), nil
-}
-
-// DeleteWord removes a saved word.
-func (a *App) DeleteWord(id string) error {
-	ctx, cancel := a.opCtx()
-	defer cancel()
-	return a.db.DeleteVocabulary(ctx, id)
-}
-
-// RecordStudy adds practice time and practiced lines.
-func (a *App) RecordStudy(in StudyInput) error {
-	ctx, cancel := a.opCtx()
-	defer cancel()
-	if in.TrackID == "" {
-		return fmt.Errorf("falta la cancion")
-	}
-	if in.Seconds > 12*3600 {
-		in.Seconds = 12 * 3600
-	}
-	if in.Lines < 0 || in.Lines > 5000 {
-		return fmt.Errorf("numero de versos invalido")
-	}
-	return a.db.RecordStudy(ctx, in.TrackID, in.Seconds, in.Lines)
-}
-
-// Progress lists study progress with track metadata.
-func (a *App) Progress() ([]ProgressDTO, error) {
-	ctx, cancel := a.opCtx()
-	defer cancel()
-	items, err := a.db.AllProgress(ctx)
-	if err != nil {
-		return nil, err
-	}
-	words, err := a.db.Vocabulary(ctx)
-	if err != nil {
-		return nil, err
-	}
-	wordsByTrack := make(map[string]int, len(words))
-	for _, w := range words {
-		if w.TrackID != "" {
-			wordsByTrack[w.TrackID]++
-		}
-	}
-	out := make([]ProgressDTO, 0, len(items))
-	for _, item := range items {
-		dto := toProgressDTO(item)
-		if track, err := a.db.Track(ctx, item.TrackID); err == nil {
-			dto.Title = track.Title
-			dto.Artist = track.Artist
-		}
-		dto.WordsSaved = wordsByTrack[item.TrackID]
-		out = append(out, dto)
-	}
-	return out, nil
 }
 
 // History lists recent playback.

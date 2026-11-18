@@ -11,7 +11,7 @@ internal/app  ── servicio Wails (DTOs, validacion de entrada, eventos)
    ├── internal/lyrics     parseo LRC, LRCLIB, cache
    ├── internal/phonetics  prompts, validacion estricta, cache
    ├── internal/ai         cliente OpenAI-compatible (timeout, retry, JSON)
-   ├── internal/demo       contenido original + sintesis de audio
+   ├── internal/demo       fixture de tests: catalogo generado
    ├── internal/learning   progreso (via storage)
    ├── internal/storage    SQLite, migraciones, repositorios
    ├── internal/config     ajustes tipados en JSON

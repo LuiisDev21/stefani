@@ -6,13 +6,11 @@ import type {
   Info,
   Lyrics,
   Playlist,
-  Progress,
   ProviderState,
   SearchResult,
   Settings,
   StoredCounts,
   Track,
-  Word,
   TestOutcome,
 } from "../lib/types";
 import { usePlayer } from "./playerStore";
@@ -23,7 +21,6 @@ export type View =
   | "library"
   | "playlists"
   | "favorites"
-  | "learning"
   | "settings";
 
 export type ToastKind = "ok" | "error" | "info";
@@ -34,27 +31,15 @@ export interface Toast {
   message: string;
 }
 
-export interface WordPanel {
-  word: string;
-  lineId: string;
-  context: string;
-  loading: boolean;
-  entry: Word | null;
-  error: string;
-}
-
 interface AppState {
   ready: boolean;
   fatalError: string;
 
   info: Info | null;
-  demo: Track[];
   recently: Track[];
   library: Track[];
   favorites: Track[];
   playlists: Playlist[];
-  progress: Progress[];
-  vocabulary: Word[];
   providers: ProviderState[];
   settings: Settings | null;
   counts: StoredCounts | null;
@@ -73,7 +58,6 @@ interface AppState {
   annotating: boolean;
   annotateProgress: { done: number; total: number } | null;
 
-  wordPanel: WordPanel | null;
   toast: Toast | null;
   immersive: boolean;
   pickerTrack: Track | null;
@@ -99,19 +83,12 @@ interface AppState {
   removeFromPlaylist: (playlistId: string, position: number) => Promise<void>;
   movePlaylistItem: (playlistId: string, from: number, to: number) => Promise<void>;
 
-  lookupWord: (word: string, lineId: string, context: string) => Promise<void>;
-  closeWordPanel: () => void;
-  saveWord: (entry: Word) => Promise<void>;
-  deleteWord: (id: string) => Promise<void>;
-
   saveSettings: (input: Parameters<typeof api.saveSettings>[0]) => Promise<boolean>;
   testLLM: () => Promise<TestOutcome | null>;
   clearKey: () => Promise<void>;
 
   refreshLibrary: () => Promise<void>;
   refreshPlaylists: () => Promise<void>;
-  refreshProgress: () => Promise<void>;
-  refreshVocabulary: () => Promise<void>;
 
   notify: (kind: ToastKind, message: string) => void;
   dismissToast: () => void;
@@ -126,13 +103,10 @@ function applyBootstrap(data: Bootstrap) {
   return {
     ready: true,
     info: data.app,
-    demo: data.demoTracks ?? [],
     recently: data.recentlyPlayed ?? [],
     library: data.library ?? [],
     favorites: data.favorites ?? [],
     playlists: data.playlists ?? [],
-    progress: data.progress ?? [],
-    vocabulary: data.vocabulary ?? [],
     providers: data.providers ?? [],
     settings: data.settings,
     counts: data.counts,
@@ -144,13 +118,10 @@ export const useApp = create<AppState>((set, get) => ({
   fatalError: "",
 
   info: null,
-  demo: [],
   recently: [],
   library: [],
   favorites: [],
   playlists: [],
-  progress: [],
-  vocabulary: [],
   providers: [],
   settings: null,
   counts: null,
@@ -169,7 +140,6 @@ export const useApp = create<AppState>((set, get) => ({
   annotating: false,
   annotateProgress: null,
 
-  wordPanel: null,
   toast: null,
   immersive: false,
   pickerTrack: null,
@@ -189,13 +159,12 @@ export const useApp = create<AppState>((set, get) => ({
     if (view === "playlists" && playlist) {
       void get().openPlaylist(playlist);
     }
-    if (view === "learning") void get().refreshProgress();
     if (view === "favorites") void get().refreshLibrary();
   },
 
   openTrack: async (track, queue) => {
     usePlayer.getState().playTrack(track, queue);
-    set({ lyrics: null, lyricsLoading: true, wordPanel: null });
+    set({ lyrics: null, lyricsLoading: true });
     await get().loadLyrics(track.id);
   },
 
@@ -381,50 +350,6 @@ export const useApp = create<AppState>((set, get) => ({
     }
   },
 
-  lookupWord: async (word, lineId, context) => {
-    const track = usePlayer.getState().current;
-    if (!track) return;
-    set({
-      wordPanel: { word, lineId, context, loading: true, entry: null, error: "" },
-    });
-    try {
-      const entry = await api.lookupWord({ trackId: track.id, lineId, word, context });
-      set({ wordPanel: { word, lineId, context, loading: false, entry, error: "" } });
-    } catch (error) {
-      set({ wordPanel: { word, lineId, context, loading: false, entry: null, error: errorMessage(error) } });
-    }
-  },
-
-  closeWordPanel: () => set({ wordPanel: null }),
-
-  saveWord: async (entry) => {
-    try {
-      await api.saveWord({
-        word: entry.word,
-        lemma: entry.lemma,
-        partOfSpeech: entry.partOfSpeech,
-        meaning: entry.meaning,
-        ipa: entry.ipa,
-        translation: entry.translation,
-        example: entry.example,
-        trackId: entry.trackId,
-      });
-      await get().refreshVocabulary();
-      get().notify("ok", `"${entry.word}" guardada en vocabulario`);
-    } catch (error) {
-      get().notify("error", errorMessage(error));
-    }
-  },
-
-  deleteWord: async (id) => {
-    try {
-      await api.deleteWord(id);
-      await get().refreshVocabulary();
-    } catch (error) {
-      get().notify("error", errorMessage(error));
-    }
-  },
-
   saveSettings: async (input) => {
     try {
       const settings = await api.saveSettings(input);
@@ -475,24 +400,6 @@ export const useApp = create<AppState>((set, get) => ({
     try {
       const playlists = await api.playlists();
       set({ playlists });
-    } catch (error) {
-      get().notify("error", errorMessage(error));
-    }
-  },
-
-  refreshProgress: async () => {
-    try {
-      const progress = await api.progress();
-      set({ progress });
-    } catch (error) {
-      get().notify("error", errorMessage(error));
-    }
-  },
-
-  refreshVocabulary: async () => {
-    try {
-      const vocabulary = await api.vocabulary();
-      set({ vocabulary });
     } catch (error) {
       get().notify("error", errorMessage(error));
     }

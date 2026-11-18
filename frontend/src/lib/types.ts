@@ -95,31 +95,6 @@ export interface Lyrics {
   notice: string;
 }
 
-export interface Word {
-  id: string;
-  word: string;
-  lemma: string;
-  partOfSpeech: string;
-  meaning: string;
-  ipa: string;
-  translation: string;
-  example: string;
-  source: string;
-  trackId: string;
-  createdAt: number;
-}
-
-export interface Progress {
-  trackId: string;
-  title: string;
-  artist: string;
-  linesPracticed: number;
-  studySeconds: number;
-  lastStudiedAt: number;
-  status: string;
-  wordsSaved: number;
-}
-
 export interface HistoryEntry {
   id: number;
   trackId: string;
@@ -164,19 +139,14 @@ export interface StoredCounts {
   libraryTracks: number;
   favorites: number;
   playlists: number;
-  vocabulary: number;
-  annotated: number;
 }
 
 export interface Bootstrap {
   app: Info;
-  demoTracks: Track[];
   recentlyPlayed: Track[];
   library: Track[];
   favorites: Track[];
   playlists: Playlist[];
-  progress: Progress[];
-  vocabulary: Word[];
   settings: Settings;
   providers: ProviderState[];
   counts: StoredCounts;
@@ -210,30 +180,6 @@ export interface TestOutcome {
   latencyMs: number;
   models?: string[];
   modelsNotice?: string;
-}
-
-export interface WordRequest {
-  trackId: string;
-  lineId: string;
-  word: string;
-  context: string;
-}
-
-export interface WordInput {
-  word: string;
-  lemma: string;
-  partOfSpeech: string;
-  meaning: string;
-  ipa: string;
-  translation: string;
-  example: string;
-  trackId: string;
-}
-
-export interface StudyInput {
-  trackId: string;
-  seconds: number;
-  lines: number;
 }
 
 export interface SettingsInput {

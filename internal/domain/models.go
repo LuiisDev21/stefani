@@ -10,6 +10,9 @@ import "time"
 type Provider string
 
 const (
+	// ProviderDemo backs the catalog used by the test fixtures only: the app no
+	// longer seeds it, but the Go and end-to-end suites need stable songs with
+	// word timings.
 	ProviderDemo    Provider = "demo"
 	ProviderLocal   Provider = "local"
 	ProviderYTMusic Provider = "ytmusic"
@@ -123,30 +126,6 @@ type Annotation struct {
 	Version       string
 	CacheKey      string
 	CreatedAt     time.Time
-}
-
-// WordEntry is a dictionary/vocabulary item.
-type WordEntry struct {
-	ID           string
-	Word         string
-	Lemma        string
-	PartOfSpeech string
-	Meaning      string
-	IPA          string
-	Translation  string
-	Example      string
-	Source       string // "ai" | "manual" | "provider"
-	TrackID      string
-	CreatedAt    time.Time
-}
-
-// Progress tracks study activity for a track.
-type Progress struct {
-	TrackID        string
-	LinesPracticed int
-	StudySeconds   int64
-	LastStudiedAt  time.Time
-	Status         string // new | learning | known
 }
 
 // Playlist is a local (or imported copy of an external) collection.

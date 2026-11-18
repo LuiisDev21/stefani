@@ -15,7 +15,7 @@ motor educativo no depende de ninguno en particular.
 
 ## Demo
 
-`internal/demo` contiene tres canciones originales escritas para el proyecto.
+`internal/demo` es un fixture de pruebas con tres canciones originales; la app no lo siembra salvo `STEFANI_SEED_DEMO=1`.
 El audio no se descarga: se sintetiza con `internal/media` (pads, melodia, pulso)
 a partir de la misma partitura que produce los tiempos por palabra, asi que audio
 y letra estan alineados por construccion. Los WAV se generan en

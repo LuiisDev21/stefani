@@ -39,8 +39,8 @@ func TestMigrationsApplyOnce(t *testing.T) {
 	if err != nil {
 		t.Fatalf("schema version: %v", err)
 	}
-	if version != 1 {
-		t.Fatalf("schema version = %d, want 1", version)
+	if version != 2 {
+		t.Fatalf("schema version = %d, want 2", version)
 	}
 	// Re-opening the same file must not re-apply migrations.
 	path := db.Path()
@@ -50,8 +50,8 @@ func TestMigrationsApplyOnce(t *testing.T) {
 		t.Fatalf("reopen database: %v", err)
 	}
 	defer again.Close()
-	if v, _ := again.SchemaVersion(context.Background()); v != 1 {
-		t.Fatalf("schema version after reopen = %d, want 1", v)
+	if v, _ := again.SchemaVersion(context.Background()); v != 2 {
+		t.Fatalf("schema version after reopen = %d, want 2", v)
 	}
 }
 
@@ -211,45 +211,5 @@ func TestDeletePlaylistCascadesItems(t *testing.T) {
 	}
 	if count != 0 {
 		t.Fatalf("playlist items survived cascade: %d", count)
-	}
-}
-
-func TestProgressAccumulates(t *testing.T) {
-	db := newTestDB(t)
-	ctx := context.Background()
-	seedTrack(t, db, "t1")
-	if err := db.RecordStudy(ctx, "t1", 30, 2); err != nil {
-		t.Fatalf("record: %v", err)
-	}
-	if err := db.RecordStudy(ctx, "t1", 15, 1); err != nil {
-		t.Fatalf("record: %v", err)
-	}
-	p, err := db.ProgressForTrack(ctx, "t1")
-	if err != nil {
-		t.Fatalf("progress: %v", err)
-	}
-	if p.StudySeconds != 45 || p.LinesPracticed != 3 {
-		t.Fatalf("progress not accumulated: %+v", p)
-	}
-	if p.Status != "learning" {
-		t.Fatalf("status = %q, want learning", p.Status)
-	}
-}
-
-func TestVocabularyUpsertByWord(t *testing.T) {
-	db := newTestDB(t)
-	ctx := context.Background()
-	if _, err := db.SaveVocabulary(ctx, domain.WordEntry{Word: "slowly", Meaning: "lentamente"}); err != nil {
-		t.Fatalf("save: %v", err)
-	}
-	if _, err := db.SaveVocabulary(ctx, domain.WordEntry{Word: "slowly", Meaning: "despacio", Lemma: "slow"}); err != nil {
-		t.Fatalf("resave: %v", err)
-	}
-	words, err := db.Vocabulary(ctx)
-	if err != nil {
-		t.Fatalf("list: %v", err)
-	}
-	if len(words) != 1 || words[0].Meaning != "despacio" {
-		t.Fatalf("vocabulary not upserted: %+v", words)
 	}
 }

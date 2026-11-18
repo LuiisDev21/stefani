@@ -1,5 +1,5 @@
-import { ArrowRight, GraduationCap, Headphones, Heart, Library, ListMusic, Pause, Play, Search, Upload } from "lucide-react";
-import { formatStudyTime, formatTime, plural } from "../../lib/format";
+import { ArrowRight, Headphones, Heart, Library, ListMusic, Pause, Play, Search, Upload } from "lucide-react";
+import { formatTime, plural } from "../../lib/format";
 import { useApp } from "../../stores/appStore";
 import { usePlayer } from "../../stores/playerStore";
 import { Button } from "../../components/ui/Button";
@@ -12,17 +12,14 @@ import { MediaCard } from "../../components/home/MediaCard";
 import { QuickCard } from "../../components/home/QuickCard";
 
 /**
- * Home: a web-player dashboard. The record that is playing — or the session
- * ready to start — owns the top of the page with its cover, the one white
- * action, and three real counters. Below it: shortcuts into the library, the
- * demo songs, your lists, and the last records you played.
- *
- * Every number here comes from the database; there are no invented metrics.
+ * Home: the record that is playing — or the first one in the library — owns the
+ * top of the page with its cover and the one white action. Below it: shortcuts,
+ * the library, your lists, and what you played last. Every number comes from
+ * the database.
  */
 export function HomeView() {
-  const demo = useApp((state) => state.demo);
+  const library = useApp((state) => state.library);
   const recently = useApp((state) => state.recently);
-  const progress = useApp((state) => state.progress);
   const playlists = useApp((state) => state.playlists);
   const counts = useApp((state) => state.counts);
   const openTrack = useApp((state) => state.openTrack);
@@ -34,10 +31,10 @@ export function HomeView() {
   const playing = usePlayer((state) => state.playing);
   const toggle = usePlayer((state) => state.toggle);
 
-  const hero = current ?? demo[0];
+  const hero = current ?? library[0] ?? recently[0];
   const heroIsCurrent = Boolean(current && hero && current.id === hero.id);
-  const totalStudy = progress.reduce((sum, item) => sum + item.studySeconds, 0);
   const heroAction = !hero ? undefined : heroIsCurrent ? "toggle" : "open";
+  const shelf = library.slice(0, 8);
 
   return (
     <div className="min-h-0">
@@ -53,7 +50,7 @@ export function HomeView() {
       <div className="px-8 pb-28">
         {hero ? (
           <section
-            aria-label={heroIsCurrent ? "Sonando ahora" : "Sesión destacada"}
+            aria-label={heroIsCurrent ? "Sonando ahora" : "Tu biblioteca"}
             className="grid gap-7 rounded-[16px] border border-line bg-elevated p-6 lg:grid-cols-[220px_minmax(0,1fr)_200px] lg:items-center lg:p-8"
           >
             <Cover
@@ -67,7 +64,7 @@ export function HomeView() {
 
             <div className="min-w-0">
               <p className="text-[12px] text-muted">
-                {heroIsCurrent ? (playing ? "Sonando ahora" : "En pausa") : "Sesión de estudio"}
+                {heroIsCurrent ? (playing ? "Sonando ahora" : "En pausa") : "De tu biblioteca"}
               </p>
               <h2 className="mt-2 text-[36px] font-semibold leading-[1.04] tracking-[-0.04em] text-ink sm:text-[44px]">
                 {hero.title}
@@ -78,8 +75,7 @@ export function HomeView() {
                 {hero.durationMs ? ` · ${formatTime(hero.durationMs)}` : ""}
               </p>
               <p className="mt-4 max-w-[54ch] text-[14px] leading-[1.5] text-muted">
-                La letra se ilumina palabra por palabra mientras suena, con IPA y lectura en español. Sin configurar
-                nada.
+                La letra se ilumina palabra por palabra mientras suena, con IPA y lectura en español.
               </p>
               <div className="mt-6 flex flex-wrap items-center gap-2">
                 <Button
@@ -94,34 +90,31 @@ export function HomeView() {
                   onClick={() => {
                     if (!hero) return;
                     if (heroAction === "toggle") toggle();
-                    else void openTrack(hero, current ? [hero] : demo);
+                    else void openTrack(hero, library);
                   }}
                 >
                   {heroAction === "toggle" ? (playing ? "Pausar" : "Reanudar") : "Reproducir"}
-                </Button>
-                <Button variant="subtle" onClick={() => go("learning")} icon={<GraduationCap className="h-4 w-4" />}>
-                  Estudiar
                 </Button>
               </div>
             </div>
 
             <dl className="hidden shrink-0 flex-col gap-5 border-l border-line pl-8 lg:flex">
               <div>
-                <dt className="text-[12px] text-muted">Práctica acumulada</dt>
-                <dd className="mt-1 text-[24px] font-semibold tracking-[-0.03em] text-ink tnum">
-                  {totalStudy > 0 ? formatStudyTime(totalStudy) : "Sin sesiones"}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-[12px] text-muted">Versos anotados</dt>
-                <dd className="mt-1 text-[24px] font-semibold tracking-[-0.03em] text-ink tnum">
-                  {counts?.annotated ?? 0}
-                </dd>
-              </div>
-              <div>
                 <dt className="text-[12px] text-muted">Pistas</dt>
                 <dd className="mt-1 text-[24px] font-semibold tracking-[-0.03em] text-ink tnum">
                   {counts?.tracks ?? 0}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-[12px] text-muted">Favoritas</dt>
+                <dd className="mt-1 text-[24px] font-semibold tracking-[-0.03em] text-ink tnum">
+                  {counts?.favorites ?? 0}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-[12px] text-muted">Listas</dt>
+                <dd className="mt-1 text-[24px] font-semibold tracking-[-0.03em] text-ink tnum">
+                  {counts?.playlists ?? 0}
                 </dd>
               </div>
             </dl>
@@ -129,8 +122,8 @@ export function HomeView() {
         ) : (
           <EmptyState
             icon={<Headphones className="h-5 w-5" />}
-            title="La biblioteca de demostración no está disponible"
-            description="Revisa los registros de la app o importa tus propios archivos de audio para empezar."
+            title="Todavía no guardaste nada"
+            description="Importa tus archivos de audio o busca en el catálogo y guarda lo que quieras escuchar."
             actions={
               <Button size="sm" onClick={() => void importAudio()} icon={<Upload className="h-3.5 w-3.5" />}>
                 Importar audio
@@ -145,7 +138,7 @@ export function HomeView() {
             <QuickCard
               icon={<Library className="h-4 w-4" />}
               label="Biblioteca"
-              detail={`${plural(counts?.libraryTracks ?? 0, "pista", "pistas")} guardadas`}
+              detail={plural(counts?.libraryTracks ?? 0, "pista", "pistas")}
               onClick={() => go("library")}
             />
             <QuickCard
@@ -161,10 +154,10 @@ export function HomeView() {
               onClick={() => go("playlists")}
             />
             <QuickCard
-              icon={<GraduationCap className="h-4 w-4" />}
-              label="Aprendizaje"
-              detail={`${plural(counts?.vocabulary ?? 0, "palabra", "palabras")} guardadas`}
-              onClick={() => go("learning")}
+              icon={<Search className="h-4 w-4" />}
+              label="Buscar"
+              detail="Biblioteca y catálogo"
+              onClick={() => go("search")}
             />
           </div>
         </section>
@@ -172,18 +165,17 @@ export function HomeView() {
         <section className="mt-12 grid gap-10 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,0.75fr)]">
           <div>
             <SectionTitle
-              title="Canciones de demostración"
-              hint="Audio generado por la app; puedes estudiar sin cuenta ni servicios externos"
+              title="Tu biblioteca"
               action={
-                <Button size="sm" variant="ghost" onClick={() => go("search")}>
-                  Buscar más
+                <Button size="sm" variant="ghost" onClick={() => go("library")}>
+                  Ver todo
                 </Button>
               }
             />
-            {demo.length === 0 ? (
-              <p className="text-[14px] text-muted">Sin canciones de demostración.</p>
+            {shelf.length === 0 ? (
+              <p className="text-[14px] text-muted">Todavía no hay canciones guardadas.</p>
             ) : (
-              <TrackList tracks={demo} onAdd={openPicker} />
+              <TrackList tracks={shelf} onAdd={openPicker} />
             )}
           </div>
 
@@ -250,39 +242,6 @@ export function HomeView() {
                 <MediaCard key={track.id} track={track} onPlay={() => void openTrack(track, recently)} />
               ))}
             </div>
-          </section>
-        ) : null}
-
-        {progress.length > 0 ? (
-          <section className="mt-12" aria-label="Continuar estudiando">
-            <SectionTitle
-              title="Continuar estudiando"
-              hint={`${formatStudyTime(totalStudy)} de práctica acumulada`}
-              action={
-                <button
-                  type="button"
-                  onClick={() => go("learning")}
-                  className="flex items-center gap-1 text-[13px] text-body transition-colors hover:text-ink"
-                >
-                  Detalle <ArrowRight className="h-3 w-3" />
-                </button>
-              }
-            />
-            <ul className="grid gap-2 rounded-[16px] border border-line bg-elevated p-2 sm:grid-cols-2">
-              {progress.slice(0, 4).map((item) => (
-                <li key={item.trackId} className="flex items-center justify-between gap-3 rounded-[8px] px-3 py-2.5">
-                  <div className="min-w-0">
-                    <p className="truncate text-[13px] text-ink">{item.title || item.trackId}</p>
-                    <p className="truncate text-[12px] text-ash">
-                      {item.artist || "Artista desconocido"} · {formatStudyTime(item.studySeconds)}
-                    </p>
-                  </div>
-                  <span className="shrink-0 text-[12px] text-muted">
-                    {item.status === "known" ? "conocida" : "en curso"}
-                  </span>
-                </li>
-              ))}
-            </ul>
           </section>
         ) : null}
       </div>

@@ -15,16 +15,11 @@ import type {
   Info,
   Lyrics,
   Playlist,
-  Progress,
   SearchResult,
   Settings,
   SettingsInput,
-  StudyInput,
   TestOutcome,
   Track,
-  Word,
-  WordInput,
-  WordRequest,
 } from "./types";
 
 const as = <T,>(value: unknown): Promise<T> => value as Promise<T>;
@@ -62,15 +57,7 @@ export const api = {
   lyrics: (trackId: string, refresh = false) => as<Lyrics>(App.Lyrics(trackId, refresh)),
   importLyricsFile: (trackId: string) => as<Lyrics>(App.ImportLyricsFile(trackId)),
   annotateTrack: (trackId: string) => as<AnnotateOutcome>(App.AnnotateTrack(trackId)),
-  resetAnnotations: (trackId: string) => as<void>(App.ResetAnnotations(trackId)),
 
-  lookupWord: (request: WordRequest) => as<Word>(App.LookupWord(request)),
-  vocabulary: () => as<Word[]>(App.Vocabulary()),
-  saveWord: (input: WordInput) => as<Word>(App.SaveWord(input)),
-  deleteWord: (id: string) => as<void>(App.DeleteWord(id)),
-
-  recordStudy: (input: StudyInput) => as<void>(App.RecordStudy(input)),
-  progress: () => as<Progress[]>(App.Progress()),
   history: (limit = 30) => as<HistoryEntry[]>(App.History(limit)),
 
   settings: () => as<Settings>(App.Settings()),

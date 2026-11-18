@@ -2,7 +2,7 @@ import { ArrowDown, LoaderCircle, Music4 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePlaybackTime } from "../../player/clock";
 import { activeLineIndex } from "../../lib/timeline";
-import type { Line, Lyrics } from "../../lib/types";
+import type { Lyrics } from "../../lib/types";
 import { EmptyState } from "../ui/EmptyState";
 import { Button } from "../ui/Button";
 import { LyricLine } from "./LyricLine";
@@ -15,7 +15,6 @@ interface LyricsViewProps {
   showTranslation: boolean;
   immersive?: boolean;
   onSeek: (ms: number) => void;
-  onWord: (word: string, line: Line) => void;
   onImport: () => void;
 }
 
@@ -34,7 +33,6 @@ export function LyricsView({
   showTranslation,
   immersive,
   onSeek,
-  onWord,
   onImport,
 }: LyricsViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -151,7 +149,6 @@ export function LyricsView({
                   showTranslation={showTranslation}
                   immersive={immersive}
                   onSeek={onSeek}
-                  onWord={onWord}
                 />
               </div>
             );

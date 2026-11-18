@@ -235,3 +235,21 @@ estanteria de lo escuchado. El modo inmersivo queda intacto, incluido su ambar.
 **Consecuencia**: cero sombras fuera del inmersivo, un solo color de accion y
 un unico momento cromatico. Los metadatos suben a `#a9a9ab`/`#8b8c8d` para
 cumplir AA sobre negro. Cualquier vista nueva hereda el tema usando los tokens.
+
+## ADR-021: el producto es un reproductor, no una herramienta de estudio
+
+**Contexto**: la app acumulo vocabulario, progreso de practica, repeticion A-B y
+un catalogo generado de tres canciones. El uso real es escuchar con la letra
+sincronizada, la pronunciacion y la traduccion.
+
+**Decision**: se elimina la capa de aprendizaje (vista Aprendizaje, vocabulario,
+progreso, repeticion de versos y su dominio en Go) y el catalogo generado deja de
+sembrarse en produccion. Se conservan letra, IPA + aproximacion local, traduccion
+por IA, desfase, busqueda, biblioteca, listas, favoritos y modo inmersivo. La
+migracion `0002_player_only.sql` borra las pistas demo y las tablas de
+aprendizaje; `internal/demo` queda solo como fixture (`STEFANI_SEED_DEMO=1`).
+
+**Consecuencia**: la app arranca vacia y se llena con el usuario. El boton del
+panel pasa a "Generar" para no confundirse con el chip "Traduccion", y el chip de
+pronunciacion se llama "Pronunciacion". Los tests usan `STEFANI_DISABLE_AI=1`
+para no llamar a un proveedor real.

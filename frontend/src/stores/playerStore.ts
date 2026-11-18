@@ -1,6 +1,5 @@
 import { create } from "zustand";
 import { api } from "../lib/api";
-import type { LoopBounds } from "../lib/timeline";
 import type { Track } from "../lib/types";
 import { clock } from "../player/clock";
 
@@ -9,7 +8,7 @@ import { clock } from "../player/clock";
  *
  * The HTML audio element lives at module scope: React never owns it, so remounts
  * and route changes cannot interrupt playback. Every side effect (loading,
- * looping, study accounting) is triggered from an action here, and the UI only
+ * playback state) is triggered from an action here, and the UI only
  * reads state.
  */
 
@@ -24,7 +23,6 @@ interface PlayerState {
   muted: boolean;
   rate: number;
   repeat: RepeatMode;
-  loop: LoopBounds | null;
   error: string | null;
 
   loadQueue: (tracks: Track[], startIndex?: number, autoplay?: boolean) => void;
@@ -37,7 +35,6 @@ interface PlayerState {
   setVolume: (value: number) => void;
   toggleMute: () => void;
   setRate: (value: number) => void;
-  setLoop: (bounds: LoopBounds | null) => void;
   setRepeat: (mode: RepeatMode) => void;
   clear: () => void;
 }
@@ -46,8 +43,6 @@ const RATES = [0.75, 1, 1.25];
 
 let audio: HTMLAudioElement | null = null;
 let frame = 0;
-let studySeconds = 0;
-let studyTrackId = "";
 
 function ensureAudio(): HTMLAudioElement {
   if (audio) return audio;
@@ -85,7 +80,6 @@ function ensureAudio(): HTMLAudioElement {
   el.addEventListener("pause", () => {
     usePlayer.setState({ playing: false });
     clock.set({ playing: false });
-    flushStudy();
   });
   return el;
 }
@@ -96,31 +90,10 @@ function startFrames() {
     frame = requestAnimationFrame(tick);
     const el = audio;
     if (!el) return;
-    const state = usePlayer.getState();
     const timeMs = Math.round(el.currentTime * 1000);
     let reported = timeMs;
 
-    if (state.loop && !el.paused) {
-      if (timeMs >= state.loop.endMs || timeMs < state.loop.startMs - 400) {
-        el.currentTime = state.loop.startMs / 1000;
-        reported = state.loop.startMs;
-      }
-    }
     clock.set({ timeMs: reported });
-
-    // Study accounting: count only real listening time on the current track.
-    if (!el.paused && state.current) {
-      studySeconds += 1 / 60;
-      if (state.current.id !== studyTrackId) {
-        studyTrackId = state.current.id;
-        studySeconds = 0;
-      }
-      if (studySeconds >= 30) {
-        const seconds = Math.round(studySeconds);
-        studySeconds = 0;
-        void api.recordStudy({ trackId: state.current.id, seconds, lines: 0 }).catch(() => undefined);
-      }
-    }
   };
   frame = requestAnimationFrame(tick);
 }
@@ -132,14 +105,6 @@ function stopFrames() {
   }
 }
 
-function flushStudy() {
-  const state = usePlayer.getState();
-  if (state.current && studySeconds >= 5) {
-    const seconds = Math.round(studySeconds);
-    studySeconds = 0;
-    void api.recordStudy({ trackId: state.current.id, seconds, lines: 0 }).catch(() => undefined);
-  }
-}
 
 function handleEnded() {
   const state = usePlayer.getState();
@@ -182,8 +147,6 @@ function loadAndPlay(track: Track, autoplay: boolean) {
   el.playbackRate = usePlayer.getState().rate;
   el.volume = usePlayer.getState().muted ? 0 : usePlayer.getState().volume;
   clock.reset(track.durationMs || 0);
-  studyTrackId = track.id;
-  studySeconds = 0;
   if (autoplay) {
     void el.play().catch((error) => {
       usePlayer.setState({ error: describePlayError(error) });
@@ -200,23 +163,22 @@ export const usePlayer = create<PlayerState>((set, get) => ({
   muted: false,
   rate: 1,
   repeat: "off",
-  loop: null,
   error: null,
 
   loadQueue: (tracks, startIndex = 0, autoplay = false) => {
     if (tracks.length === 0) return;
     const index = Math.min(Math.max(0, startIndex), tracks.length - 1);
     const track = tracks[index];
-    set({ queue: tracks, index, current: track, error: null, loop: null });
+    set({ queue: tracks, index, current: track, error: null });
     loadAndPlay(track, autoplay);
   },
 
   playTrack: (track, queue) => {
     const existingIndex = queue?.findIndex((item) => item.id === track.id) ?? -1;
     if (queue && existingIndex >= 0) {
-      set({ queue, index: existingIndex, current: track, error: null, loop: null });
+      set({ queue, index: existingIndex, current: track, error: null });
     } else {
-      set({ queue: [track], index: 0, current: track, error: null, loop: null });
+      set({ queue: [track], index: 0, current: track, error: null });
     }
     loadAndPlay(track, true);
   },
@@ -246,12 +208,12 @@ export const usePlayer = create<PlayerState>((set, get) => ({
     const nextIndex = index + 1;
     if (nextIndex >= queue.length) {
       if (repeat === "all") {
-        set({ index: 0, current: queue[0], loop: null });
+        set({ index: 0, current: queue[0] });
         loadAndPlay(queue[0], true);
       }
       return;
     }
-    set({ index: nextIndex, current: queue[nextIndex], loop: null });
+    set({ index: nextIndex, current: queue[nextIndex] });
     loadAndPlay(queue[nextIndex], true);
   },
 
@@ -265,7 +227,7 @@ export const usePlayer = create<PlayerState>((set, get) => ({
       return;
     }
     const prevIndex = Math.max(0, index - 1);
-    set({ index: prevIndex, current: queue[prevIndex], loop: null });
+    set({ index: prevIndex, current: queue[prevIndex] });
     loadAndPlay(queue[prevIndex], true);
   },
 
@@ -297,10 +259,6 @@ export const usePlayer = create<PlayerState>((set, get) => ({
     set({ rate });
   },
 
-  setLoop: (bounds) => {
-    set({ loop: bounds });
-  },
-
   setRepeat: (mode) => {
     set({ repeat: mode });
   },
@@ -310,7 +268,7 @@ export const usePlayer = create<PlayerState>((set, get) => ({
     ensureAudio().removeAttribute("src");
     stopFrames();
     clock.reset();
-    set({ queue: [], index: -1, current: null, playing: false, loop: null, error: null });
+    set({ queue: [], index: -1, current: null, playing: false, error: null });
   },
 }));
 

@@ -56,6 +56,11 @@ func (l *Library) Ensure(ctx context.Context, db *storage.DB) error {
 		if _, err := db.SaveTrack(ctx, built.track); err != nil {
 			return err
 		}
+		// The fixture is a shelf, not a catalogue entry: the tests need these
+		// songs in the library, which is where the UI looks for content.
+		if err := db.SaveToLibrary(ctx, built.track.ID); err != nil {
+			return err
+		}
 		if err := db.SaveLyrics(ctx, built.lyrics); err != nil {
 			return err
 		}

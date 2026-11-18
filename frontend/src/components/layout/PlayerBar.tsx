@@ -32,7 +32,6 @@ export function PlayerBar() {
   const muted = usePlayer((state) => state.muted);
   const rate = usePlayer((state) => state.rate);
   const repeat = usePlayer((state) => state.repeat);
-  const loop = usePlayer((state) => state.loop);
   const error = usePlayer((state) => state.error);
   const toggle = usePlayer((state) => state.toggle);
   const next = usePlayer((state) => state.next);
@@ -143,8 +142,6 @@ export function PlayerBar() {
             <p className="max-w-[52ch] truncate text-[11px] text-danger" role="status">
               {error}
             </p>
-          ) : loop ? (
-            <p className="max-w-[52ch] truncate text-[11px] text-muted">Repitiendo: {loop.label}</p>
           ) : null}
         </div>
 
