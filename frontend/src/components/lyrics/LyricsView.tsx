@@ -153,7 +153,7 @@ export function LyricsView({
       ) : null}
       <div
         ref={containerRef}
-        className="scroll-area h-full pr-2"
+        className={immersive ? "scroll-area scrollbar-hidden h-full pr-2" : "scroll-area h-full pr-2"}
         tabIndex={0}
         onKeyDown={handleScrollKey}
         onWheel={pauseAutoscroll}

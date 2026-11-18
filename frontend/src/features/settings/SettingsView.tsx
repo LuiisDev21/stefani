@@ -40,6 +40,7 @@ export function SettingsView() {
   const appUpdateBusy = useApp((state) => state.appUpdateBusy);
   const loadAppUpdate = useApp((state) => state.loadAppUpdate);
   const installAppUpdate = useApp((state) => state.installAppUpdate);
+  const [checking, setChecking] = useState(false);
   const saveSettings = useApp((state) => state.saveSettings);
   const testLLM = useApp((state) => state.testLLM);
   const clearKey = useApp((state) => state.clearKey);
@@ -458,9 +459,6 @@ export function SettingsView() {
           <SectionTitle title="Acerca de" />
           <dl className="space-y-1 text-[11.5px] text-muted">
             <Row label="Versión" value={info ? `${info.name} ${info.version}` : "—"} />
-            <Row label="Identificador" value={info?.identifier ?? "—"} />
-            <Row label="Base de datos" value={info?.dbPath ?? "—"} mono />
-            <Row label="Configuración" value={form.configPath} mono />
           </dl>
           <div className="mt-4 flex items-center justify-between gap-4 rounded-[10px] border border-line bg-elevated px-4 py-3">
             <div className="min-w-0">
@@ -479,7 +477,20 @@ export function SettingsView() {
               <Button size="sm" disabled={appUpdateBusy} onClick={() => void installAppUpdate()}>
                 {appUpdateBusy ? "Descargando" : "Actualizar"}
               </Button>
-            ) : null}
+            ) : (
+              <Button
+                size="sm"
+                variant="subtle"
+                disabled={checking}
+                onClick={async () => {
+                  setChecking(true);
+                  await loadAppUpdate();
+                  setChecking(false);
+                }}
+              >
+                {checking ? "Comprobando" : "Comprobar"}
+              </Button>
+            )}
           </div>
         </section>
       </div>
