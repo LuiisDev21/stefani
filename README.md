@@ -1,189 +1,174 @@
 # STEFANI
 
-Reproductor musical de escritorio con letras sincronizadas palabra por palabra,
-transcripcion IPA, aproximacion fonetica para hispanohablantes y traduccion al
-espanol. Construido con Go, Wails 3, React 19 y SQLite.
+[![Release](https://github.com/LuiisDev21/stefani/actions/workflows/release.yml/badge.svg)](https://github.com/LuiisDev21/stefani/actions/workflows/release.yml)
+[![CI](https://github.com/LuiisDev21/stefani/actions/workflows/ci.yml/badge.svg)](https://github.com/LuiisDev21/stefani/actions/workflows/ci.yml)
 
-La aplicacion es un reproductor: escuchar musica, leer la letra siguiendo el
-audio y entender como se pronuncia. Funciona sin cuenta y sin servidor externo;
-arranca vacia y se llena con tus archivos o con el catalogo en linea.
+A desktop music player built around the lyrics. STEFANI plays local files and
+YouTube Music, follows the words in time with the audio, and shows how every
+line sounds: IPA transcription, a Spanish-friendly approximation and, when a
+provider is configured, a contextual translation with notes on the hard sounds.
 
-## Estado
+Windows is the tested platform. The release workflow also builds Linux and
+macOS (Apple silicon) artifacts.
 
-MVP funcional en Windows (probado en esta maquina), con el codigo preparado para
-Linux y macOS. Lo que esta verificado esta en [docs/TESTING.md](docs/TESTING.md);
-las limitaciones conocidas, en la seccion final de este documento.
+<p align="center">
+  <img src="docs/screenshots/home.png" alt="Home" width="49%">
+  <img src="docs/screenshots/lyrics.png" alt="Synchronized lyrics with pronunciation" width="49%">
+</p>
+<p align="center">
+  <img src="docs/screenshots/playlist.png" alt="Playlist imported from YouTube Music" width="49%">
+  <img src="docs/screenshots/about.png" alt="Version and update status" width="49%">
+</p>
 
-## Funcionalidades
+## Features
 
-- **Reproduccion local**: importa tus archivos (mp3, m4a, aac, wav, flac, ogg,
-  opus). Los archivos se referencian en su ubicacion original, no se copian.
-- **Letras sincronizadas**: LRC, LRC mejorado (tiempos por palabra) y texto sin
-  sincronizar, con autoscroll que se rinde ante el scroll manual.
-- **Lectura fonetica sin configurar nada**: IPA estadounidense y aproximacion
-  en espanol para cualquier letra, generadas en local con el diccionario CMU.
-  No hace falta clave de IA para ver la pronunciacion.
-- **Traduccion con IA**: cuando configuras un proveedor, el boton Generar
-  anade traduccion contextual y explicaciones de los sonidos dificiles.
-- **Control de velocidad** 0.75x / 1x / 1.25x.
-- **Musica en linea**: busqueda en el catalogo de YouTube Music y reproduccion
-  dentro de la app mediante `yt-dlp`, con las mismas letras y velocidad que el
-  audio local. Es una integracion no oficial, activa por defecto y se apaga
-  sola si la herramienta no esta instalada.
-- **Biblioteca, favoritos, playlists locales e importacion de playlists de
-  YouTube Music**.
-- **Modo inmersivo** de pantalla completa para seguir la letra.
-- **Ajustes de IA**: cualquier endpoint compatible con OpenAI Chat Completions;
-  la clave se guarda en el almacen de credenciales del sistema.
-- **Ajustes de musica en linea**: interruptor propio y estado real del
-  reproductor (`yt-dlp` detectado o ausente) con la instruccion de instalacion.
+- **Local playback.** Imports mp3, m4a, aac, wav, flac, ogg and opus. Files are
+  referenced in place; nothing is copied into the library.
+- **Synchronized lyrics.** LRC, enhanced LRC with word timings and plain text.
+  Auto-scroll yields as soon as you scroll manually.
+- **Phonetic reading with no setup.** US IPA and a Spanish approximation for any
+  lyric, generated locally from the CMU dictionary. No API key required.
+- **AI translation.** With a provider configured, the Generate button adds a
+  contextual translation and short notes on difficult sounds.
+- **Playback speed.** 0.75x, 1x and 1.25x.
+- **YouTube Music.** Search and play the catalogue through `yt-dlp` with the same
+  lyrics panel. Unofficial integration, enabled by default, disabled by itself
+  when the tool is missing.
+- **Library, favorites and playlists.** Local lists plus import of YouTube Music
+  playlists from a connected Google account.
+- **Immersive mode.** Full-screen lyrics with the current line highlighted.
+- **AI settings.** Any OpenAI-compatible Chat Completions endpoint. The key lives
+  in the OS credential store, never in the database or the logs.
+- **Updates.** Settings checks the latest public release, shows the version it is
+  running and can download and launch the installer.
 
-## Requisitos
+## Install
 
-- Go 1.26 o superior (probado con 1.27.1)
-- Node 22 o superior y pnpm 11
+Download the artifact for your platform from the
+[latest release](https://github.com/LuiisDev21/stefani/releases/latest):
+
+| Platform | Asset |
+| --- | --- |
+| Windows | `stefani-windows-amd64.zip` (portable build and NSIS installer) |
+| Linux | `stefani-linux-amd64.tar.gz` |
+| macOS (Apple silicon) | `stefani-macos-arm64.zip` |
+
+The Windows installer bundles `yt-dlp`, so online playback works on first launch.
+After installing, **Settings → Acerca de** keeps the app up to date: it checks the
+latest release and, when there is a newer one, downloads the installer and asks
+Windows for elevation.
+
+## Build from source
+
+Requirements:
+
+- Go 1.26 or newer (tested with 1.27.1)
+- Node 22 or newer and pnpm 11
 - Wails CLI v3: `go install github.com/wailsapp/wails/v3/cmd/wails3@v3.1.0`
-- Windows: WebView2 (viene con Windows 11) y un compilador C para cgo
-- Linux: `libgtk-3-dev` y `libwebkit2gtk-4.1-dev`
+- Windows: WebView2 (included in Windows 11) and a C compiler for cgo
+- Linux: `libgtk-3-dev`, `libgtk-4-dev`, `libwebkit2gtk-4.1-dev` and
+  `libwebkitgtk-6.0-dev`
 - macOS: Xcode Command Line Tools
-- Nada extra para la pronunciacion: el diccionario CMU va incluido en el
-  binario.
-- Opcional, para musica en linea: `yt-dlp` en el PATH
-  (`winget install yt-dlp`). No se empaqueta con la aplicacion: sin el, la app
-  funciona igual con tu audio local.
-
-## Desarrollo
 
 ```bash
-# 1. dependencias del frontend
+# 1. frontend dependencies
 cd frontend && pnpm install && cd ..
 
-# 2. bindings de Go a TypeScript (tras cambiar la API del servicio)
-wails3 generate bindings
+# 2. Go to TypeScript bindings (after changing the service API)
+wails3 generate bindings -ts
 
-# 3. modo desarrollo con recarga en caliente
+# 3. development with hot reload
 wails3 dev
 
-# 4. compilacion de escritorio
-go build -o bin/stefani.exe .        # Windows
-go build -o bin/stefani .            # Linux / macOS
+# 4. desktop build
+go build -o bin/stefani.exe .    # Windows
+go build -o bin/stefani .        # Linux / macOS
 ```
 
-`wails3 build` empaqueta instaladores; en Windows requiere NSIS, que no forma
-parte del alcance actual (ver [docs/DECISIONS.md](docs/DECISIONS.md)).
+`wails3 build` packages the native app and, on Windows, the NSIS installer.
 
-## Ver la interfaz en el navegador
+### Frontend in a browser
 
-El binario de escritorio no abre ningún puerto: para revisar la interfaz desde
-Chrome o Edge se usa el build de servidor, que sirve la app completa (los
-bindings tambien van por HTTP, asi que la biblioteca, la busqueda y la letra
-funcionan igual).
+The desktop binary opens no ports. To inspect the UI from Chrome or Edge, run the
+server build, which serves the whole app over HTTP with the same database:
 
 ```powershell
-# primera vez, o tras cambios en Go
 .\scripts\serve-web.ps1 -Rebuild
-
-# tras cambios de frontend: reconstruye y recarga con F5, sin reiniciar
-cd frontend; pnpm build
 ```
 
-Queda en <http://127.0.0.1:8080>, con la misma base de datos que la app de
-escritorio. El servidor sirve `frontend/dist` desde disco (`STEFANI_WEB_DIST`),
-asi que un `pnpm build` se ve al recargar sin recompilar Go.
+It listens on <http://127.0.0.1:8080>. `-Lan` exposes it on the local network
+(`STEFANI_WEB_HOST=0.0.0.0`); there is no authentication, so use it only on a
+trusted network.
 
-`-Lan` lo expone en la red local (`STEFANI_WEB_HOST=0.0.0.0`) para abrirlo desde
-el movil o una tablet. No hay autenticacion: usalo solo en una red de confianza.
+## How it works
 
-## YouTube Music en línea
+- **Go** owns playback state, the library, SQLite storage, the lyrics pipeline
+  (LRC parsing, LRCLIB, CMUdict phonetics) and the `yt-dlp` integration.
+- **React 19 + Vite** render the UI. The player clock is the single source of
+  truth: the lyric view derives the active line, the active word and the fill
+  progress from a timestamp and never keeps its own timer.
+- **Wails 3** hosts the WebView2 window and exposes the service as typed
+  TypeScript bindings.
+- Online audio is streamed through a Range proxy in front of `yt-dlp`, so seeking
+  works like a local file. It needs `yt-dlp` and `ffmpeg`; the app looks for both
+  in `PATH` and in the usual Windows folders, so it also works when launched from
+  Explorer.
 
-La reproducción en línea necesita `yt-dlp` y `ffmpeg`. La app lo busca en el
-`PATH` y, si no está, en las carpetas habituales de Windows (Scripts de Python,
-WinGet, Scoop, Chocolatey y junto al ejecutable), así que también funciona al
-abrirla desde el Explorador.
-
-## Instalador y actualizaciones
-
-Los instaladores incluyen `yt-dlp`, así que la reproducción en línea funciona
-desde el primer arranque. En **Ajustes → Música en linea** hay un botón para
-descargar la última versión de `yt-dlp` cuando quieras, sin reinstalar la app:
-la copia vive en la carpeta de datos de STEFANI y tiene prioridad sobre la que
-venga instalada en el sistema.
-
-Cada push a `main` compila Windows, Linux y macOS y publica una release con los
-binarios y el `yt-dlp` correspondiente.
-
-## Cuenta de YouTube Music
-
-En Windows puedes conectar tu cuenta desde **Ajustes → Cuenta**: se abre el
-inicio de sesión de Google dentro de la app y, al cerrar esa ventana, STEFANI
-lee las playlists de tu biblioteca. La sesión vive en el perfil de WebView2 de la
-app; no se copia a la base de datos, al `config.json` ni a los registros. La
-reproducción sigue usando `yt-dlp`, así que si la sesión caduca solo se pierde la
-biblioteca de la cuenta, no el reproductor.
-
-## Pruebas
+## Tests
 
 ```bash
-go test ./internal/... -count=1      # dominio, storage, letras, IA
+go test ./internal/... -count=1      # domain, storage, lyrics, AI
 go vet ./...
-cd frontend && pnpm exec tsc --noEmit && pnpm test
-cd frontend && pnpm exec playwright test   # E2E contra el servidor Go real
+
+cd frontend
+pnpm exec tsc --noEmit
+pnpm test
+pnpm exec playwright test            # E2E against the real Go server
 ```
 
-El arnes E2E compila la aplicacion con `-tags server` y Playwright la maneja
-contra `http://127.0.0.1:8080` con un `STEFANI_HOME` temporal, de modo que nunca
-toca el perfil real. Detalles y cobertura en [docs/TESTING.md](docs/TESTING.md).
+The E2E harness builds the app with `-tags server` and drives it with Playwright
+against `http://127.0.0.1:8080` using a temporary `STEFANI_HOME`, so it never
+touches the real profile. Coverage and details live in
+[docs/TESTING.md](docs/TESTING.md).
 
-## Datos y privacidad
+## Data and privacy
 
-- Todo se guarda en el directorio de configuracion del usuario:
-  `%APPDATA%\stefani` (Windows), `~/.config/stefani` (Linux y macOS).
-- La base de datos es SQLite en `data/stefani.db`.
-- La clave de la API de IA vive en el almacen de credenciales del sistema, nunca
-  en la base de datos ni en los registros.
-- Las letras obtenidas de LRCLIB se guardan localmente para uso privado.
-- No hay telemetria ni cuentas.
+- Everything is stored in the user configuration directory:
+  `%APPDATA%\stefani` on Windows, `~/.config/stefani` on Linux and macOS.
+- The database is SQLite at `data/stefani.db`.
+- The AI API key is kept in the system credential store, never in the database,
+  the config file or the logs.
+- The Google session used to read playlists lives in the app's WebView2 profile;
+  it is never copied to the database, the config file or the logs.
+- Lyrics fetched from LRCLIB are cached locally for private use.
+- No telemetry and no accounts of our own.
 
-## Limitaciones actuales
+## Limitations
 
-- **YouTube Music**: la busqueda y la importacion de playlists usan el cliente
-  web publico (InnerTube). No se descarga audio ni se evaden restricciones, por
-  lo que esas pistas no se reproducen dentro de la app; se abren en la pagina
-  oficial. Requiere activar el catalogo experimental en Ajustes.
-- **eSpeak NG** no se incluye: su licencia GPL complica la distribucion del
-  binario. La aproximacion en espanol se calcula en local con CMUdict; la
-  transcripcion IPA de una cancion nueva la genera el proveedor de IA.
-- **Alineacion de audio**: cuando una letra solo tiene tiempos por verso, la app
-  lo indica y no inventa tiempos por palabra.
-- **Velocidad y salto** dependen del motor HTML5 Audio; para fuentes que no lo
-  soportan (catalogo de YouTube) los controles quedan deshabilitados.
-- **Sin firmar**: los instaladores no estan firmados ni notarizados.
-- **Validacion nativa**: el ejecutable de Windows se compila y arranca, pero las
-  pruebas automatizadas se ejecutan sobre el build `server`; la revision visual de
-  la ventana nativa queda como tarea manual (ver docs/TESTING.md).
+- **YouTube Music catalogue tracks.** Search and playlist import use the public
+  web client (InnerTube). Tracks without a playable stream are opened in the
+  official page instead of playing in-app; the experimental catalogue must be
+  enabled in Settings.
+- **eSpeak NG is not bundled.** Its GPL license complicates binary distribution.
+  The Spanish approximation is computed locally with CMUdict; IPA for a new song
+  comes from the configured AI provider.
+- **Word alignment.** When a lyric only has line timings, the app says so and
+  never invents word timings.
+- **Speed and seeking** depend on the HTML5 audio engine; sources that do not
+  support them (the YouTube catalogue) disable those controls.
+- **Unsigned builds.** The installers are not code-signed or notarized.
 
-## Icono
+## Documentation
 
-El icono vive como vector en `build/icon.svg` (marca completa) y
-`build/icon-small.svg` (sin subrayado, S mas grande para 16-48 px).
-`build/appicon.png` es su render a 1024 px y es la fuente de `wails3 generate icons`,
-que produce `build/windows/icon.ico` y `build/darwin/icons.icns`. El `.ico`
-incluye un render nativo por tamano para que la S siga leyendose a 16 px.
+- [Architecture](docs/ARCHITECTURE.md)
+- [Design system](docs/DESIGN_SYSTEM.md)
+- [Providers](docs/PROVIDERS.md)
+- [Testing](docs/TESTING.md)
+- [Security](docs/SECURITY.md)
+- [Licenses](docs/LICENSES.md)
+- [Decisions](docs/DECISIONS.md)
+- [Roadmap](docs/ROADMAP.md)
 
-El favicon del modo servidor sale del mismo dibujo: `frontend/public/favicon.svg`,
-`favicon.ico`, `favicon-32.png` y `apple-touch-icon.png`, enlazados desde
-`frontend/index.html`.
-
-## Documentacion
-
-- [Arquitectura](docs/ARCHITECTURE.md)
-- [Sistema de diseno](docs/DESIGN_SYSTEM.md)
-- [Proveedores](docs/PROVIDERS.md)
-- [Pruebas](docs/TESTING.md)
-- [Seguridad](docs/SECURITY.md)
-- [Licencias](docs/LICENSES.md)
-- [Decisiones](docs/DECISIONS.md)
-- [Hoja de ruta](docs/ROADMAP.md)
-
-El nombre, identificador y branding viven en `internal/brand/brand.go` y en
-`build/config.yml`: renombrar el producto no requiere tocar la arquitectura.
+The product name, identifier and branding live in `internal/brand/brand.go` and
+`build/config.yml`; renaming the product does not require touching the
+architecture.
