@@ -274,6 +274,72 @@ export class AnnotationDTO {
 }
 
 /**
+ * AppUpdateDTO reports the latest published build next to the running one.
+ */
+export class AppUpdateDTO {
+    /**
+     * Creates a new AppUpdateDTO instance.
+     * @param {Partial<AppUpdateDTO>} [$$source = {}] - The source object to create the AppUpdateDTO.
+     */
+    constructor($$source = {}) {
+        if (!("current" in $$source)) {
+            /**
+             * @member
+             * @type {string}
+             */
+            this["current"] = "";
+        }
+        if (!("latest" in $$source)) {
+            /**
+             * @member
+             * @type {string}
+             */
+            this["latest"] = "";
+        }
+        if (!("available" in $$source)) {
+            /**
+             * @member
+             * @type {boolean}
+             */
+            this["available"] = false;
+        }
+        if (!("ready" in $$source)) {
+            /**
+             * @member
+             * @type {boolean}
+             */
+            this["ready"] = false;
+        }
+        if (!("url" in $$source)) {
+            /**
+             * @member
+             * @type {string}
+             */
+            this["url"] = "";
+        }
+        if (!("detail" in $$source)) {
+            /**
+             * @member
+             * @type {string}
+             */
+            this["detail"] = "";
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new AppUpdateDTO instance from a string or object.
+     * @param {any} [$$source = {}]
+     * @returns {AppUpdateDTO}
+     */
+    static createFrom($$source = {}) {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new AppUpdateDTO(/** @type {Partial<AppUpdateDTO>} */($$parsedSource));
+    }
+}
+
+/**
  * BootstrapDTO is the first payload the UI loads.
  */
 export class BootstrapDTO {

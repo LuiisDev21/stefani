@@ -13,6 +13,15 @@ export interface OnlineStatus {
   detail: string;
 }
 
+export interface AppUpdate {
+  current: string;
+  latest: string;
+  available: boolean;
+  ready: boolean;
+  url: string;
+  detail: string;
+}
+
 export interface Info {
   name: string;
   tagline: string;

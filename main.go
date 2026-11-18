@@ -311,7 +311,7 @@ func run() error {
 			// own directory, so the cookie reader knows exactly where to look.
 			WebviewUserDataPath: filepath.Join(paths.ConfigDir, "webview"),
 			// Opt-in only: a debugging port must never be open in normal use.
-			AdditionalBrowserArgs: webviewDebugArgs(),
+			AdditionalBrowserArgs: webviewArgs(),
 		},
 		Server: application.ServerOptions{
 			Host: webHost(),
@@ -360,11 +360,13 @@ func run() error {
 	return wailsApp.Run()
 }
 
-// webviewDebugArgs exposes the WebView2 debugging port only when the operator
-// asks for it, which is what lets an automated check inspect the renderer.
-func webviewDebugArgs() []string {
+// webviewArgs keeps WebView2 on software rendering: the GPU compositor can
+// freeze the window black while audio keeps playing on some machines. A
+// debugging port is still opt-in only.
+func webviewArgs() []string {
+	args := []string{"--disable-gpu", "--disable-gpu-compositing"}
 	if os.Getenv("STEFANI_DEBUG_WEBVIEW") == "1" {
-		return []string{"--remote-debugging-port=9222"}
+		args = append(args, "--remote-debugging-port=9222")
 	}
-	return nil
+	return args
 }

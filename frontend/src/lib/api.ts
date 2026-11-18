@@ -9,6 +9,7 @@
 import * as App from "../../bindings/github.com/LuiisDev21/stefani/internal/app/app.js";
 import type {
   Account,
+  AppUpdate,
   AccountPlaylist,
   AnnotateOutcome,
   Bootstrap,
@@ -30,6 +31,8 @@ const as = <T,>(value: unknown): Promise<T> => value as Promise<T>;
 export const api = {
   info: () => as<Info>(App.Info()),
   updateYtDlp: () => as<OnlineStatus>(App.UpdateYtDlp()),
+  checkAppUpdate: () => as<AppUpdate>(App.CheckAppUpdate()),
+  installAppUpdate: () => as<AppUpdate>(App.InstallAppUpdate()),
 
   accountStatus: () => as<Account>(App.AccountStatus()),
   connectAccount: () => as<void>(App.ConnectAccount()),

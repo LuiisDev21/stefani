@@ -32,6 +32,16 @@ type OnlineDTO struct {
 	Detail    string `json:"detail"`
 }
 
+// AppUpdateDTO reports the latest published build next to the running one.
+type AppUpdateDTO struct {
+	Current   string `json:"current"`
+	Latest    string `json:"latest"`
+	Available bool   `json:"available"`
+	Ready     bool   `json:"ready"`
+	URL       string `json:"url"`
+	Detail    string `json:"detail"`
+}
+
 // TrackDTO is a track as the UI sees it.
 type TrackDTO struct {
 	ID          string `json:"id"`

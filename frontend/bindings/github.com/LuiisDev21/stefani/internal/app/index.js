@@ -12,6 +12,7 @@ export {
     AccountPlaylistDTO,
     AnnotateOutcome,
     AnnotationDTO,
+    AppUpdateDTO,
     BootstrapDTO,
     FeaturesDTO,
     HistoryDTO,

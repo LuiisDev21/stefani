@@ -2,6 +2,7 @@ import { Events } from "@wailsio/runtime";
 import { create } from "zustand";
 import { api, errorMessage } from "../lib/api";
 import type {
+  AppUpdate,
   Account,
   AccountPlaylist,
   Bootstrap,
@@ -38,6 +39,8 @@ interface AppState {
   fatalError: string;
 
   info: Info | null;
+  appUpdate: AppUpdate | null;
+  appUpdateBusy: boolean;
   recently: Track[];
   library: Track[];
   favorites: Track[];
@@ -89,6 +92,8 @@ interface AppState {
   finishAccount: () => Promise<void>;
   refreshAccount: () => Promise<void>;
   updateYtDlp: () => Promise<void>;
+  loadAppUpdate: () => Promise<void>;
+  installAppUpdate: () => Promise<void>;
   importAccountPlaylist: (id: string, name: string) => Promise<void>;
   openPlaylist: (playlist: Playlist) => Promise<void>;
   createPlaylist: (name: string) => Promise<Playlist | null>;
@@ -132,6 +137,8 @@ export const useApp = create<AppState>((set, get) => ({
   fatalError: "",
 
   info: null,
+  appUpdate: null,
+  appUpdateBusy: false,
   recently: [],
   library: [],
   favorites: [],
@@ -328,6 +335,27 @@ export const useApp = create<AppState>((set, get) => ({
       get().notify("ok", online.available ? `yt-dlp ${online.version}` : "yt-dlp actualizado");
     } catch (error) {
       get().notify("error", errorMessage(error));
+    }
+  },
+
+  loadAppUpdate: async () => {
+    try {
+      set({ appUpdate: await api.checkAppUpdate() });
+    } catch {
+      // A failed check must not break the panel.
+    }
+  },
+
+  installAppUpdate: async () => {
+    set({ appUpdateBusy: true });
+    try {
+      const update = await api.installAppUpdate();
+      set({ appUpdate: update });
+      get().notify("ok", update.detail || "Actualización iniciada");
+    } catch (error) {
+      get().notify("error", errorMessage(error));
+    } finally {
+      set({ appUpdateBusy: false });
     }
   },
 

@@ -36,6 +36,10 @@ const llmSchema = z.object({
 export function SettingsView() {
   const settings = useApp((state) => state.settings);
   const info = useApp((state) => state.info);
+  const appUpdate = useApp((state) => state.appUpdate);
+  const appUpdateBusy = useApp((state) => state.appUpdateBusy);
+  const loadAppUpdate = useApp((state) => state.loadAppUpdate);
+  const installAppUpdate = useApp((state) => state.installAppUpdate);
   const saveSettings = useApp((state) => state.saveSettings);
   const testLLM = useApp((state) => state.testLLM);
   const clearKey = useApp((state) => state.clearKey);
@@ -56,6 +60,10 @@ export function SettingsView() {
   const [testing, setTesting] = useState(false);
   const [ytdlpBusy, setYtdlpBusy] = useState(false);
   const [testResult, setTestResult] = useState<{ ok: boolean; message: string; latencyMs: number } | null>(null);
+
+  useEffect(() => {
+    void loadAppUpdate();
+  }, [loadAppUpdate]);
 
   useEffect(() => {
     setForm(settings);
@@ -452,9 +460,27 @@ export function SettingsView() {
             <Row label="Versión" value={info ? `${info.name} ${info.version}` : "—"} />
             <Row label="Identificador" value={info?.identifier ?? "—"} />
             <Row label="Base de datos" value={info?.dbPath ?? "—"} mono />
-            <Row label="Esquema" value={info ? `v${info.schema}` : "—"} />
             <Row label="Configuración" value={form.configPath} mono />
           </dl>
+          <div className="mt-4 flex items-center justify-between gap-4 rounded-[10px] border border-line bg-elevated px-4 py-3">
+            <div className="min-w-0">
+              <p className="truncate text-[13px] text-ink">
+                {appUpdate?.available
+                  ? `Versión ${appUpdate.latest} disponible`
+                  : appUpdate?.detail ?? "Comprobando la última versión"}
+              </p>
+              <p className="truncate text-[11.5px] text-muted">
+                {appUpdate?.available
+                  ? "Se descarga el instalador y la app se cierra para reemplazarse."
+                  : `Versión actual: ${appUpdate?.current ?? info?.version ?? "—"}`}
+              </p>
+            </div>
+            {appUpdate?.available ? (
+              <Button size="sm" disabled={appUpdateBusy} onClick={() => void installAppUpdate()}>
+                {appUpdateBusy ? "Descargando" : "Actualizar"}
+              </Button>
+            ) : null}
+          </div>
         </section>
       </div>
     </div>

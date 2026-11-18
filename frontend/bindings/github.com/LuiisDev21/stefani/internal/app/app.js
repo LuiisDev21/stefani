@@ -74,12 +74,23 @@ export function Bootstrap() {
 }
 
 /**
+ * CheckAppUpdate compares the running build with the latest published tag.
+ * It never fails: the panel shows "no se pudo comprobar" instead.
+ * @returns {$CancellablePromise<$models.AppUpdateDTO>}
+ */
+export function CheckAppUpdate() {
+    return $Call.ByID(1322852020).then(/** @type {($result: any) => any} */(($result) => {
+        return $$createType5($result);
+    }));
+}
+
+/**
  * ClearLLMKey deletes the stored API key.
  * @returns {$CancellablePromise<$models.SettingsDTO>}
  */
 export function ClearLLMKey() {
     return $Call.ByID(1843416029).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType5($result);
+        return $$createType6($result);
     }));
 }
 
@@ -99,7 +110,7 @@ export function ConnectAccount() {
  */
 export function CreatePlaylist(name) {
     return $Call.ByID(3797441004, name).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType6($result);
+        return $$createType7($result);
     }));
 }
 
@@ -118,7 +129,7 @@ export function DeletePlaylist(id) {
  */
 export function Favorites() {
     return $Call.ByID(977377251).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType8($result);
+        return $$createType9($result);
     }));
 }
 
@@ -139,7 +150,7 @@ export function FinishAccount() {
  */
 export function History(limit) {
     return $Call.ByID(3845597558, limit).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType10($result);
+        return $$createType11($result);
     }));
 }
 
@@ -151,7 +162,7 @@ export function History(limit) {
  */
 export function ImportAccountPlaylist(id, name) {
     return $Call.ByID(455781904, id, name).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType11($result);
+        return $$createType12($result);
     }));
 }
 
@@ -162,7 +173,7 @@ export function ImportAccountPlaylist(id, name) {
  */
 export function ImportDroppedFiles(paths) {
     return $Call.ByID(865611062, paths).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType11($result);
+        return $$createType12($result);
     }));
 }
 
@@ -172,7 +183,7 @@ export function ImportDroppedFiles(paths) {
  */
 export function ImportLocalTracks() {
     return $Call.ByID(2270584902).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType11($result);
+        return $$createType12($result);
     }));
 }
 
@@ -183,7 +194,7 @@ export function ImportLocalTracks() {
  */
 export function ImportLyricsFile(trackID) {
     return $Call.ByID(978064089, trackID).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType12($result);
+        return $$createType13($result);
     }));
 }
 
@@ -194,7 +205,7 @@ export function ImportLyricsFile(trackID) {
  */
 export function ImportPlaylist(rawURL) {
     return $Call.ByID(745975253, rawURL).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType11($result);
+        return $$createType12($result);
     }));
 }
 
@@ -204,7 +215,19 @@ export function ImportPlaylist(rawURL) {
  */
 export function Info() {
     return $Call.ByID(776457598).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType13($result);
+        return $$createType14($result);
+    }));
+}
+
+/**
+ * InstallAppUpdate downloads the platform archive, extracts the installer and
+ * starts it. On Windows the app quits so the installer can replace the binary;
+ * elsewhere it opens the release page instead.
+ * @returns {$CancellablePromise<$models.AppUpdateDTO>}
+ */
+export function InstallAppUpdate() {
+    return $Call.ByID(3410966381).then(/** @type {($result: any) => any} */(($result) => {
+        return $$createType5($result);
     }));
 }
 
@@ -214,7 +237,7 @@ export function Info() {
  */
 export function Library() {
     return $Call.ByID(3102670385).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType8($result);
+        return $$createType9($result);
     }));
 }
 
@@ -229,7 +252,7 @@ export function Library() {
  */
 export function Lyrics(trackID, refresh) {
     return $Call.ByID(1703921402, trackID, refresh).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType12($result);
+        return $$createType13($result);
     }));
 }
 
@@ -260,7 +283,7 @@ export function OpenExternal(rawURL) {
  */
 export function Playlist(id) {
     return $Call.ByID(456499736, id).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType6($result);
+        return $$createType7($result);
     }));
 }
 
@@ -271,7 +294,7 @@ export function Playlist(id) {
  */
 export function PlaylistTracks(id) {
     return $Call.ByID(3375718916, id).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType8($result);
+        return $$createType9($result);
     }));
 }
 
@@ -281,7 +304,7 @@ export function PlaylistTracks(id) {
  */
 export function Playlists() {
     return $Call.ByID(1080995441).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType14($result);
+        return $$createType15($result);
     }));
 }
 
@@ -325,7 +348,7 @@ export function ReportPlayback(trackID, listenedMs) {
  */
 export function ResolveAudioSource(trackID) {
     return $Call.ByID(3020879485, trackID).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType15($result);
+        return $$createType16($result);
     }));
 }
 
@@ -336,7 +359,7 @@ export function ResolveAudioSource(trackID) {
  */
 export function SaveSettings($in) {
     return $Call.ByID(3238136870, $in).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType5($result);
+        return $$createType6($result);
     }));
 }
 
@@ -357,7 +380,7 @@ export function SaveWindowState($in) {
  */
 export function Search(query, limit) {
     return $Call.ByID(2296388846, query, limit).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType16($result);
+        return $$createType17($result);
     }));
 }
 
@@ -369,7 +392,7 @@ export function Search(query, limit) {
  */
 export function SetFavorite(trackID, favorite) {
     return $Call.ByID(3359295882, trackID, favorite).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType7($result);
+        return $$createType8($result);
     }));
 }
 
@@ -381,7 +404,7 @@ export function SetFavorite(trackID, favorite) {
  */
 export function SetInLibrary(trackID, save) {
     return $Call.ByID(3503078356, trackID, save).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType7($result);
+        return $$createType8($result);
     }));
 }
 
@@ -401,7 +424,7 @@ export function SetTrackDuration(trackID, durationMs) {
  */
 export function Settings() {
     return $Call.ByID(2660117835).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType5($result);
+        return $$createType6($result);
     }));
 }
 
@@ -420,7 +443,7 @@ export function SignOutAccount() {
  */
 export function TestLLM() {
     return $Call.ByID(2950311297).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType17($result);
+        return $$createType18($result);
     }));
 }
 
@@ -431,7 +454,7 @@ export function TestLLM() {
  */
 export function Track(id) {
     return $Call.ByID(3509125837, id).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType7($result);
+        return $$createType8($result);
     }));
 }
 
@@ -453,7 +476,7 @@ export function UpdatePlaylist(id, name, description) {
  */
 export function UpdateYtDlp() {
     return $Call.ByID(2314142790).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType18($result);
+        return $$createType19($result);
     }));
 }
 
@@ -463,7 +486,7 @@ export function UpdateYtDlp() {
  */
 export function WindowState() {
     return $Call.ByID(1162240999).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType19($result);
+        return $$createType20($result);
     }));
 }
 
@@ -473,18 +496,19 @@ const $$createType1 = $Create.Array($$createType0);
 const $$createType2 = $models.AccountDTO.createFrom;
 const $$createType3 = $models.AnnotateOutcome.createFrom;
 const $$createType4 = $models.BootstrapDTO.createFrom;
-const $$createType5 = $models.SettingsDTO.createFrom;
-const $$createType6 = $models.PlaylistDTO.createFrom;
-const $$createType7 = $models.TrackDTO.createFrom;
-const $$createType8 = $Create.Array($$createType7);
-const $$createType9 = $models.HistoryDTO.createFrom;
-const $$createType10 = $Create.Array($$createType9);
-const $$createType11 = $models.ImportDTO.createFrom;
-const $$createType12 = $models.LyricsDTO.createFrom;
-const $$createType13 = $models.InfoDTO.createFrom;
-const $$createType14 = $Create.Array($$createType6);
-const $$createType15 = media$0.Source.createFrom;
-const $$createType16 = $models.SearchDTO.createFrom;
-const $$createType17 = $models.TestOutcome.createFrom;
-const $$createType18 = $models.OnlineDTO.createFrom;
-const $$createType19 = $models.WindowStateInput.createFrom;
+const $$createType5 = $models.AppUpdateDTO.createFrom;
+const $$createType6 = $models.SettingsDTO.createFrom;
+const $$createType7 = $models.PlaylistDTO.createFrom;
+const $$createType8 = $models.TrackDTO.createFrom;
+const $$createType9 = $Create.Array($$createType8);
+const $$createType10 = $models.HistoryDTO.createFrom;
+const $$createType11 = $Create.Array($$createType10);
+const $$createType12 = $models.ImportDTO.createFrom;
+const $$createType13 = $models.LyricsDTO.createFrom;
+const $$createType14 = $models.InfoDTO.createFrom;
+const $$createType15 = $Create.Array($$createType7);
+const $$createType16 = media$0.Source.createFrom;
+const $$createType17 = $models.SearchDTO.createFrom;
+const $$createType18 = $models.TestOutcome.createFrom;
+const $$createType19 = $models.OnlineDTO.createFrom;
+const $$createType20 = $models.WindowStateInput.createFrom;
