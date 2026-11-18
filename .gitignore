@@ -33,6 +33,8 @@ Thumbs.db
 
 # Local runtime data, databases and secrets
 data/
+!internal/phonetics/data/
+!internal/phonetics/data/cmudict.dict
 *.db
 *.db-wal
 *.db-shm
