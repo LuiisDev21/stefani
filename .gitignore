@@ -3,6 +3,9 @@
 bin/
 build/bin/
 build/windows/nsis/
+!build/windows/nsis/
+!build/windows/nsis/project.nsi
+!build/windows/nsis/wails_tools.nsh
 *.exe
 *.dll
 *.so
