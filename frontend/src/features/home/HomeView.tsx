@@ -49,14 +49,7 @@ export function HomeView() {
 
   return (
     <div className="min-h-0">
-      <TopBar
-        title="Inicio"
-        actions={
-          <Button size="sm" variant="subtle" icon={<Search className="h-3.5 w-3.5" />} onClick={() => focusSearch()}>
-            Buscar música
-          </Button>
-        }
-      />
+      <TopBar title="Inicio" />
 
       <div className="px-8 pb-28">
         {hero ? (
