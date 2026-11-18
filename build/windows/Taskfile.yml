@@ -114,7 +114,7 @@ tasks:
 
   create:nsis:installer:
     summary: Creates an NSIS installer
-    dir: build/windows/nsis
+    dir: nsis
     deps:
       - task: build
     preconditions:

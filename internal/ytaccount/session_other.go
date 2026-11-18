@@ -22,5 +22,3 @@ func readCookies(string) ([]cookie, error) {
 }
 
 func cookieHeader([]cookie) string { return "" }
-
-func findOn([]cookie, string, string) string { return "" }

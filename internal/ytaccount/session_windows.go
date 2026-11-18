@@ -17,8 +17,8 @@ import (
 	"strings"
 	"unsafe"
 
-	_ "modernc.org/sqlite"
 	"golang.org/x/sys/windows"
+	_ "modernc.org/sqlite"
 )
 
 // cookie is one row of the WebView2 cookie store, already decrypted.
@@ -160,14 +160,4 @@ func cookieHeader(jar []cookie) string {
 		}
 	}
 	return strings.Join(parts, "; ")
-}
-
-func findOn(jar []cookie, name, domain string) string {
-	for _, c := range jar {
-		host := strings.TrimPrefix(c.host, ".")
-		if c.name == name && strings.HasSuffix(host, domain) {
-			return c.value
-		}
-	}
-	return ""
 }

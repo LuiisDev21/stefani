@@ -260,6 +260,17 @@ func avatar(header any) string {
 	return url
 }
 
+// findOn returns the value of a cookie for a domain, ignoring the leading dot.
+func findOn(jar []cookie, name, domain string) string {
+	for _, c := range jar {
+		host := strings.TrimPrefix(c.host, ".")
+		if c.name == name && strings.HasSuffix(host, domain) {
+			return c.value
+		}
+	}
+	return ""
+}
+
 func browseID(row map[string]any) string {
 	if id, ok := dig(row, "navigationEndpoint", "browseEndpoint", "browseId").(string); ok {
 		return id
