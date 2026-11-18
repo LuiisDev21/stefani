@@ -8,7 +8,6 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strconv"
@@ -80,9 +79,7 @@ func (a *App) InstallAppUpdate() (AppUpdateDTO, error) {
 	if err := extractAsset(data, installerName, installer); err != nil {
 		return dto, err
 	}
-	cmd := exec.Command(installer)
-	cmd.Dir = dir
-	if err := cmd.Start(); err != nil {
+	if err := launchInstaller(installer); err != nil {
 		return dto, fmt.Errorf("abrir el instalador: %w", err)
 	}
 	dto.Ready = true
