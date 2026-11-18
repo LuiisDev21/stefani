@@ -101,6 +101,17 @@ La reproducción en línea necesita `yt-dlp` y `ffmpeg`. La app lo busca en el
 WinGet, Scoop, Chocolatey y junto al ejecutable), así que también funciona al
 abrirla desde el Explorador.
 
+## Instalador y actualizaciones
+
+Los instaladores incluyen `yt-dlp`, así que la reproducción en línea funciona
+desde el primer arranque. En **Ajustes → Música en linea** hay un botón para
+descargar la última versión de `yt-dlp` cuando quieras, sin reinstalar la app:
+la copia vive en la carpeta de datos de STEFANI y tiene prioridad sobre la que
+venga instalada en el sistema.
+
+Cada push a `main` compila Windows, Linux y macOS y publica una release con los
+binarios y el `yt-dlp` correspondiente.
+
 ## Cuenta de YouTube Music
 
 En Windows puedes conectar tu cuenta desde **Ajustes → Cuenta**: se abre el

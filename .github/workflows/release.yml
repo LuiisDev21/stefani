@@ -1,0 +1,124 @@
+name: release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            name: windows-amd64
+          - os: ubuntu-24.04
+            name: linux-amd64
+          - os: macos-14
+            name: macos-arm64
+          - os: macos-15-intel
+            name: macos-amd64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev
+
+      - name: Install Wails
+        run: |
+          go install github.com/wailsapp/wails/v3/cmd/wails3@v3.1.0
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+
+      - name: Build
+        run: wails3 build
+
+      - name: Bundle yt-dlp
+        run: go run ./cmd/fetchytdlp bin
+
+      - name: Install NSIS
+        if: runner.os == 'Windows'
+        run: choco install nsis --no-progress -y
+
+      - name: Build installer
+        if: runner.os == 'Windows'
+        continue-on-error: true
+        run: wails3 package
+
+      - name: Package (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force dist | Out-Null
+          Copy-Item bin/stefani.exe dist/
+          Copy-Item bin/yt-dlp.exe dist/
+          if (Test-Path bin/stefani-amd64-installer.exe) {
+            Copy-Item bin/stefani-amd64-installer.exe dist/
+          }
+          Compress-Archive -Path dist/* -DestinationPath stefani-${{ matrix.name }}.zip
+
+      - name: Package (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          mkdir -p dist
+          cp bin/stefani dist/
+          cp bin/yt-dlp dist/
+          tar -czf stefani-${{ matrix.name }}.tar.gz -C dist .
+
+      - name: Package (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          mkdir -p dist
+          if [ -d bin/stefani.app ]; then cp -R bin/stefani.app dist/; else cp bin/stefani dist/; fi
+          cp bin/yt-dlp dist/
+          cd dist && zip -r ../stefani-${{ matrix.name }}.zip .
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stefani-${{ matrix.name }}
+          path: |
+            stefani-${{ matrix.name }}.zip
+            stefani-${{ matrix.name }}.tar.gz
+          if-no-files-found: error
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v0.1.${{ github.run_number }}
+          name: STEFANI v0.1.${{ github.run_number }}
+          generate_release_notes: true
+          files: artifacts/*

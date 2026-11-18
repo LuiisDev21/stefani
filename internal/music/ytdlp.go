@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"regexp"
 	"strconv"
 	"strings"
@@ -101,10 +102,40 @@ func NewYtDlpWithRunner(path string, run Runner, now func() time.Time, ttl time.
 	}
 }
 
-// findYtDlp returns the binary to run: PATH first, then the usual Windows
-// install locations. Without this, launching the app from Explorer misses a
-// yt-dlp installed in a folder that is not on the user's PATH.
+// managedDir is where the app keeps its own yt-dlp copy. It is set from main
+// so the file follows STEFANI_HOME.
+var managedDir string
+
+// SetManagedDir points the updater at the folder that holds the app's copy.
+func SetManagedDir(dir string) { managedDir = dir }
+
+// managedBinary is the path of the copy the app owns and updates.
+func managedBinary() string {
+	dir := managedDir
+	if dir == "" {
+		base, err := os.UserConfigDir()
+		if err != nil {
+			return ""
+		}
+		dir = filepath.Join(base, "stefani", "bin")
+	}
+	name := "yt-dlp"
+	if runtime.GOOS == "windows" {
+		name += ".exe"
+	}
+	return filepath.Join(dir, name)
+}
+
+// findYtDlp returns the binary to run: the app's own copy first (so updates
+// win), then PATH and the usual Windows install locations. Without the latter,
+// launching the app from Explorer misses a yt-dlp whose folder is not on the
+// user's PATH.
 func findYtDlp() string {
+	if path := managedBinary(); path != "" {
+		if info, err := os.Stat(path); err == nil && !info.IsDir() {
+			return path
+		}
+	}
 	if path, err := exec.LookPath("yt-dlp"); err == nil {
 		return path
 	}

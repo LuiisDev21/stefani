@@ -44,6 +44,7 @@ export function SettingsView() {
   const finishAccount = useApp((state) => state.finishAccount);
   const loadAccount = useApp((state) => state.loadAccount);
   const signOutAccount = useApp((state) => state.signOutAccount);
+  const updateYtDlp = useApp((state) => state.updateYtDlp);
 
   const [form, setForm] = useState<Settings | null>(settings);
   const [apiKey, setApiKey] = useState("");
@@ -53,6 +54,7 @@ export function SettingsView() {
   const [models, setModels] = useState<string[]>([]);
   const [modelsNotice, setModelsNotice] = useState("");
   const [testing, setTesting] = useState(false);
+  const [ytdlpBusy, setYtdlpBusy] = useState(false);
   const [testResult, setTestResult] = useState<{ ok: boolean; message: string; latencyMs: number } | null>(null);
 
   useEffect(() => {
@@ -416,25 +418,29 @@ export function SettingsView() {
             label="Buscar y reproducir desde YouTube Music"
           />
 
-          <div className="mt-3 flex items-start gap-2 rounded-[9px] border border-line/70 px-3 py-2.5">
-            <span
-              className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full"
-              style={{ background: info?.online.available ? "var(--color-ink)" : "var(--color-danger)" }}
-              aria-hidden
-            />
-            <p className="text-[11.5px] leading-relaxed text-muted">
-              {info?.online.available ? (
-                <>
-                  Reproductor en linea listo. <span className="text-ink">{info.online.detail}</span>
-                </>
-              ) : (
-                <>
-                  <span className="text-ink">Falta yt-dlp.</span> Instalalo con{" "}
-                  <span className="font-mono text-[11px] text-ink">winget install yt-dlp</span> y reinicia STEFANI. Sin
-                  el, las pistas de YouTube Music se pueden guardar y abrir en la app oficial, pero no suenan aquí.
-                </>
-              )}
-            </p>
+          <div className="mt-3 flex items-center justify-between gap-3 rounded-[9px] border border-line/70 px-3 py-2.5">
+            <div className="flex min-w-0 items-center gap-2">
+              <span
+                className="h-1.5 w-1.5 shrink-0 rounded-full"
+                style={{ background: info?.online.available ? "var(--color-ink)" : "var(--color-danger)" }}
+                aria-hidden
+              />
+              <p className="truncate text-[11.5px] text-muted">
+                {info?.online.available ? info.online.detail : "yt-dlp no está instalado"}
+              </p>
+            </div>
+            <Button
+              size="sm"
+              variant="subtle"
+              disabled={ytdlpBusy}
+              onClick={async () => {
+                setYtdlpBusy(true);
+                await updateYtDlp();
+                setYtdlpBusy(false);
+              }}
+            >
+              {ytdlpBusy ? "Actualizando" : info?.online.available ? "Actualizar" : "Instalar"}
+            </Button>
           </div>
         </section>
 

@@ -236,6 +236,12 @@ tasks:
     cmds:
       - wails3 update build-assets -name "{{.APP_NAME}}" -binaryname "{{.APP_NAME}}" -config config.yml -dir .
 
+  fetch:ytdlp:
+    summary: Downloads the standalone yt-dlp into bin so installers ship it
+    dir: ..
+    cmds:
+      - go run ./cmd/fetchytdlp bin
+
   build:server:
     summary: Builds the application in server mode (no GUI, HTTP server only)
     desc: |

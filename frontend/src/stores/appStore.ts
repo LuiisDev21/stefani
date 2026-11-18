@@ -88,6 +88,7 @@ interface AppState {
   signOutAccount: () => Promise<void>;
   finishAccount: () => Promise<void>;
   refreshAccount: () => Promise<void>;
+  updateYtDlp: () => Promise<void>;
   importAccountPlaylist: (id: string, name: string) => Promise<void>;
   openPlaylist: (playlist: Playlist) => Promise<void>;
   createPlaylist: (name: string) => Promise<Playlist | null>;
@@ -314,6 +315,17 @@ export const useApp = create<AppState>((set, get) => ({
     try {
       await api.signOutAccount();
       set({ account: { connected: false, name: "", email: "", avatar: "", playlists: 0, locked: true } });
+    } catch (error) {
+      get().notify("error", errorMessage(error));
+    }
+  },
+
+  updateYtDlp: async () => {
+    try {
+      const online = await api.updateYtDlp();
+      const info = get().info;
+      if (info) set({ info: { ...info, online } });
+      get().notify("ok", online.available ? `yt-dlp ${online.version}` : "yt-dlp actualizado");
     } catch (error) {
       get().notify("error", errorMessage(error));
     }

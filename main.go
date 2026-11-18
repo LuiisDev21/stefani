@@ -198,6 +198,7 @@ func run() error {
 	}
 
 	yt := music.NewYTMusic(12 * time.Second)
+	music.SetManagedDir(filepath.Join(paths.ConfigDir, "bin"))
 	streamer := music.DetectYtDlp()
 	localPhon := phonetics.NewLocal()
 	musicSvc := music.NewService(db, yt, logger, state.youtubeMusic)

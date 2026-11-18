@@ -9,6 +9,10 @@ import (
 // The app must find a yt-dlp installed in Python's Scripts folder even when
 // that folder is not on PATH (the usual case when launching from Explorer).
 func TestFindYtDlpUsesKnownWindowsLocations(t *testing.T) {
+	oldManaged := managedDir
+	SetManagedDir("")
+	defer SetManagedDir(oldManaged)
+
 	root := t.TempDir()
 	scripts := filepath.Join(root, "Programs", "Python", "Python312", "Scripts")
 	if err := os.MkdirAll(scripts, 0o755); err != nil {

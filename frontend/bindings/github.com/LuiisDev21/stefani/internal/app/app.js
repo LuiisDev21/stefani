@@ -447,12 +447,23 @@ export function UpdatePlaylist(id, name, description) {
 }
 
 /**
+ * UpdateYtDlp downloads the latest yt-dlp release into the app's bin folder and
+ * refreshes the detected binary, so the new version is used without a restart.
+ * @returns {$CancellablePromise<$models.OnlineDTO>}
+ */
+export function UpdateYtDlp() {
+    return $Call.ByID(2314142790).then(/** @type {($result: any) => any} */(($result) => {
+        return $$createType18($result);
+    }));
+}
+
+/**
  * WindowState reports the stored geometry so the window can restore itself.
  * @returns {$CancellablePromise<$models.WindowStateInput>}
  */
 export function WindowState() {
     return $Call.ByID(1162240999).then(/** @type {($result: any) => any} */(($result) => {
-        return $$createType18($result);
+        return $$createType19($result);
     }));
 }
 
@@ -475,4 +486,5 @@ const $$createType14 = $Create.Array($$createType6);
 const $$createType15 = media$0.Source.createFrom;
 const $$createType16 = $models.SearchDTO.createFrom;
 const $$createType17 = $models.TestOutcome.createFrom;
-const $$createType18 = $models.WindowStateInput.createFrom;
+const $$createType18 = $models.OnlineDTO.createFrom;
+const $$createType19 = $models.WindowStateInput.createFrom;

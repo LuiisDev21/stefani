@@ -16,6 +16,7 @@ import type {
   ImportResult,
   Info,
   Lyrics,
+  OnlineStatus,
   Playlist,
   SearchResult,
   Settings,
@@ -28,6 +29,7 @@ const as = <T,>(value: unknown): Promise<T> => value as Promise<T>;
 
 export const api = {
   info: () => as<Info>(App.Info()),
+  updateYtDlp: () => as<OnlineStatus>(App.UpdateYtDlp()),
 
   accountStatus: () => as<Account>(App.AccountStatus()),
   connectAccount: () => as<void>(App.ConnectAccount()),
