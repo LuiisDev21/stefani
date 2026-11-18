@@ -16,9 +16,12 @@ import (
 	"io"
 	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/LuiisDev21/stefani/internal/domain"
 )
 
 // Errors the UI can tell apart.
@@ -351,4 +354,149 @@ func runsJoin(value any) string {
 		}
 	}
 	return strings.TrimSpace(strings.Join(parts, ""))
+}
+
+// PlaylistTracks reads a playlist with the signed-in session. Unlike the
+// anonymous catalog, this resolves the private lists of the user's library and
+// keeps the songs YouTube will not serve, flagged as unavailable.
+func (c *Client) PlaylistTracks(ctx context.Context, playlistID string) ([]domain.Track, error) {
+	id := strings.TrimPrefix(strings.TrimSpace(playlistID), "VL")
+	if id == "" {
+		return nil, fmt.Errorf("empty playlist id")
+	}
+	res, err := c.call(ctx, "browse", map[string]any{"browseId": "VL" + id})
+	if err != nil {
+		return nil, err
+	}
+	rows := collectPlaylistRows(res)
+	out := make([]domain.Track, 0, len(rows))
+	seen := make(map[string]bool, len(rows))
+	for _, row := range rows {
+		track, ok := playlistTrack(row)
+		if !ok {
+			continue
+		}
+		key := track.ProviderID
+		if key == "" {
+			key = "na:" + track.Title + "|" + track.Artist
+		}
+		if seen[key] {
+			continue
+		}
+		seen[key] = true
+		out = append(out, track)
+	}
+	return out, nil
+}
+
+// collectPlaylistRows walks the response tree instead of binding the exact
+// renderer path: YouTube moves sections around and the song rows stay the same.
+func collectPlaylistRows(node any) []map[string]any {
+	var out []map[string]any
+	var walk func(n any)
+	walk = func(n any) {
+		switch v := n.(type) {
+		case map[string]any:
+			if row, ok := v["musicResponsiveListItemRenderer"].(map[string]any); ok {
+				out = append(out, row)
+			}
+			for _, child := range v {
+				walk(child)
+			}
+		case []any:
+			for _, child := range v {
+				walk(child)
+			}
+		}
+	}
+	walk(node)
+	return out
+}
+
+// playlistTrack turns one row into a track. A row without a video id is a song
+// YouTube will not serve here (removed, private or blocked in the region); it
+// still comes back so the list keeps its shape and the row can be greyed out.
+func playlistTrack(row map[string]any) (domain.Track, bool) {
+	title := rowText(row, 0)
+	if title == "" {
+		return domain.Track{}, false
+	}
+	videoID, _ := dig(row, "playlistItemData", "videoId").(string)
+	artist, album, duration := splitSubtitle(rowText(row, 1))
+	if duration == 0 {
+		// Video rows carry the length in the fixed column, not in the subtitle.
+		duration = rowDuration(row)
+	}
+	track := domain.Track{
+		Provider:   domain.ProviderYTMusic,
+		ProviderID: videoID,
+		Title:      title,
+		Artist:     artist,
+		Album:      album,
+		DurationMs: duration,
+		ArtworkURL: rowThumbnail(row),
+	}
+	if videoID != "" {
+		track.ExternalURL = "https://music.youtube.com/watch?v=" + videoID
+	}
+	return track, true
+}
+
+func rowText(row map[string]any, column int) string {
+	text, _ := dig(row, "flexColumns", column, "musicResponsiveListItemFlexColumnRenderer", "text").(map[string]any)
+	return runsJoin(text)
+}
+
+func rowDuration(row map[string]any) int64 {
+	text, _ := dig(row, "fixedColumns", 0, "musicResponsiveListItemFixedColumnRenderer", "text").(map[string]any)
+	if ms, ok := parseClock(runsJoin(text)); ok {
+		return ms
+	}
+	return 0
+}
+
+func rowThumbnail(row map[string]any) string {
+	list, _ := dig(row, "thumbnail", "musicThumbnailRenderer", "thumbnail", "thumbnails").([]any)
+	if len(list) == 0 {
+		return ""
+	}
+	last, _ := list[len(list)-1].(map[string]any)
+	url, _ := last["url"].(string)
+	return url
+}
+
+// splitSubtitle reads the "Artist • Album • 3:45" line. The duration is the
+// last segment only when it looks like one.
+func splitSubtitle(subtitle string) (artist, album string, durationMs int64) {
+	parts := strings.Split(subtitle, " • ")
+	if len(parts) == 0 {
+		return "", "", 0
+	}
+	if ms, ok := parseClock(parts[len(parts)-1]); ok {
+		durationMs = ms
+		parts = parts[:len(parts)-1]
+	}
+	if len(parts) > 0 {
+		artist = strings.TrimSpace(parts[0])
+	}
+	if len(parts) > 1 {
+		album = strings.TrimSpace(parts[1])
+	}
+	return artist, album, durationMs
+}
+
+func parseClock(text string) (int64, bool) {
+	parts := strings.Split(strings.TrimSpace(text), ":")
+	if len(parts) < 2 || len(parts) > 3 {
+		return 0, false
+	}
+	var total int64
+	for _, part := range parts {
+		n, err := strconv.Atoi(part)
+		if err != nil || n < 0 {
+			return 0, false
+		}
+		total = total*60 + int64(n)
+	}
+	return total * 1000, true
 }

@@ -380,20 +380,36 @@ interface PlaylistRowProps {
 }
 
 function PlaylistRow({ track, index, total, active, playing, onPlay, onUp, onDown, onRemove }: PlaylistRowProps) {
+  const unavailable = track.unavailable;
   return (
-    <li className="group flex items-center gap-3 rounded-[7px] px-2 py-1.5 transition-colors hover:bg-surface">
+    <li
+      className={`group flex items-center gap-3 rounded-[7px] px-2 py-1.5 transition-colors hover:bg-surface ${unavailable ? "opacity-45 hover:bg-transparent" : ""}`}
+    >
       <button
         type="button"
         onClick={onPlay}
-        aria-label={`Reproducir ${track.title}`}
+        disabled={unavailable}
+        aria-label={unavailable ? `${track.title} no esta disponible` : `Reproducir ${track.title}`}
         className="flex h-7 w-7 items-center justify-center rounded text-[11px] text-faint tnum hover:text-ink"
       >
         {active && playing ? <span className="text-accent">II</span> : index + 1}
       </button>
-      <button type="button" onClick={onPlay} className="flex min-w-0 flex-1 items-center gap-3 text-left">
+      <button
+        type="button"
+        onClick={onPlay}
+        disabled={unavailable}
+        className="flex min-w-0 flex-1 items-center gap-3 text-left"
+      >
         <Cover title={track.title} src={track.artworkUrl} size={32} />
         <span className="min-w-0">
-          <span className={`block truncate text-[12.5px] ${active ? "text-accent" : "text-ink"}`}>{track.title}</span>
+          <span className={`flex items-center gap-2 ${active ? "text-accent" : "text-ink"}`}>
+            <span className="truncate text-[12.5px]">{track.title}</span>
+            {unavailable ? (
+              <span className="shrink-0 rounded-[3px] border border-line px-1.5 py-[1px] text-[9.5px] text-faint">
+                no disponible
+              </span>
+            ) : null}
+          </span>
           <span className="block truncate text-[11px] text-faint">{track.artist || "Artista desconocido"}</span>
         </span>
       </button>

@@ -5,6 +5,8 @@ package app
 
 import (
 	"context"
+	"crypto/sha1"
+	"encoding/hex"
 	"fmt"
 	"log/slog"
 	"net/url"
@@ -626,16 +628,36 @@ func (a *App) ImportPlaylist(rawURL string) (ImportDTO, error) {
 
 // importPlaylist stores the metadata of one playlist and its tracks.
 func (a *App) importPlaylist(ctx context.Context, playlistID, name string) (ImportDTO, error) {
-	tracks, err := a.music.ImportPlaylist(ctx, playlistID)
-	if err != nil {
-		return ImportDTO{}, err
+	// The signed-in client sees the private lists of the library; the anonymous
+	// catalog is the fallback for public links and for users without a session.
+	var tracks []domain.Track
+	if a.account != nil && a.account.Available() {
+		if signed, err := a.account.PlaylistTracks(ctx, playlistID); err == nil {
+			tracks = signed
+		}
+	}
+	if len(tracks) == 0 {
+		anonymous, err := a.music.ImportPlaylist(ctx, playlistID)
+		if err != nil {
+			return ImportDTO{}, err
+		}
+		tracks = anonymous
 	}
 	if len(tracks) == 0 {
 		return ImportDTO{Notice: "La lista no devolvio canciones (puede ser privada o regional)"}, nil
 	}
 
+	unavailable := 0
 	saved := make([]domain.Track, 0, len(tracks))
 	for _, track := range tracks {
+		if track.ProviderID == "" {
+			// No video id: YouTube will not serve it. The synthetic id keeps it
+			// in the list, where the UI renders the row greyed out.
+			sum := sha1.Sum([]byte(track.Title + "|" + track.Artist))
+			track.ProviderID = "na:" + hex.EncodeToString(sum[:8])
+			track.ExternalURL = ""
+			unavailable++
+		}
 		id, err := a.db.SaveTrack(ctx, track)
 		if err != nil {
 			return ImportDTO{}, err
@@ -661,10 +683,14 @@ func (a *App) importPlaylist(ctx context.Context, playlistID, name string) (Impo
 	}
 	playlist, _ = a.db.Playlist(ctx, playlist.ID)
 	dto := toPlaylistDTO(playlist)
+	notice := fmt.Sprintf("Importadas %d pistas como metadatos. La reproduccion sigue en la app oficial.", len(saved))
+	if unavailable > 0 {
+		notice = fmt.Sprintf("Importadas %d pistas. %d no estan disponibles en YouTube Music y quedaron en gris.",
+			len(saved), unavailable)
+	}
 	return ImportDTO{
 		Imported: a.toTrackList(ctx, saved),
-		Notice: fmt.Sprintf("Importadas %d pistas como metadatos. La reproduccion sigue en la app oficial.",
-			len(saved)),
+		Notice:   notice,
 		Playlist: &dto,
 	}, nil
 }

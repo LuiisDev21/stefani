@@ -45,6 +45,7 @@ export interface Track {
   playable: boolean;
   inLibrary: boolean;
   favorite: boolean;
+  unavailable: boolean;
   note: string;
 }
 

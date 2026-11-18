@@ -113,7 +113,7 @@ function handleEnded() {
     void ensureAudio().play();
     return;
   }
-  const hasNext = state.index + 1 < state.queue.length;
+  const hasNext = playableIndex(state.queue, state.index + 1, 1) !== -1;
   if (hasNext || state.repeat === "all") {
     state.next();
     return;
@@ -152,6 +152,14 @@ function loadAndPlay(track: Track, autoplay: boolean) {
       usePlayer.setState({ error: describePlayError(error) });
     });
   }
+}
+
+/** Skips rows YouTube will not serve: they show in the list but cannot play. */
+function playableIndex(queue: Track[], from: number, direction: 1 | -1): number {
+  for (let i = from; i >= 0 && i < queue.length; i += direction) {
+    if (!queue[i]?.unavailable) return i;
+  }
+  return -1;
 }
 
 export const usePlayer = create<PlayerState>((set, get) => ({
@@ -205,11 +213,13 @@ export const usePlayer = create<PlayerState>((set, get) => ({
   next: () => {
     const { queue, index, repeat } = get();
     if (queue.length === 0) return;
-    const nextIndex = index + 1;
-    if (nextIndex >= queue.length) {
+    const nextIndex = playableIndex(queue, index + 1, 1);
+    if (nextIndex === -1) {
       if (repeat === "all") {
-        set({ index: 0, current: queue[0] });
-        loadAndPlay(queue[0], true);
+        const first = playableIndex(queue, 0, 1);
+        if (first === -1) return;
+        set({ index: first, current: queue[first] });
+        loadAndPlay(queue[first], true);
       }
       return;
     }
@@ -226,7 +236,7 @@ export const usePlayer = create<PlayerState>((set, get) => ({
       clock.set({ timeMs: 0 });
       return;
     }
-    const prevIndex = Math.max(0, index - 1);
+    const prevIndex = Math.max(0, playableIndex(queue, index - 1, -1));
     set({ index: prevIndex, current: queue[prevIndex] });
     loadAndPlay(queue[prevIndex], true);
   },

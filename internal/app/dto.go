@@ -2,6 +2,7 @@ package app
 
 import (
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/LuiisDev21/stefani/internal/domain"
@@ -56,6 +57,7 @@ type TrackDTO struct {
 	Playable    bool   `json:"playable"`
 	InLibrary   bool   `json:"inLibrary"`
 	Favorite    bool   `json:"favorite"`
+	Unavailable bool   `json:"unavailable"`
 	Note        string `json:"note"`
 }
 
@@ -318,6 +320,12 @@ type WindowStateInput struct {
 // ---- converters ----
 
 func toTrackDTO(t domain.Track, inLibrary, favorite, playable bool) TrackDTO {
+	// Rows imported without a video id are songs YouTube will not serve; they
+	// stay in the list so the order survives, and the UI greys them out.
+	unavailable := strings.HasPrefix(t.ProviderID, "na:")
+	if unavailable {
+		playable = false
+	}
 	dto := TrackDTO{
 		ID:          t.ID,
 		Provider:    string(t.Provider),
@@ -330,6 +338,7 @@ func toTrackDTO(t domain.Track, inLibrary, favorite, playable bool) TrackDTO {
 		Playable:    playable,
 		InLibrary:   inLibrary,
 		Favorite:    favorite,
+		Unavailable: unavailable,
 	}
 	if playable {
 		dto.AudioURL = "/media/" + url.PathEscape(t.ID)

@@ -31,26 +31,32 @@ export function TrackRow({
   onAdd,
   onExternal,
 }: TrackRowProps) {
+  const unavailable = track.unavailable;
   return (
     <li
       className={cn(
         "group grid grid-cols-[28px_minmax(0,1fr)_auto] items-center gap-3 rounded-[7px] px-2 py-2",
         "transition-colors hover:bg-surface/50",
         active && "bg-surface",
+        unavailable && "opacity-45 hover:bg-transparent",
       )}
     >
       <button
         type="button"
         onClick={onPlay}
-        aria-label={`Reproducir ${track.title}`}
+        disabled={unavailable}
+        aria-label={unavailable ? `${track.title} no esta disponible` : `Reproducir ${track.title}`}
         className="relative flex h-7 w-7 items-center justify-center rounded text-[11px] text-faint tnum"
       >
-        <span className={cn("group-hover:opacity-0", active && "opacity-0")}>{index + 1}</span>
+        <span className={cn("group-hover:opacity-0", active && "opacity-0", unavailable && "group-hover:opacity-100")}>
+          {index + 1}
+        </span>
         <span
           className={cn(
             "absolute inset-0 flex items-center justify-center opacity-0",
             "group-hover:opacity-100 group-focus-visible:opacity-100",
             active && "opacity-100",
+            unavailable && "hidden",
           )}
         >
           {active && playing ? (
@@ -61,14 +67,23 @@ export function TrackRow({
         </span>
       </button>
 
-      <button type="button" onClick={onPlay} className="grid min-w-0 grid-cols-[36px_minmax(0,1fr)] items-center gap-3 text-left">
+      <button
+        type="button"
+        onClick={onPlay}
+        disabled={unavailable}
+        className="grid min-w-0 grid-cols-[36px_minmax(0,1fr)] items-center gap-3 text-left"
+      >
         <Cover title={track.title} src={track.artworkUrl} size={36} />
         <span className="min-w-0">
           <span className="flex items-center gap-2">
             <span className={cn("truncate text-[13px]", active ? "font-medium text-accent" : "text-ink")}>
               {track.title}
             </span>
-            {!track.playable ? (
+            {unavailable ? (
+              <span className="shrink-0 rounded-[3px] border border-line px-1.5 py-[1px] text-[9.5px] text-faint">
+                no disponible
+              </span>
+            ) : !track.playable ? (
               <span className="shrink-0 rounded-[3px] border border-line px-1.5 py-[1px] text-[9.5px] text-faint">
                 catalogo
               </span>
@@ -85,7 +100,7 @@ export function TrackRow({
         <span className="mr-1 w-9 text-right text-[10.5px] text-ash tnum">
           {track.durationMs > 0 ? formatTime(track.durationMs) : "—"}
         </span>
-        {onAdd ? (
+        {onAdd && !unavailable ? (
           <IconButton label="Agregar a una lista" size="sm" onClick={onAdd} className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100">
             <ListPlus className="h-3.5 w-3.5" />
           </IconButton>

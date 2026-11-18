@@ -29,7 +29,9 @@ export function TrackList({ tracks, onAdd, onExternal }: TrackListProps) {
           index={index}
           active={current?.id === track.id}
           playing={playing}
-          onPlay={() => void openTrack(track, tracks)}
+          onPlay={() => {
+            if (!track.unavailable) void openTrack(track, tracks);
+          }}
           onFavorite={() => void toggleFavorite(track)}
           onAdd={onAdd ? () => onAdd(track) : undefined}
           onExternal={

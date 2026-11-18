@@ -289,6 +289,7 @@ export interface TrackDTO {
     "playable": boolean;
     "inLibrary": boolean;
     "favorite": boolean;
+    "unavailable": boolean;
     "note": string;
 }
 
