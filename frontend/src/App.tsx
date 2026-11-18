@@ -15,6 +15,7 @@ import { SettingsView } from "./features/settings/SettingsView";
 import { ImmersiveView } from "./features/immersive/ImmersiveView";
 import { useApp } from "./stores/appStore";
 import { useKeyboardShortcuts } from "./lib/useKeyboardShortcuts";
+import { api } from "./lib/api";
 
 /** Application shell: global navigation, active view, study panel, transport. */
 export default function App() {
@@ -27,6 +28,26 @@ export default function App() {
   const closePicker = useApp((state) => state.closePicker);
   const init = useApp((state) => state.init);
   const [navOpen, setNavOpen] = useState(false);
+
+  // The host reloads the window when this stops arriving or reports an empty
+  // tree, so a dead renderer cannot leave a black window behind.
+  useEffect(() => {
+    const send = () => {
+      void api
+        .heartbeat(
+          JSON.stringify({
+            root: document.querySelector("#root")?.childElementCount ?? -1,
+            text: document.body.innerText.length,
+            href: location.href,
+            errors: window.__stefaniErrors ?? [],
+          }),
+        )
+        .catch(() => undefined);
+    };
+    send();
+    const id = window.setInterval(send, 3000);
+    return () => window.clearInterval(id);
+  }, []);
 
   useEffect(() => {
     void init();

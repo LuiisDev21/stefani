@@ -86,6 +86,7 @@ type App struct {
 	emitter    Emitter
 	opener     Opener
 	account    *ytaccount.Client
+	health     healthState
 	openLogin  func(url string) error
 	closeLogin func() error
 

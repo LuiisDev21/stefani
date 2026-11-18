@@ -288,6 +288,9 @@ func run() error {
 				mediaHandler.ServeHTTP(w, r)
 				return
 			}
+			// A new build ships new asset hashes; a cached index.html would
+			// point at a bundle that no longer exists and leave the window black.
+			w.Header().Set("Cache-Control", "no-store, must-revalidate")
 			next.ServeHTTP(w, r)
 		})
 	})
@@ -357,6 +360,8 @@ func run() error {
 
 	logger.Info("starting", "name", brand.Name, "version", brand.Version, "db", db.Path(),
 		"online", streamer.Detail())
+	go appSvc.WatchRenderer(window, logger)
+
 	return wailsApp.Run()
 }
 

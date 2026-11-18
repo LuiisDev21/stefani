@@ -32,6 +32,7 @@ export const api = {
   info: () => as<Info>(App.Info()),
   updateYtDlp: () => as<OnlineStatus>(App.UpdateYtDlp()),
   checkAppUpdate: () => as<AppUpdate>(App.CheckAppUpdate()),
+  heartbeat: (report: string) => as<void>(App.ClientHeartbeat(report)),
   installAppUpdate: () => as<AppUpdate>(App.InstallAppUpdate()),
 
   accountStatus: () => as<Account>(App.AccountStatus()),

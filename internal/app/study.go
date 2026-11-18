@@ -116,7 +116,14 @@ func (a *App) ImportLyricsFile(trackID string) (LyricsDTO, error) {
 
 // AnnotateTrack generates IPA, Spanish approximation and translation for the
 // track lyrics, emitting progress events as it goes.
-func (a *App) AnnotateTrack(trackID string) (AnnotateOutcome, error) {
+func (a *App) AnnotateTrack(trackID string) (out AnnotateOutcome, err error) {
+	// A nil slice serializes as null and the UI reads .length; always answer
+	// with an array.
+	defer func() {
+		if out.Failed == nil {
+			out.Failed = []string{}
+		}
+	}()
 	// CI and the end-to-end suite must never reach a real provider: the setup
 	// path is what those runs assert.
 	if os.Getenv("STEFANI_DISABLE_AI") == "1" {

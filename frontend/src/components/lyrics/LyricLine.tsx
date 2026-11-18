@@ -32,7 +32,8 @@ export const LyricLine = memo(function LyricLine({
   immersive,
   onSeek,
 }: LyricLineProps) {
-  const hasWords = line.words.length > 0;
+  const words = line.words ?? [];
+  const hasWords = words.length > 0;
   const annotation = line.annotation;
   const sizeClass = immersive
     ? "text-[clamp(20px,2.05vw,29px)] font-semibold leading-[1.34] tracking-[-0.3px]"
@@ -57,7 +58,7 @@ export const LyricLine = memo(function LyricLine({
         <span className={cn("block transition-colors", sizeClass)}>
           {hasWords ? (
             <span className="flex flex-wrap items-baseline gap-x-[0.26em] gap-y-1">
-              {line.words.map((word, index) => {
+              {words.map((word, index) => {
                 const progress = active ? wordProgress(word, timeMs) : past ? 1 : 0;
                 /* One span per word: a hard gradient fills it left to right
                    without duplicating text nodes. */
@@ -112,9 +113,9 @@ export const LyricLine = memo(function LyricLine({
               {annotation.translation}
             </p>
           ) : null}
-          {annotation.notes.length > 0 ? (
+          {(annotation.notes ?? []).length > 0 ? (
             <ul className="space-y-1 pt-0.5">
-              {annotation.notes.map((note) => (
+              {(annotation.notes ?? []).map((note) => (
                 <li
                   key={note.text}
                   className={immersive ? "text-[12.5px] leading-[1.45] text-white/40" : "text-[12.5px] leading-[1.45] text-faint"}

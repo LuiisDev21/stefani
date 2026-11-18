@@ -219,7 +219,7 @@ export const useApp = create<AppState>((set, get) => ({
         return;
       }
       if (outcome.message) {
-        get().notify(outcome.failed.length > 0 ? "error" : "info", outcome.message);
+        get().notify((outcome.failed ?? []).length > 0 ? "error" : "info", outcome.message);
       } else if (outcome.generated > 0) {
         get().notify("ok", `${outcome.generated} verso(s) anotados`);
       } else {
@@ -273,7 +273,7 @@ export const useApp = create<AppState>((set, get) => ({
   importAudio: async () => {
     try {
       const result = await api.importLocalTracks();
-      if (result.notice) get().notify(result.imported.length > 0 ? "ok" : "info", result.notice);
+      if (result.notice) get().notify((result.imported ?? []).length > 0 ? "ok" : "info", result.notice);
       await get().refreshLibrary();
     } catch (error) {
       get().notify("error", errorMessage(error));
@@ -403,7 +403,7 @@ export const useApp = create<AppState>((set, get) => ({
   importPlaylist: async (url) => {
     try {
       const result = await api.importPlaylist(url);
-      if (result.notice) get().notify(result.imported.length > 0 ? "ok" : "info", result.notice);
+      if (result.notice) get().notify((result.imported ?? []).length > 0 ? "ok" : "info", result.notice);
       await get().refreshPlaylists();
       if (result.playlist) {
         await get().openPlaylist(result.playlist);

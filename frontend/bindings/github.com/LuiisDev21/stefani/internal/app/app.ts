@@ -13,6 +13,12 @@ import { Call as $Call, CancellablePromise as $CancellablePromise } from "@wails
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore: Unused imports
 import * as media$0 from "../media/models.js";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore: Unused imports
+import * as application$0 from "../../../../wailsapp/wails/v3/pkg/application/models.js";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore: Unused imports
+import * as slog$0 from "../../../../../log/slog/models.js";
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore: Unused imports
@@ -69,6 +75,14 @@ export function CheckAppUpdate(): $CancellablePromise<$models.AppUpdateDTO> {
  */
 export function ClearLLMKey(): $CancellablePromise<$models.SettingsDTO> {
     return $Call.ByID(1843416029);
+}
+
+/**
+ * ClientHeartbeat is called by the UI every few seconds with a small JSON
+ * snapshot of the document (root children, visible text, captured errors).
+ */
+export function ClientHeartbeat(report: string): $CancellablePromise<void> {
+    return $Call.ByID(787665775, report);
 }
 
 /**
@@ -332,6 +346,15 @@ export function UpdatePlaylist(id: string, name: string, description: string): $
  */
 export function UpdateYtDlp(): $CancellablePromise<$models.OnlineDTO> {
     return $Call.ByID(2314142790);
+}
+
+/**
+ * WatchRenderer reloads the window when the UI stops reporting or reports an
+ * empty tree. It never acts while the window is hidden or minimised, where the
+ * browser throttles timers and a pause is expected.
+ */
+export function WatchRenderer(window: application$0.WebviewWindow | null, logger: slog$0.Logger | null): $CancellablePromise<void> {
+    return $Call.ByID(1814642054, window, logger);
 }
 
 /**
