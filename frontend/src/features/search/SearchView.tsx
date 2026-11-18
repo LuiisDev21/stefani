@@ -5,12 +5,11 @@ import { TrackList } from "../../components/track/TrackList";
 
 /**
  * Search results. The field itself lives in the top bar, so this view only
- * reports what the query found and which providers answered.
+ * reports what the query found.
  */
 export function SearchView() {
   const searching = useApp((state) => state.searching);
   const result = useApp((state) => state.searchResult);
-  const providers = useApp((state) => state.providers);
   const openPicker = useApp((state) => state.openPicker);
 
   const items = result?.items ?? [];
@@ -20,23 +19,6 @@ export function SearchView() {
       <TopBar title="Buscar" subtitle="Tu biblioteca local y el catalogo experimental" />
 
       <div className="px-7 pb-10">
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-faint">
-          {providers.map((provider) => (
-            <span key={provider.name} className="flex items-center gap-1.5" title={provider.detail}>
-              <span
-                className="h-1.5 w-1.5 rounded-full"
-                style={{
-                  background:
-                    provider.state === "ready" || provider.state === "enabled"
-                      ? "var(--color-ink)"
-                      : "var(--color-ash)",
-                }}
-              />
-              {provider.name}
-            </span>
-          ))}
-        </div>
-
         {result?.notice ? (
           <p className="mt-4 max-w-[70ch] rounded-[8px] border border-line/70 bg-elevated/50 px-3 py-2 text-[11.5px] leading-relaxed text-muted">
             {result.notice}
