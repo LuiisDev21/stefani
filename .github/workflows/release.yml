@@ -79,7 +79,13 @@ jobs:
 
       - name: Build installer
         if: runner.os == 'Windows'
-        run: wails3 package
+        shell: pwsh
+        run: |
+          wails3 generate webview2bootstrapper -dir build/windows/nsis
+          Push-Location build/windows/nsis
+          $exe = (Resolve-Path ../../../bin/stefani.exe).Path
+          makensis -DARG_WAILS_AMD64_BINARY="$exe" project.nsi
+          Pop-Location
 
       - name: Package (Windows)
         if: runner.os == 'Windows'
