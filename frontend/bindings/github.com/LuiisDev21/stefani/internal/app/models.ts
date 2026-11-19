@@ -66,6 +66,16 @@ export interface AppUpdateDTO {
 }
 
 /**
+ * AudioSettingsDTO carries the equaliser and the spatial settings as a JSON
+ * document. The shape lives in the frontend, which is also the only place that
+ * can apply it, so the backend keeps it as an opaque, validated blob instead
+ * of duplicating a schema that would drift.
+ */
+export interface AudioSettingsDTO {
+    "json": string;
+}
+
+/**
  * BootstrapDTO is the first payload the UI loads.
  */
 export interface BootstrapDTO {

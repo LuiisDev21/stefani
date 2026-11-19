@@ -1,3 +1,4 @@
+import { AudioPanel } from "./AudioPanel";
 import { CheckCircle2, KeyRound, PlugZap, Trash2, UserRound } from "lucide-react";
 import { useEffect, useState } from "react";
 import { z } from "zod";
@@ -452,6 +453,10 @@ export function SettingsView() {
             </Button>
           </div>
         </section>
+
+        <div className="hairline my-8" />
+
+        <AudioPanel />
 
         <div className="hairline my-8" />
 

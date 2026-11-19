@@ -1,3 +1,4 @@
+import { useAudio } from "./audioStore";
 import { Events } from "@wailsio/runtime";
 import { create } from "zustand";
 import { api, errorMessage } from "../lib/api";
@@ -192,6 +193,7 @@ export const useApp = create<AppState>((set, get) => ({
       void get().loadAccount();
       // The top bar announces a new build; a failed check stays silent.
       void get().loadAppUpdate();
+      void useAudio.getState().load();
     } catch (error) {
       set({ ready: true, fatalError: errorMessage(error) });
     }

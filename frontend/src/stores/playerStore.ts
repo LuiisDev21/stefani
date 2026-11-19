@@ -1,3 +1,4 @@
+import { audioEngine } from "../audio/engine";
 import { create } from "zustand";
 import { api } from "../lib/api";
 import type { Track } from "../lib/types";
@@ -56,6 +57,9 @@ function ensureAudio(): HTMLAudioElement {
   // sessions behave like any other page audio.
   document.body.appendChild(el);
   audio = el;
+  // The engine takes the element over: from here on, audio goes through the
+  // graph and the element's own volume still applies before it.
+  audioEngine.attach(el);
 
   el.addEventListener("loadedmetadata", () => {
     const durationMs = Number.isFinite(el.duration) ? Math.round(el.duration * 1000) : 0;
@@ -75,6 +79,7 @@ function ensureAudio(): HTMLAudioElement {
     clock.set({ playing: false });
   });
   el.addEventListener("play", () => {
+    audioEngine.resume();
     usePlayer.setState({ playing: true, error: null });
     clock.set({ playing: true });
     startFrames();
@@ -302,6 +307,11 @@ export const usePlayer = create<PlayerState>((set, get) => ({
 export const PLAYBACK_RATES = RATES;
 
 /** The single audio element, created lazily. */
+/** Builds the player element on demand so the graph exists before a play. */
+export function ensureAudioElement(): HTMLAudioElement {
+  return ensureAudio();
+}
+
 export function getAudioElement(): HTMLAudioElement | null {
   return audio;
 }

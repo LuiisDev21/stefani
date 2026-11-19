@@ -54,9 +54,10 @@ describe("LyricLine", () => {
     expect(screen.getByText("slowly,")).toBeInTheDocument();
   });
 
-  it("shows IPA, approximation and translation for the active line", () => {
+  it("shows the Spanish reading and the translation for the active line", () => {
     renderLine();
-    expect(screen.getByText("/teɪk ɪt ˈsloʊli/")).toBeInTheDocument();
+    // The IPA transcription was removed: only the reading in Spanish is shown.
+    expect(screen.queryByText("/teɪk ɪt ˈsloʊli/")).not.toBeInTheDocument();
     expect(screen.getByText("téik it slóuli")).toBeInTheDocument();
     expect(screen.getByText("Tómatelo con calma")).toBeInTheDocument();
     expect(screen.getByText("El acento cae en la primera silaba.")).toBeInTheDocument();
@@ -64,7 +65,7 @@ describe("LyricLine", () => {
 
   it("hides study data when the toggles are off", () => {
     renderLine({ showIPA: false, showTranslation: false });
-    expect(screen.queryByText("/teɪk ɪt ˈsloʊli/")).not.toBeInTheDocument();
+    expect(screen.queryByText("téik it slóuli")).not.toBeInTheDocument();
     expect(screen.queryByText("Tómatelo con calma")).not.toBeInTheDocument();
   });
 

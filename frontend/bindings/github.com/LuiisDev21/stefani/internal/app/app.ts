@@ -50,6 +50,13 @@ export function AnnotateTrack(trackID: string): $CancellablePromise<$models.Anno
 }
 
 /**
+ * AudioSettings returns the saved document, or an empty string on first run.
+ */
+export function AudioSettings(): $CancellablePromise<$models.AudioSettingsDTO> {
+    return $Call.ByID(2988294581);
+}
+
+/**
  * Bootstrap loads everything the shell needs on start.
  */
 export function Bootstrap(): $CancellablePromise<$models.BootstrapDTO> {
@@ -308,6 +315,14 @@ export function ResetRendererHealth(): $CancellablePromise<void> {
  */
 export function ResolveAudioSource(trackID: string): $CancellablePromise<media$0.Source> {
     return $Call.ByID(3020879485, trackID);
+}
+
+/**
+ * SaveAudioSettings stores the document after checking it is JSON we could read
+ * back. A corrupt value must never reach the player, so nothing else is written.
+ */
+export function SaveAudioSettings($in: $models.AudioSettingsDTO): $CancellablePromise<$models.AudioSettingsDTO> {
+    return $Call.ByID(4275587562, $in);
 }
 
 /**

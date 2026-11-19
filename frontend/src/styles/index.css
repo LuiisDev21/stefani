@@ -202,6 +202,38 @@
   .stefani-slider:focus-visible::-webkit-slider-thumb {
     opacity: 1;
   }
+  /* Vertical band faders: same rail and thumb language as the horizontal
+     slider, rotated so ten of them fit under the curve. */
+  .stefani-band {
+    appearance: none;
+    writing-mode: vertical-lr;
+    direction: rtl;
+    width: 18px;
+    height: 92px;
+    background: transparent;
+    cursor: pointer;
+  }
+  .stefani-band::-webkit-slider-runnable-track {
+    width: 3px;
+    border-radius: 999px;
+    background: #2c2f30;
+  }
+  .stefani-band::-webkit-slider-thumb {
+    appearance: none;
+    width: 16px;
+    height: 7px;
+    margin-left: -6.5px;
+    border-radius: 3px;
+    background: var(--color-accent);
+  }
+  .stefani-band:hover::-webkit-slider-thumb,
+  .stefani-band:focus-visible::-webkit-slider-thumb {
+    background: #ffffff;
+  }
+  .stefani-band:disabled {
+    cursor: default;
+    opacity: 0.4;
+  }
   .stefani-slider.on-dark::-webkit-slider-runnable-track {
     background: linear-gradient(
       to right,

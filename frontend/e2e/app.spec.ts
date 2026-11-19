@@ -51,16 +51,38 @@ test.describe("STEFANI desktop shell", () => {
     }
   });
 
-  test("shows word-synced lyrics with IPA for a demo track", async ({ page }) => {
+  test("shows word-synced lyrics with the Spanish reading for a demo track", async ({ page }) => {
     await waitForApp(page);
     await page.getByRole("button", { name: /Reproducir Paper Boats/ }).click();
 
     const panel = page.locator("aside[data-lyrics-state]");
     // The sync wording moved to the heading's tooltip when the header was tidied.
     await expect(panel.getByTitle(/palabra por palabra/)).toBeVisible();
-    await expect(panel.getByText("/wiː ˈfoʊldɪd wɜːrdz ˈɪntuː ə boʊt/")).toBeVisible();
+    // The IPA transcription was removed; only the reading in Spanish remains.
+    await expect(panel.getByText("/wiː ˈfoʊldɪd wɜːrdz ˈɪntuː ə boʊt/")).toHaveCount(0);
     await expect(panel.getByText("uii fóuldid uérds íntu a bóut")).toBeVisible();
     await expect(panel.getByText("Doblamos palabras en un barco")).toBeVisible();
+  });
+
+  test("keeps the equaliser on after a reload", async ({ page }) => {
+    await waitForApp(page);
+    await page.getByRole("button", { name: "Ajustes" }).click();
+
+    const eq = page.getByRole("switch", { name: "Ecualizador" });
+    // The suite shares one profile, so the starting state is whatever the last
+    // run left behind: turn it on only if it is off.
+    if ((await eq.getAttribute("aria-checked")) !== "true") await eq.click();
+    await expect(eq).toHaveAttribute("aria-checked", "true");
+
+    await page.getByLabel("Preset del ecualizador").selectOption("bass-boost");
+    await expect(page.getByRole("slider", { name: "Banda 62 hercios" })).toHaveValue("5");
+
+    // The store writes behind a debounce; the page must not reload first.
+    await page.waitForTimeout(700);
+    await page.reload();
+    await page.getByRole("button", { name: "Ajustes" }).click();
+    await expect(page.getByRole("switch", { name: "Ecualizador" })).toHaveAttribute("aria-checked", "true");
+    await expect(page.getByLabel("Preset del ecualizador")).toHaveValue("bass-boost");
   });
 
   test("creates a playlist that survives a reload", async ({ page }) => {

@@ -52,3 +52,6 @@ e2e-artifacts/
 # local design notes, not part of the project
 apple.design.md
 build/*.syso
+
+# Playwright keeps its throwaway profile and database here.
+frontend/.e2e-home/

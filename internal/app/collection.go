@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/LuiisDev21/stefani/internal/domain"
+	"github.com/LuiisDev21/stefani/internal/ytaccount"
 )
 
 // ShelfItemDTO is one card of a home row.
@@ -45,6 +46,11 @@ func (a *App) HomeFeed() ([]ShelfDTO, error) {
 	ctx, cancel := a.opCtx()
 	defer cancel()
 	shelves, err := a.account.Home(ctx)
+	if errors.Is(err, ytaccount.ErrNotSignedIn) {
+		// No account is a normal state, not a failed request: the home shows
+		// what is stored locally and nothing else.
+		return nil, nil
+	}
 	if err != nil {
 		return nil, err
 	}

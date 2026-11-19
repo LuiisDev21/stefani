@@ -12,6 +12,7 @@ export type {
     AnnotateOutcome,
     AnnotationDTO,
     AppUpdateDTO,
+    AudioSettingsDTO,
     BootstrapDTO,
     CollectionDTO,
     FeaturesDTO,
